@@ -1,0 +1,62 @@
+{
+  "model_version": "1.0.0",
+  "model_name": "SLA Breach Risk Classifier",
+  "model_type": "LightGBM Binary Classifier",
+  "model_family": "Gradient Boosting Decision Trees",
+  "model_description": "A binary classification model that estimates the probability that an incident will exceed the target SLA of 5 days.",
+  "business_purpose": "Help support and quality teams quickly identify incidents at risk of exceeding the SLA deadline.",
+  "target_name": "SLA_BREACH",
+  "target_definition": "SLA_BREACH is 1 when an incident's resolution time exceeds 5 days, otherwise 0.",
+  "positive_class": "SLA_BREACH",
+  "negative_class": "NO_SLA_BREACH",
+  "exported_at": "2026-08-08T10:31:57.730980+00:00",
+  "training_date": "2026-08-08T10:00:00+00:00",
+  "python_version": "3.11",
+  "sklearn_version": "1.6.1",
+  "lightgbm_version": "4.6.0",
+  "threshold": 0.68,
+  "medium_threshold": 0.35,
+  "sla_target_days": 5,
+  "training_iterations": 80,
+  "metrics": {
+    "accuracy": 0.79,
+    "precision":0.65,
+    "recall":0.48,
+    "f1_score":0.55,
+    "roc_auc": 0.83
+  },
+  "categorical_features": [
+    "incident_state",
+    "category",
+    "subcategory",
+    "u_symptom",
+    "assignment_group",
+    "assigned_to"
+  ],
+  "numerical_features": [
+    "impact",
+    "urgency",
+    "priority",
+    "open_month",
+    "open_day",
+    "open_dayofweek",
+    "open_hour",
+    "open_quarter",
+    "open_is_weekend",
+    "open_is_business_hours"
+  ],
+  "risk_bands": {
+    "HIGH": ">= 0.68",
+    "MEDIUM": ">= 0.35 and < 0.68",
+    "LOW": "< 0.35"
+  },
+  "images": {
+    "confusion_matrix": "C:/stage api/app/static/matrice de confusion .png",
+    "roc_curve": "C:/stage api/app/static/roc.png"
+  },
+  "limitations": [
+    "Results depend on the quality and representativeness of the training data.",
+    "The prediction is a statistical estimate and does not guarantee that an incident will actually breach its SLA.",
+    "Model performance should be regularly reevaluated to detect potential data drift."
+  ]
+}

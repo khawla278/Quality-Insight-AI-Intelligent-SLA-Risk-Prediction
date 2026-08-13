@@ -1,0 +1,716 @@
+<div class="analytics-page">
+
+  <!-- ============================================================
+       HEADER
+  ============================================================ -->
+
+  <header class="analytics-header">
+
+    <div class="header-left">
+
+      <div class="header-icon">
+        <i class="bi bi-bar-chart-line-fill"></i>
+      </div>
+
+      <div>
+
+        <span class="eyebrow">
+          AI ANALYTICS
+        </span>
+
+        <h1>
+          Risk Analytics
+        </h1>
+
+        <p>
+          Prediction & model insights
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <!-- ==========================================================
+         LATEST RISK
+    =========================================================== -->
+
+    <div
+      class="latest-risk"
+      *ngIf="latest"
+      [ngClass]="getRiskClass(latestRisk)"
+    >
+
+      <div class="latest-dot"></div>
+
+      <div>
+
+        <span>
+          Latest Risk
+        </span>
+
+        <strong>
+          {{ getRiskLabel(latestRisk) }}
+        </strong>
+
+      </div>
+
+      <b>
+        {{ formatProbability(latestProbability) }}
+      </b>
+
+    </div>
+
+  </header>
+
+
+  <!-- ============================================================
+       TOOLBAR
+  ============================================================ -->
+
+  <section class="toolbar">
+
+    <div class="toolbar-status">
+
+      <span class="status-dot"></span>
+
+      <span>
+        {{ total }} predictions
+      </span>
+
+    </div>
+
+
+    <div class="toolbar-actions">
+
+      <button
+        type="button"
+        class="btn-refresh"
+        [disabled]="loading"
+        (click)="refresh()"
+      >
+
+        <i
+          class="bi bi-arrow-clockwise"
+          [class.spinning]="loading"
+        ></i>
+
+        Refresh
+
+      </button>
+
+
+      <button
+        type="button"
+        class="btn-clear"
+        [disabled]="!total"
+        (click)="clear()"
+      >
+
+        <i class="bi bi-trash3"></i>
+
+        Clear
+
+      </button>
+
+    </div>
+
+  </section>
+
+
+  <!-- ============================================================
+       ERROR
+  ============================================================ -->
+
+  <div
+    class="error-box"
+    *ngIf="errorMessage"
+  >
+
+    <i class="bi bi-exclamation-circle"></i>
+
+    <span>
+      {{ errorMessage }}
+    </span>
+
+  </div>
+
+
+  <!-- ============================================================
+       KPI
+  ============================================================ -->
+
+  <section class="kpi-grid">
+
+    <article class="kpi-card">
+
+      <div class="kpi-icon blue-background">
+        <i class="bi bi-activity"></i>
+      </div>
+
+      <div class="kpi-content">
+
+        <span>
+          Total
+        </span>
+
+        <strong>
+          {{ total }}
+        </strong>
+
+        <small>
+          predictions
+        </small>
+
+      </div>
+
+    </article>
+
+
+    <article class="kpi-card high-card">
+
+      <div class="kpi-icon red-background">
+        <i class="bi bi-exclamation-octagon-fill"></i>
+      </div>
+
+      <div class="kpi-content">
+
+        <span>
+          High Risk
+        </span>
+
+        <strong>
+          {{ highCount }}
+        </strong>
+
+        <small>
+          {{ highPercentage | number:'1.0-1' }}%
+        </small>
+
+      </div>
+
+    </article>
+
+
+    <article class="kpi-card medium-card">
+
+      <div class="kpi-icon orange-background">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+      </div>
+
+      <div class="kpi-content">
+
+        <span>
+          Medium Risk
+        </span>
+
+        <strong>
+          {{ mediumCount }}
+        </strong>
+
+        <small>
+          {{ mediumPercentage | number:'1.0-1' }}%
+        </small>
+
+      </div>
+
+    </article>
+
+
+    <article class="kpi-card low-card">
+
+      <div class="kpi-icon green-background">
+        <i class="bi bi-check-circle-fill"></i>
+      </div>
+
+      <div class="kpi-content">
+
+        <span>
+          Low Risk
+        </span>
+
+        <strong>
+          {{ lowCount }}
+        </strong>
+
+        <small>
+          {{ lowPercentage | number:'1.0-1' }}%
+        </small>
+
+      </div>
+
+    </article>
+
+
+    <article class="kpi-card">
+
+      <div class="kpi-icon purple-background">
+        <i class="bi bi-percent"></i>
+      </div>
+
+      <div class="kpi-content">
+
+        <span>
+          Average
+        </span>
+
+        <strong>
+          {{ average | number:'1.0-1' }}%
+        </strong>
+
+        <small>
+          probability
+        </small>
+
+      </div>
+
+    </article>
+
+
+    <article class="kpi-card">
+
+      <div class="kpi-icon cyan-background">
+        <i class="bi bi-arrow-up-right"></i>
+      </div>
+
+      <div class="kpi-content">
+
+        <span>
+          Maximum
+        </span>
+
+        <strong>
+          {{ maximum | number:'1.0-1' }}%
+        </strong>
+
+        <small>
+          probability
+        </small>
+
+      </div>
+
+    </article>
+
+  </section>
+
+
+  <!-- ============================================================
+       EMPTY
+  ============================================================ -->
+
+  <section
+    class="empty-state"
+    *ngIf="!total"
+  >
+
+    <div class="empty-icon">
+      <i class="bi bi-bar-chart-line"></i>
+    </div>
+
+    <h2>
+      No analytics data
+    </h2>
+
+    <p>
+      Create a prediction to see analytics.
+    </p>
+
+    <a routerLink="/dashboard">
+
+      <i class="bi bi-arrow-left"></i>
+
+      Dashboard
+
+    </a>
+
+  </section>
+
+
+  <!-- ============================================================
+       CHARTS
+  ============================================================ -->
+
+  <section
+    class="charts-grid"
+    *ngIf="total"
+  >
+
+
+    <!-- ==========================================================
+         RISK DISTRIBUTION
+    =========================================================== -->
+
+    <article class="chart-card">
+
+      <div class="chart-header">
+
+        <div>
+
+          <span>
+            RISK
+          </span>
+
+          <h2>
+            Risk Distribution
+          </h2>
+
+        </div>
+
+        <div class="chart-icon red-background">
+
+          <i class="bi bi-pie-chart-fill"></i>
+
+        </div>
+
+      </div>
+
+      <div class="chart chart-medium">
+
+        <canvas
+          #riskDistributionChart
+        ></canvas>
+
+      </div>
+
+    </article>
+
+
+    <!-- ==========================================================
+         PROBABILITY DISTRIBUTION
+    =========================================================== -->
+
+    <article class="chart-card">
+
+      <div class="chart-header">
+
+        <div>
+
+          <span>
+            PROBABILITY
+          </span>
+
+          <h2>
+            Distribution
+          </h2>
+
+        </div>
+
+        <div class="chart-icon orange-background">
+
+          <i class="bi bi-bar-chart-fill"></i>
+
+        </div>
+
+      </div>
+
+      <div class="chart chart-medium">
+
+        <canvas
+          #probabilityHistogramChart
+        ></canvas>
+
+      </div>
+
+    </article>
+
+
+    <!-- ==========================================================
+         EVOLUTION
+    =========================================================== -->
+
+    <article class="chart-card full-card">
+
+      <div class="chart-header">
+
+        <div>
+
+          <span>
+            TREND
+          </span>
+
+          <h2>
+            Probability Evolution
+          </h2>
+
+        </div>
+
+        <div class="chart-icon blue-background">
+
+          <i class="bi bi-graph-up-arrow"></i>
+
+        </div>
+
+      </div>
+
+
+      <div class="mini-legend">
+
+        <span>
+
+          <i class="legend-line high"></i>
+
+          HIGH 68%
+
+        </span>
+
+
+        <span>
+
+          <i class="legend-line medium"></i>
+
+          MEDIUM 35%
+
+        </span>
+
+      </div>
+
+
+      <div class="chart chart-large">
+
+        <canvas
+          #probabilityEvolutionChart
+        ></canvas>
+
+      </div>
+
+    </article>
+
+
+    <!-- ==========================================================
+         COMPARISON
+    =========================================================== -->
+
+    <article class="chart-card full-card">
+
+      <div class="chart-header">
+
+        <div>
+
+          <span>
+            COMPARISON
+          </span>
+
+          <h2>
+            Last Predictions
+          </h2>
+
+        </div>
+
+        <div class="chart-icon purple-background">
+
+          <i class="bi bi-bar-chart-line-fill"></i>
+
+        </div>
+
+      </div>
+
+
+      <div class="chart chart-large">
+
+        <canvas
+          #predictionComparisonChart
+        ></canvas>
+
+      </div>
+
+    </article>
+
+
+    <!-- ==========================================================
+         LOCAL INFLUENCE
+    =========================================================== -->
+
+    <article class="chart-card">
+
+      <div class="chart-header">
+
+        <div>
+
+          <span>
+            EXPLAINABILITY
+          </span>
+
+          <h2>
+            Feature Influence
+          </h2>
+
+        </div>
+
+        <div class="chart-icon red-background">
+
+          <i class="bi bi-sliders"></i>
+
+        </div>
+
+      </div>
+
+
+      <!-- DERNIER RISQUE -->
+      <div
+        class="latest-mini"
+        *ngIf="latest"
+      >
+
+        <span
+          [ngClass]="getRiskClass(latestRisk)"
+        >
+          {{ getRiskLabel(latestRisk) }}
+        </span>
+
+        <strong>
+          {{ formatProbability(latestProbability) }}
+        </strong>
+
+        <small>
+          {{ formatDateTime(latestDate) }}
+        </small>
+
+      </div>
+
+
+      <!-- GRAPH -->
+      <div
+        class="chart chart-influence"
+        *ngIf="latestDrivers.length"
+      >
+
+        <canvas
+          #influenceChart
+        ></canvas>
+
+      </div>
+
+
+      <!-- EMPTY -->
+      <div
+        class="chart-empty"
+        *ngIf="!latestDrivers.length"
+      >
+
+        <i class="bi bi-sliders"></i>
+
+        <strong>
+          No influence data
+        </strong>
+
+        <small>
+          Run an explainable prediction.
+        </small>
+
+      </div>
+
+
+      <!-- LEGEND -->
+      <div
+        class="influence-legend"
+        *ngIf="latestDrivers.length"
+      >
+
+        <span>
+
+          <i class="increase-dot"></i>
+
+          Increases risk
+
+        </span>
+
+
+        <span>
+
+          <i class="decrease-dot"></i>
+
+          Decreases risk
+
+        </span>
+
+      </div>
+
+    </article>
+
+
+    <!-- ==========================================================
+         GLOBAL IMPORTANCE
+    =========================================================== -->
+
+    <article class="chart-card">
+
+      <div class="chart-header">
+
+        <div>
+
+          <span>
+            MODEL
+          </span>
+
+          <h2>
+            Feature Importance
+          </h2>
+
+        </div>
+
+        <div class="chart-icon purple-background">
+
+          <i class="bi bi-diagram-3-fill"></i>
+
+        </div>
+
+      </div>
+
+
+      <!-- LOADING -->
+      <div
+        class="chart-loading"
+        *ngIf="loadingImportance"
+      >
+
+        <div class="loader"></div>
+
+        <span>
+          Loading...
+        </span>
+
+      </div>
+
+
+      <!-- GRAPH -->
+      <div
+        class="chart chart-influence"
+        *ngIf="
+          !loadingImportance &&
+          globalImportance
+        "
+      >
+
+        <canvas
+          #globalImportanceChart
+        ></canvas>
+
+      </div>
+
+
+      <!-- EMPTY -->
+      <div
+        class="chart-empty"
+        *ngIf="
+          !loadingImportance &&
+          !globalImportance
+        "
+      >
+
+        <i class="bi bi-database"></i>
+
+        <strong>
+          Data unavailable
+        </strong>
+
+        <small>
+          Feature importance not available.
+        </small>
+
+      </div>
+
+    </article>
+
+  </section>
+
+</div>

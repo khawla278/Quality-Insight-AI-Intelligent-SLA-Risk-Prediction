@@ -1,0 +1,250 @@
+<div class="app-layout">
+
+
+  <!-- =====================================================
+       SIDEBAR
+  ====================================================== -->
+
+  <aside
+    class="sidebar"
+    [class.collapsed]="!menuOpen"
+  >
+
+    <!-- BRAND -->
+
+    <div
+      class="brand"
+      (click)="toggleMenu()"
+    >
+
+      <div class="brand-logo">
+        Q
+      </div>
+
+      <div
+        class="brand-text"
+        *ngIf="menuOpen"
+      >
+
+        <strong>
+          Quality
+        </strong>
+
+        <span>
+          Insight AI
+        </span>
+
+      </div>
+
+    </div>
+
+
+    <!-- NAVIGATION -->
+
+    <nav class="sidebar-nav">
+
+
+
+<a
+  routerLink="/home"
+  routerLinkActive="active"
+  [routerLinkActiveOptions]="{ exact: true }"
+>
+  <i class="bi bi-house"></i>
+
+  <span *ngIf="menuOpen">
+    Home
+  </span>
+</a>
+
+
+      <!-- DASHBOARD -->
+
+      <a
+        routerLink="/dashboard"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{
+          exact: true
+        }"
+      >
+
+        <i class="bi bi-grid"></i>
+
+        <span *ngIf="menuOpen">
+          Dashboard
+        </span>
+
+      </a>
+      <!-- MODEL OVERVIEW -->
+
+<a
+  routerLink="/model"
+  routerLinkActive="active"
+>
+  
+  <i class="bi bi-cpu"></i>
+
+  <span *ngIf="menuOpen">
+    Model Overview
+  </span>
+
+</a>
+
+
+    
+
+      <!-- ANALYTICS -->
+
+      <a
+        routerLink="/analytics"
+        routerLinkActive="active"
+      >
+
+        <i class="bi bi-graph-up"></i>
+
+        <span *ngIf="menuOpen">
+          Analytics
+        </span>
+
+      </a>
+
+
+      <!-- EXPLAINABILITY -->
+
+      <a
+        routerLink="/explainability"
+        routerLinkActive="active"
+      >
+
+        <i class="bi bi-lightbulb"></i>
+
+        <span *ngIf="menuOpen">
+          Explainability
+        </span>
+
+      </a>
+  <!-- HISTORIQUE -->
+
+      <a
+        routerLink="/historique"
+        routerLinkActive="active"
+      >
+
+        <i class="bi bi-clock-history"></i>
+
+        <span *ngIf="menuOpen">
+          Historique
+        </span>
+
+      </a>
+
+
+      <!-- AI ASSISTANT -->
+
+      <a
+        routerLink="/ai-assistant"
+        routerLinkActive="active"
+      >
+
+        <i class="bi bi-robot"></i>
+
+        <span *ngIf="menuOpen">
+          AI Assistant
+        </span>
+
+      </a>
+
+
+      <!-- PIPELINE -->
+
+      <a
+        routerLink="/pipeline"
+        routerLinkActive="active"
+      >
+
+        <i class="bi bi-diagram-3"></i>
+
+        <span *ngIf="menuOpen">
+          Pipeline
+        </span>
+
+      </a>
+
+    </nav>
+
+
+    <!-- SIDEBAR FOOTER -->
+
+    <div
+      class="sidebar-footer"
+      *ngIf="menuOpen"
+    >
+
+      <span class="online-dot"></span>
+
+      <span>
+        AI System
+      </span>
+
+    </div>
+
+  </aside>
+
+
+  <!-- =====================================================
+       MAIN
+  ====================================================== -->
+
+  <main
+    class="main-content"
+    [class.expanded]="!menuOpen"
+  >
+
+
+    <!-- TOPBAR -->
+
+    <header class="topbar">
+
+      <div class="topbar-left">
+
+        <button
+          type="button"
+          class="menu-button"
+          (click)="toggleMenu()"
+        >
+
+          <i class="bi bi-list"></i>
+
+        </button>
+
+        <strong>
+          Quality Insight AI
+        </strong>
+
+      </div>
+
+
+      <div class="system-status">
+
+        <span class="status-dot"></span>
+
+        <span>
+          AI System
+        </span>
+
+      </div>
+
+    </header>
+
+
+    <!-- PAGE -->
+
+    <section class="content">
+
+      <router-outlet></router-outlet>
+
+    </section>
+
+  </main>
+
+</div>

@@ -1,0 +1,1219 @@
+
+<div class="dashboard-page">
+
+  <!-- =====================================================
+       HEADER
+  ====================================================== -->
+
+  <section class="heading">
+
+    <div class="heading-main">
+
+      <div class="eyebrow">
+        AI MONITORING
+      </div>
+
+      <h1>
+        Risk Prediction Dashboard
+      </h1>
+
+      <p>
+        Analyze an incident and estimate the risk of SLA breach
+        using the AI prediction model.
+      </p>
+
+    </div>
+
+    <div class="online-status">
+
+      <span
+        class="status-dot"
+        [class.ok]="health">
+      </span>
+
+      <span>
+        {{
+          health
+            ? 'Backend Online'
+            : 'Backend Offline'
+        }}
+      </span>
+
+    </div>
+
+  </section>
+
+
+  <!-- =====================================================
+       MESSAGES
+  ====================================================== -->
+
+  <div
+    class="message error"
+    *ngIf="errorMessage">
+
+    <i class="bi bi-exclamation-circle"></i>
+
+    <span>
+      {{ errorMessage }}
+    </span>
+
+  </div>
+
+
+  <div
+    class="message success"
+    *ngIf="successMessage">
+
+    <i class="bi bi-check-circle"></i>
+
+    <span>
+      {{ successMessage }}
+    </span>
+
+  </div>
+
+
+  <div
+    class="message alert"
+    *ngIf="alertMessage">
+
+    <i class="bi bi-shield-exclamation"></i>
+
+    <span>
+      {{ alertMessage }}
+    </span>
+
+  </div>
+
+
+  <!-- =====================================================
+       KPI
+  ====================================================== -->
+
+  <section class="kpis">
+
+    <article class="kpi-card">
+
+      <div class="kpi-icon blue">
+        <i class="bi bi-shield-check"></i>
+      </div>
+
+      <div>
+        <span>Current Risk</span>
+
+        <strong
+          [ngClass]="risk?.toLowerCase()">
+
+          {{ risk || '—' }}
+
+        </strong>
+      </div>
+
+    </article>
+
+
+    <article class="kpi-card">
+
+      <div class="kpi-icon purple">
+        <i class="bi bi-percent"></i>
+      </div>
+
+      <div>
+        <span>Probability</span>
+
+        <strong>
+          {{
+            percentage
+              | number:'1.0-1'
+          }}%
+        </strong>
+      </div>
+
+    </article>
+
+
+    <article class="kpi-card">
+
+      <div class="kpi-icon orange">
+        <i class="bi bi-activity"></i>
+      </div>
+
+      <div>
+        <span>Predictions</span>
+
+        <strong>
+          {{ totalPredictions }}
+        </strong>
+      </div>
+
+    </article>
+
+
+    <article class="kpi-card">
+
+      <div class="kpi-icon green">
+        <i class="bi bi-server"></i>
+      </div>
+
+      <div>
+        <span>API</span>
+
+        <strong>
+          {{
+            health
+              ? 'ONLINE'
+              : 'OFFLINE'
+          }}
+        </strong>
+      </div>
+
+    </article>
+
+  </section>
+
+
+  <!-- =====================================================
+       MAIN CONTENT
+  ====================================================== -->
+
+  <section class="content-grid">
+
+
+    <!-- ===================================================
+         FORM PANEL
+    ==================================================== -->
+
+    <article class="panel form-panel">
+
+      <header class="panel-header">
+
+        <div>
+
+          <div class="panel-eyebrow">
+            INCIDENT
+          </div>
+
+          <h2>
+            Incident Information
+          </h2>
+
+          <p>
+            Enter the information required to perform
+            the predictive analysis.
+          </p>
+
+        </div>
+
+      </header>
+
+
+      <!-- =================================================
+           STEP NAVIGATION
+      ================================================== -->
+
+      <div class="stepper">
+
+        <!-- STEP 1 -->
+
+        <button
+          type="button"
+          [class.active]="currentStep === 1"
+          [class.completed]="currentStep > 1"
+          (click)="goToStep(1)">
+
+          <span class="step-number">
+
+            <i
+              *ngIf="currentStep > 1"
+              class="bi bi-check">
+            </i>
+
+            <span
+              *ngIf="currentStep <= 1">
+              1
+            </span>
+
+          </span>
+
+          <span class="step-text">
+
+            <strong>
+              Identification
+            </strong>
+
+            <small>
+              General information
+            </small>
+
+          </span>
+
+        </button>
+
+
+        <div class="step-line"></div>
+
+
+        <!-- STEP 2 -->
+
+        <button
+          type="button"
+          [class.active]="currentStep === 2"
+          [class.completed]="currentStep > 2"
+          (click)="goToStep(2)">
+
+          <span class="step-number">
+
+            <i
+              *ngIf="currentStep > 2"
+              class="bi bi-check">
+            </i>
+
+            <span
+              *ngIf="currentStep <= 2">
+              2
+            </span>
+
+          </span>
+
+          <span class="step-text">
+
+            <strong>
+              Severity
+            </strong>
+
+            <small>
+              Assignment and priority
+            </small>
+
+          </span>
+
+        </button>
+
+
+        <div class="step-line"></div>
+
+
+        <!-- STEP 3 -->
+
+        <button
+          type="button"
+          [class.active]="currentStep === 3">
+
+          <span class="step-number">
+            3
+          </span>
+
+          <span class="step-text">
+
+            <strong>
+              Analysis
+            </strong>
+
+            <small>
+              Date and prediction
+            </small>
+
+          </span>
+
+        </button>
+
+      </div>
+
+
+      <!-- =================================================
+           PROGRESS
+      ================================================== -->
+
+      <div class="progress-wrapper">
+
+        <div class="progress-info">
+
+          <span>
+            Step {{ currentStep }} of {{ totalSteps }}
+          </span>
+
+          <span>
+            {{
+              progressPercentage
+                | number:'1.0-0'
+            }}%
+          </span>
+
+        </div>
+
+        <div class="progress-track">
+
+          <div
+            class="progress-value"
+            [style.width.%]="progressPercentage">
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           FORM
+      ================================================== -->
+
+      <div class="form-content">
+
+
+        <!-- ===============================================
+             STEP 1
+        ================================================ -->
+
+        <div
+          class="step-content"
+          *ngIf="currentStep === 1">
+
+          <div class="step-title">
+
+            <div class="step-title-icon">
+              <i class="bi bi-file-earmark-text"></i>
+            </div>
+
+            <div>
+
+              <h3>
+                Incident Identification
+              </h3>
+
+              <p>
+                Provide a clear title and describe
+                the problem encountered.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div class="form-grid">
+
+
+            <!-- TITLE -->
+
+            <label class="field full">
+
+              <span class="field-label">
+                Incident Title
+                <b>*</b>
+              </span>
+
+              <input
+                type="text"
+                [(ngModel)]="incident.title"
+                placeholder="e.g. Production server unavailable"
+                maxlength="150">
+
+             
+
+            </label>
+
+
+            <!-- CATEGORY -->
+
+            <label class="field">
+
+              <span class="field-label">
+                Category
+                <b>*</b>
+              </span>
+
+              <input
+                type="text"
+                [(ngModel)]="incident.category"
+                placeholder="e.g. Software">
+
+            </label>
+
+
+            <!-- SUBCATEGORY -->
+
+            <label class="field">
+
+              <span class="field-label">
+                Subcategory
+                <b>*</b>
+              </span>
+
+              <input
+                type="text"
+                [(ngModel)]="incident.subcategory"
+                placeholder="e.g. Application">
+
+            </label>
+
+
+            <!-- SYMPTOM -->
+
+            <label class="field full">
+
+              <span class="field-label">
+                Symptom
+                <b>*</b>
+              </span>
+
+              <textarea
+                [(ngModel)]="incident.u_symptom"
+                rows="4"
+                placeholder="Describe the observed symptom...">
+              </textarea>
+
+            </label>
+
+          </div>
+
+        </div>
+
+
+        <!-- ===============================================
+             STEP 2
+        ================================================ -->
+
+        <div
+          class="step-content"
+          *ngIf="currentStep === 2">
+
+          <div class="step-title">
+
+            <div class="step-title-icon">
+              <i class="bi bi-sliders"></i>
+            </div>
+
+            <div>
+
+              <h3>
+                Severity and Assignment
+              </h3>
+
+              <p>
+                Provide the treatment information
+                and incident priority.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div class="form-grid">
+
+
+            <!-- STATE -->
+
+            <label class="field">
+
+              <span class="field-label">
+                State
+                <b>*</b>
+              </span>
+
+              <select
+                [(ngModel)]="incident.incident_state">
+
+                <option value="RAISED">
+                  Raised
+                </option>
+
+                <option value="ASSIGNED">
+                  Assigned
+                </option>
+
+                <option value="UNDER_INVESTIGATION">
+                  Under Investigation
+                </option>
+
+                <option value="CORRECTIVE_ACTION">
+                  Corrective Action
+                </option>
+
+                <option value="CLOSED">
+                  Closed
+                </option>
+
+                <option value="REJECTED">
+                  Rejected
+                </option>
+
+              </select>
+
+            </label>
+
+
+            <!-- ASSIGNMENT GROUP -->
+
+            <label class="field">
+
+              <span class="field-label">
+                Assignment Group
+                <b>*</b>
+              </span>
+
+              <input
+                type="text"
+                [(ngModel)]="incident.assignment_group"
+                placeholder="e.g. Network Team">
+
+            </label>
+
+
+            <!-- ASSIGNED TO -->
+
+            <label class="field full">
+
+              <span class="field-label">
+                Assigned To
+                <b>*</b>
+              </span>
+
+              <input
+                type="text"
+                [(ngModel)]="incident.assigned_to"
+                placeholder="e.g. Resolver 89">
+
+            </label>
+
+
+            <!-- IMPACT -->
+
+            <label class="field">
+
+              <span class="field-label">
+                Impact
+                <b>*</b>
+              </span>
+
+              <select
+                [(ngModel)]="incident.impact">
+
+                <option [ngValue]="1">
+                  1 - High
+                </option>
+
+                <option [ngValue]="2">
+                  2 - Medium
+                </option>
+
+                <option [ngValue]="3">
+                  3 - Low
+                </option>
+
+              </select>
+
+            </label>
+
+
+            <!-- URGENCY -->
+
+            <label class="field">
+
+              <span class="field-label">
+                Urgency
+                <b>*</b>
+              </span>
+
+              <select
+                [(ngModel)]="incident.urgency">
+
+                <option [ngValue]="1">
+                  1 - High
+                </option>
+
+                <option [ngValue]="2">
+                  2 - Medium
+                </option>
+
+                <option [ngValue]="3">
+                  3 - Low
+                </option>
+
+              </select>
+
+            </label>
+
+
+            <!-- PRIORITY -->
+
+            <label class="field full">
+
+              <span class="field-label">
+                Priority
+                <b>*</b>
+              </span>
+
+              <select
+                [(ngModel)]="incident.priority">
+
+                <option [ngValue]="1">
+                  1 - Critical
+                </option>
+
+                <option [ngValue]="2">
+                  2 - High
+                </option>
+
+                <option [ngValue]="3">
+                  3 - Moderate
+                </option>
+
+                <option [ngValue]="4">
+                  4 - Low
+                </option>
+
+                <option [ngValue]="5">
+                  5 - Planning
+                </option>
+
+              </select>
+
+            </label>
+
+          </div>
+
+        </div>
+
+
+        <!-- ===============================================
+             STEP 3
+        ================================================ -->
+
+        <div
+          class="step-content"
+          *ngIf="currentStep === 3">
+
+          <div class="step-title">
+
+            <div class="step-title-icon">
+              <i class="bi bi-calendar-check"></i>
+            </div>
+
+            <div>
+
+              <h3>
+                Date and Analysis
+              </h3>
+
+              <p>
+                Review the information before launching
+                the AI prediction.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div class="form-grid">
+
+
+            <!-- DATE -->
+
+            <label class="field">
+
+              <span class="field-label">
+                Date
+                <b>*</b>
+              </span>
+
+              <input
+                type="date"
+                [(ngModel)]="incident.date">
+
+            </label>
+
+
+            <!-- TIME -->
+
+            <label class="field">
+
+              <span class="field-label">
+                Time
+                <b>*</b>
+              </span>
+
+              <input
+                type="time"
+                [(ngModel)]="incident.time">
+
+            </label>
+
+          </div>
+
+
+          <!-- SUMMARY -->
+
+          <div class="review-card">
+
+            <div class="review-header">
+
+              <i class="bi bi-clipboard-check"></i>
+
+              <div>
+
+                <strong>
+                  Review
+                </strong>
+
+                <span>
+                  Incident summary
+                </span>
+
+              </div>
+
+            </div>
+
+
+            <div class="review-grid">
+
+              <div>
+
+                <span>Title</span>
+
+                <strong>
+                  {{ incident.title || '—' }}
+                </strong>
+
+              </div>
+
+              <div>
+
+                <span>Category</span>
+
+                <strong>
+                  {{ incident.category || '—' }}
+                </strong>
+
+              </div>
+
+              <div>
+
+                <span>State</span>
+
+                <strong>
+                  {{ incident.incident_state || '—' }}
+                </strong>
+
+              </div>
+
+              <div>
+
+                <span>Priority</span>
+
+                <strong>
+
+                  {{ incident.priority }}
+
+                  -
+
+                  {{
+                    incident.priority === 1
+                      ? 'Critical'
+                      : incident.priority === 2
+                        ? 'High'
+                        : incident.priority === 3
+                          ? 'Moderate'
+                          : incident.priority === 4
+                            ? 'Low'
+                            : 'Planning'
+                  }}
+
+                </strong>
+
+              </div>
+
+              <div>
+
+                <span>Impact</span>
+
+                <strong>
+                  {{ incident.impact }}
+                </strong>
+
+              </div>
+
+              <div>
+
+                <span>Urgency</span>
+
+                <strong>
+                  {{ incident.urgency }}
+                </strong>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- AI READY -->
+
+          <div class="prediction-info">
+
+            <i class="bi bi-stars"></i>
+
+            <div>
+
+              <strong>
+                AI Analysis Ready
+              </strong>
+
+              <p>
+                The model will analyze the incident information
+                and estimate the probability of an SLA breach.
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           FORM ACTIONS
+      ================================================== -->
+
+      <div class="form-actions">
+
+
+        <button
+          type="button"
+          class="btn-secondary"
+          (click)="resetForm()">
+
+          <i class="bi bi-arrow-counterclockwise"></i>
+
+          Reset
+
+        </button>
+
+
+        <div class="navigation-actions">
+
+
+          <button
+            *ngIf="currentStep > 1"
+            type="button"
+            class="btn-light"
+            (click)="previousStep()">
+
+            <i class="bi bi-arrow-left"></i>
+
+            Back
+
+          </button>
+
+
+          <button
+            *ngIf="currentStep < totalSteps"
+            type="button"
+            class="btn-primary"
+            (click)="nextStep()">
+
+            Continue
+
+            <i class="bi bi-arrow-right"></i>
+
+          </button>
+
+
+          <button
+            *ngIf="currentStep === totalSteps"
+            type="button"
+            class="btn-predict"
+            [disabled]="loading"
+            (click)="predictRisk()">
+
+            <i
+              *ngIf="loading"
+              class="bi bi-arrow-repeat spin">
+            </i>
+
+            <i
+              *ngIf="!loading"
+              class="bi bi-stars">
+            </i>
+
+            {{
+              loading
+                ? 'Analyzing...'
+                : 'Predict Risk'
+            }}
+
+          </button>
+
+        </div>
+
+      </div>
+
+    </article>
+
+
+    <!-- ===================================================
+         AI RESULT
+    ==================================================== -->
+
+    <article class="panel result-panel">
+
+      <header class="panel-header">
+
+        <div>
+
+          <div class="panel-eyebrow">
+            ARTIFICIAL INTELLIGENCE
+          </div>
+
+          <h2>
+            AI Risk Assessment
+          </h2>
+
+          <p>
+            AI-powered incident risk prediction.
+          </p>
+
+        </div>
+
+        <div class="ai-icon">
+          <i class="bi bi-robot"></i>
+        </div>
+
+      </header>
+
+
+      <!-- =================================================
+           EMPTY RESULT
+      ================================================== -->
+
+      <div
+        class="empty-result"
+        *ngIf="!prediction">
+
+        <div class="empty-icon">
+          <i class="bi bi-shield-check"></i>
+        </div>
+
+        <h3>
+          No Prediction Yet
+        </h3>
+
+        <p>
+          Complete the form and launch the AI prediction.
+        </p>
+
+        <div class="empty-step">
+
+          <span>1</span>
+
+          Identification
+
+        </div>
+
+        <div class="empty-step">
+
+          <span>2</span>
+
+          Severity
+
+        </div>
+
+        <div class="empty-step">
+
+          <span>3</span>
+
+          AI Analysis
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           RESULT
+      ================================================== -->
+
+      <div
+        class="result-body"
+        *ngIf="prediction">
+
+
+        <!-- RISK -->
+
+        <div
+          class="risk-card"
+          [ngClass]="risk?.toLowerCase()">
+
+          <div class="risk-icon">
+
+            <i
+              class="bi"
+              [ngClass]="riskIcon()">
+            </i>
+
+          </div>
+
+          <span>
+            Risk Level
+          </span>
+
+          <strong>
+            {{ risk }}
+          </strong>
+
+        </div>
+
+
+        <!-- PROBABILITY -->
+
+        <div class="probability-card">
+
+          <div class="probability-header">
+
+            <div>
+
+              <span>
+                SLA Breach Probability
+              </span>
+
+              <strong>
+                {{
+                  percentage
+                    | number:'1.0-1'
+                }}%
+              </strong>
+
+            </div>
+
+          </div>
+
+
+          <div class="probability-track">
+
+            <div
+              [style.width.%]="percentage"
+              [ngClass]="risk?.toLowerCase()">
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- RESULT METADATA -->
+
+        <div class="result-meta">
+
+          <div class="meta-card">
+
+            <span>
+              Decision
+            </span>
+
+            <strong>
+              {{ prediction.prediction }}
+            </strong>
+
+          </div>
+
+
+          <div class="meta-card">
+
+            <span>
+              Model Version
+            </span>
+
+            <strong>
+              {{ prediction.model_version }}
+            </strong>
+
+          </div>
+
+
+          <div class="meta-card">
+
+            <span>
+              SLA Target
+            </span>
+
+            <strong>
+              {{ prediction.sla_target_days }} days
+            </strong>
+
+          </div>
+
+
+          <div class="meta-card">
+
+            <span>
+              Confidence
+            </span>
+
+            <strong>
+              {{
+                confidencePercentage
+                  | number:'1.0-1'
+              }}%
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <!-- =================================================
+             RECOMMENDATION
+        ================================================== -->
+
+        <div
+          class="prediction-recommendation"
+          [ngClass]="risk?.toLowerCase()">
+
+          <div class="recommendation-icon">
+
+            <i
+              class="bi"
+              [ngClass]="riskIcon()">
+            </i>
+
+          </div>
+
+          <div>
+
+            <strong>
+              AI Recommendation
+            </strong>
+
+            <p *ngIf="risk === 'HIGH'">
+              This incident has a high probability of
+              breaching the SLA. Immediate attention
+              and prioritization are recommended.
+            </p>
+
+            <p *ngIf="risk === 'MEDIUM'">
+              This incident presents a moderate SLA breach
+              risk. Close monitoring is recommended.
+            </p>
+
+            <p *ngIf="risk === 'LOW'">
+              This incident presents a low SLA breach risk.
+              Standard monitoring can be maintained.
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </article>
+
+  </section>
+
+</div>
+

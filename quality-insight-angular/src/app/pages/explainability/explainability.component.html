@@ -1,0 +1,851 @@
+<div class="explainability-page">
+
+  <!-- =========================================================
+       HEADER
+  ========================================================== -->
+
+  <header class="page-header">
+
+    <div class="header-content">
+
+      <span class="eyebrow">
+        MODEL EXPLAINABILITY
+      </span>
+
+      <h1>
+        Prediction Explanation
+      </h1>
+
+      <p>
+        Understand why the latest prediction was generated
+        and which factors influenced the model decision.
+      </p>
+
+    </div>
+
+    <button
+      type="button"
+      class="refresh-btn"
+      (click)="refresh()"
+      [disabled]="isLoading"
+    >
+
+      <i
+        class="bi"
+        [ngClass]="
+          isLoading
+            ? 'bi-arrow-repeat spin'
+            : 'bi-arrow-clockwise'
+        "
+      ></i>
+
+      {{ isLoading ? 'Loading...' : 'Refresh' }}
+
+    </button>
+
+  </header>
+
+
+  <!-- =========================================================
+       EMPTY STATE
+  ========================================================== -->
+
+  <section
+    class="empty-state"
+    *ngIf="!data && !isLoading"
+  >
+
+    <div class="empty-icon">
+      <i class="bi bi-lightbulb"></i>
+    </div>
+
+    <h2>
+      No recent prediction
+    </h2>
+
+    <p>
+      Run a prediction from the Analysis page to see
+      the latest model explanation here.
+    </p>
+
+    <div
+      class="empty-message"
+      *ngIf="errorMessage"
+    >
+      {{ errorMessage }}
+    </div>
+
+  </section>
+
+
+  <!-- =========================================================
+       LOADING
+  ========================================================== -->
+
+  <section
+    class="loading-state"
+    *ngIf="isLoading"
+  >
+
+    <div class="loading-spinner">
+      <i class="bi bi-arrow-repeat spin"></i>
+    </div>
+
+    <strong>
+      Loading latest prediction
+    </strong>
+
+    <span>
+      Synchronizing the explanation with the latest analysis.
+    </span>
+
+  </section>
+
+
+  <!-- =========================================================
+       MAIN CONTENT
+  ========================================================== -->
+
+  <ng-container *ngIf="data">
+
+    <!-- =======================================================
+         CURRENT PREDICTION
+    ======================================================== -->
+
+    <section class="prediction-hero">
+
+      <div class="hero-left">
+
+        <div
+          class="risk-icon"
+          [ngClass]="
+            getRiskClass(
+              data.prediction.risk_level
+            )
+          "
+        >
+
+          <i
+            class="bi"
+            [ngClass]="
+              getRiskIcon(
+                data.prediction.risk_level
+              )
+            "
+          ></i>
+
+        </div>
+
+        <div class="hero-text">
+
+          <span class="hero-label">
+            LATEST MODEL PREDICTION
+          </span>
+
+          <div class="risk-line">
+
+            <h2
+              [ngClass]="
+                getRiskClass(
+                  data.prediction.risk_level
+                )
+              "
+            >
+              {{ data.prediction.risk_level }}
+            </h2>
+
+            <span class="live-badge">
+              <span class="live-dot"></span>
+              Latest
+            </span>
+
+          </div>
+
+          <p class="decision">
+            {{ data.prediction.prediction }}
+          </p>
+
+          <p class="risk-description">
+            {{
+              getRiskDescription(
+                data.prediction.risk_level
+              )
+            }}
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <!-- =====================================================
+           PROBABILITY
+      ====================================================== -->
+
+      <div class="probability-panel">
+
+        <div class="probability-top">
+
+          <span>
+            Risk probability
+          </span>
+
+          <strong>
+            {{
+              formatProbability(
+                data.prediction.probability
+              )
+              | number:'1.0-1'
+            }}%
+          </strong>
+
+        </div>
+
+        <div class="probability-track">
+
+          <div
+            class="probability-fill"
+            [ngClass]="
+              getRiskClass(
+                data.prediction.risk_level
+              )
+            "
+            [style.width.%]="
+              formatProbability(
+                data.prediction.probability
+              )
+            "
+          ></div>
+
+        </div>
+
+        <div class="probability-labels">
+
+          <span>
+            Low
+          </span>
+
+          <span>
+            Medium
+          </span>
+
+          <span>
+            High
+          </span>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =======================================================
+         SUMMARY CARDS
+    ======================================================== -->
+
+    <section class="summary-grid">
+
+      <!-- Probability -->
+
+      <article class="summary-card">
+
+        <div class="summary-icon purple">
+          <i class="bi bi-speedometer2"></i>
+        </div>
+
+        <div class="summary-content">
+
+          <span>
+            Probability
+          </span>
+
+          <strong>
+            {{
+              formatProbability(
+                data.prediction.probability
+              )
+              | number:'1.0-1'
+            }}%
+          </strong>
+
+        </div>
+
+      </article>
+
+
+      <!-- Features -->
+
+      <article class="summary-card">
+
+        <div class="summary-icon blue">
+          <i class="bi bi-diagram-3-fill"></i>
+        </div>
+
+        <div class="summary-content">
+
+          <span>
+            Influential factors
+          </span>
+
+          <strong>
+            {{
+              data.most_influential_features.length
+            }}
+          </strong>
+
+        </div>
+
+      </article>
+
+
+      <!-- Risk -->
+
+      <article class="summary-card">
+
+        <div
+          class="summary-icon"
+          [ngClass]="
+            getRiskClass(
+              data.prediction.risk_level
+            )
+          "
+        >
+
+          <i
+            class="bi"
+            [ngClass]="
+              getRiskIcon(
+                data.prediction.risk_level
+              )
+            "
+          ></i>
+
+        </div>
+
+        <div class="summary-content">
+
+          <span>
+            Risk level
+          </span>
+
+          <strong
+            [ngClass]="
+              getRiskClass(
+                data.prediction.risk_level
+              )
+            "
+          >
+            {{ data.prediction.risk_level }}
+          </strong>
+
+        </div>
+
+      </article>
+
+    </section>
+
+
+    <!-- =======================================================
+         FEATURE SECTION
+    ======================================================== -->
+
+    <section class="features-section">
+
+      <div class="section-heading">
+
+        <div>
+
+          <span class="section-eyebrow">
+            LOCAL EXPLANATION
+          </span>
+
+          <h2>
+            What influenced the prediction?
+          </h2>
+
+          <p>
+            Select a factor to see a detailed explanation
+            of its contribution to the latest prediction.
+          </p>
+
+        </div>
+
+        <span class="feature-count">
+          {{
+            data.most_influential_features.length
+          }}
+          factors
+        </span>
+
+      </div>
+
+
+      <!-- =====================================================
+           NO FEATURES
+      ====================================================== -->
+
+      <div
+        class="no-features"
+        *ngIf="
+          data.most_influential_features.length === 0
+        "
+      >
+
+        <i class="bi bi-info-circle"></i>
+
+        <div>
+
+          <strong>
+            No feature explanation available
+          </strong>
+
+          <p>
+            The latest prediction was loaded, but the
+            model did not return local feature explanations.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <!-- =====================================================
+           FEATURE CARDS
+      ====================================================== -->
+
+      <div
+        class="drivers-grid"
+        *ngIf="
+          data.most_influential_features.length > 0
+        "
+      >
+
+        <article
+          class="driver-card"
+          *ngFor="
+            let driver of data.most_influential_features;
+            trackBy: trackFeature
+          "
+          (click)="openFeature(driver)"
+          (keydown.enter)="openFeature(driver)"
+          tabindex="0"
+          role="button"
+        >
+
+          <div class="driver-header">
+
+            <div
+              class="feature-icon"
+              [ngClass]="
+                getInfluenceClass(
+                  driver.influence
+                )
+              "
+            >
+
+              <i
+                class="bi"
+                [ngClass]="
+                  getInfluenceIcon(
+                    driver.influence
+                  )
+                "
+              ></i>
+
+            </div>
+
+            <div class="driver-title">
+
+              <strong>
+                {{ format(driver.feature) }}
+              </strong>
+
+              <span
+                [ngClass]="
+                  getInfluenceClass(
+                    driver.influence
+                  )
+                "
+              >
+                {{
+                  getInfluenceLabel(
+                    driver.influence
+                  )
+                }}
+              </span>
+
+            </div>
+
+            <div class="open-icon">
+
+              <i class="bi bi-chevron-right"></i>
+
+            </div>
+
+          </div>
+
+
+          <div class="driver-description">
+
+            <p>
+              {{
+                driver.explanation
+              }}
+            </p>
+
+          </div>
+
+
+          <div class="driver-footer">
+
+            <span>
+              Feature influence
+            </span>
+
+            <strong
+              [ngClass]="
+                getInfluenceClass(
+                  driver.influence
+                )
+              "
+            >
+
+              {{
+                formatInfluence(
+                  driver.influence
+                ) > 0
+                  ? '+'
+                  : ''
+              }}{{
+                formatInfluence(
+                  driver.influence
+                )
+                | number:'1.1-1'
+              }}
+
+            </strong>
+
+          </div>
+
+        </article>
+
+      </div>
+
+    </section>
+
+
+    <!-- =======================================================
+         INTERPRETATION
+    ======================================================== -->
+
+    <section class="interpretation-card">
+
+      <div class="interpretation-icon">
+
+        <i class="bi bi-stars"></i>
+
+      </div>
+
+      <div>
+
+        <span class="section-eyebrow">
+          MODEL INTERPRETATION
+        </span>
+
+        <h3>
+          How to read this explanation
+        </h3>
+
+        <p>
+          Factors marked as
+          <strong class="text-increase">
+            increasing risk
+          </strong>
+          push the prediction toward a higher-risk outcome.
+          Factors marked as
+          <strong class="text-decrease">
+            reducing risk
+          </strong>
+          contribute to a more favorable prediction.
+        </p>
+
+      </div>
+
+    </section>
+
+  </ng-container>
+
+
+  <!-- =========================================================
+       FEATURE DETAIL POPUP
+  ========================================================== -->
+
+  <div
+    class="modal-backdrop"
+    *ngIf="isFeatureModalOpen && selectedFeature"
+    (click)="closeFeature()"
+  >
+
+    <div
+      class="feature-modal"
+      (click)="$event.stopPropagation()"
+    >
+
+      <!-- =====================================================
+           MODAL HEADER
+      ====================================================== -->
+
+      <div class="modal-header">
+
+        <div class="modal-title-area">
+
+          <div
+            class="modal-feature-icon"
+            [ngClass]="
+              getInfluenceClass(
+                selectedFeature.influence
+              )
+            "
+          >
+
+            <i
+              class="bi"
+              [ngClass]="
+                getInfluenceIcon(
+                  selectedFeature.influence
+                )
+              "
+            ></i>
+
+          </div>
+
+          <div>
+
+            <span class="modal-eyebrow">
+              FEATURE EXPLANATION
+            </span>
+
+            <h2>
+              {{
+                format(
+                  selectedFeature.feature
+                )
+              }}
+            </h2>
+
+          </div>
+
+        </div>
+
+        <button
+          type="button"
+          class="close-btn"
+          (click)="closeFeature()"
+          aria-label="Close"
+        >
+
+          <i class="bi bi-x-lg"></i>
+
+        </button>
+
+      </div>
+
+
+      <!-- =====================================================
+           MODAL CONTENT
+      ====================================================== -->
+
+      <div class="modal-body">
+
+        <!-- Influence -->
+
+        <div class="modal-highlight">
+
+          <div>
+
+            <span>
+              Influence on prediction
+            </span>
+
+            <strong
+              [ngClass]="
+                getInfluenceClass(
+                  selectedFeature.influence
+                )
+              "
+            >
+
+              {{
+                formatInfluence(
+                  selectedFeature.influence
+                ) > 0
+                  ? '+'
+                  : ''
+              }}{{
+                formatInfluence(
+                  selectedFeature.influence
+                )
+                | number:'1.1-1'
+              }}
+
+            </strong>
+
+          </div>
+
+          <div
+            class="influence-status"
+            [ngClass]="
+              getInfluenceClass(
+                selectedFeature.influence
+              )
+            "
+          >
+
+            <i
+              class="bi"
+              [ngClass]="
+                getInfluenceIcon(
+                  selectedFeature.influence
+                )
+              "
+            ></i>
+
+            {{
+              getInfluenceLabel(
+                selectedFeature.influence
+              )
+            }}
+
+          </div>
+
+        </div>
+
+
+        <!-- Direction -->
+
+        <div class="detail-block">
+
+          <div class="detail-icon">
+            <i class="bi bi-compass"></i>
+          </div>
+
+          <div>
+
+            <span class="detail-label">
+              Direction
+            </span>
+
+            <strong>
+              {{
+                selectedFeature.direction
+              }}
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <!-- Explanation -->
+
+        <div class="explanation-block">
+
+          <div class="explanation-heading">
+
+            <i class="bi bi-lightbulb-fill"></i>
+
+            <strong>
+              Why does this matter?
+            </strong>
+
+          </div>
+
+          <p>
+            {{
+              selectedFeature.explanation
+            }}
+          </p>
+
+        </div>
+
+
+        <!-- Dynamic interpretation -->
+
+        <div
+          class="dynamic-message"
+          [ngClass]="
+            getInfluenceClass(
+              selectedFeature.influence
+            )
+          "
+        >
+
+          <i
+            class="bi"
+            [ngClass]="
+              getInfluenceIcon(
+                selectedFeature.influence
+              )
+            "
+          ></i>
+
+          <p>
+
+            <ng-container
+              *ngIf="
+                getInfluenceClass(
+                  selectedFeature.influence
+                ) === 'increase';
+                else decreaseMessage
+              "
+            >
+
+              This factor is pushing the current model
+              prediction toward a
+              <strong>higher risk</strong>
+              outcome.
+
+            </ng-container>
+
+            <ng-template #decreaseMessage>
+
+              This factor is pushing the current model
+              prediction toward a
+              <strong>lower risk</strong>
+              outcome.
+
+            </ng-template>
+
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <!-- =====================================================
+           MODAL FOOTER
+      ====================================================== -->
+
+      <div class="modal-footer">
+
+        <span>
+          Based on the latest model prediction
+        </span>
+
+        <button
+          type="button"
+          class="modal-close-btn"
+          (click)="closeFeature()"
+        >
+          Close
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
