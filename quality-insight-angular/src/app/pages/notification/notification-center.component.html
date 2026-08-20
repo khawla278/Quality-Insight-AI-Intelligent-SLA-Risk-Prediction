@@ -1,0 +1,982 @@
+<div class="notification-page">
+
+  <!-- ======================================================
+       HERO
+  ======================================================= -->
+
+  <section class="hero">
+
+    <div class="hero-content">
+
+      <div class="hero-icon">
+        <i class="bi bi-shield-exclamation"></i>
+      </div>
+
+      <div>
+
+        <span class="eyebrow">
+          QUALITY INSIGHT AI
+        </span>
+
+        <h1>
+          Alert Center
+        </h1>
+
+        <p>
+          Automated monitoring of
+          <strong>HIGH-risk</strong>
+          tickets exceeding
+          <strong>{{ SLA_DAYS }}-day SLA</strong>.
+        </p>
+
+      </div>
+
+    </div>
+
+    <div class="live-status">
+
+      <span class="live-dot"></span>
+
+      Monitoring active
+
+    </div>
+
+  </section>
+
+
+  <!-- ======================================================
+       KPI
+  ======================================================= -->
+
+  <section class="stats-grid">
+
+    <article class="stat-card">
+
+      <div class="stat-icon danger">
+        <i class="bi bi-exclamation-octagon"></i>
+      </div>
+
+      <div class="stat-content">
+
+        <span>HIGH RISK</span>
+
+        <strong>
+          {{ highRiskCount }}
+        </strong>
+
+        <small>
+          Active alerts
+        </small>
+
+      </div>
+
+    </article>
+
+
+    <article class="stat-card">
+
+      <div class="stat-icon warning">
+        <i class="bi bi-bell"></i>
+      </div>
+
+      <div class="stat-content">
+
+        <span>PENDING</span>
+
+        <strong>
+          {{ pendingCount }}
+        </strong>
+
+        <small>
+          Require action
+        </small>
+
+      </div>
+
+    </article>
+
+
+    <article class="stat-card">
+
+      <div class="stat-icon success">
+        <i class="bi bi-check-circle"></i>
+      </div>
+
+      <div class="stat-content">
+
+        <span>TREATED</span>
+
+        <strong>
+          {{ treatedCount }}
+        </strong>
+
+        <small>
+          Alerts resolved
+        </small>
+
+      </div>
+
+    </article>
+
+
+    <article class="stat-card">
+
+      <div class="stat-icon archive">
+        <i class="bi bi-archive"></i>
+      </div>
+
+      <div class="stat-content">
+
+        <span>ARCHIVED</span>
+
+        <strong>
+          {{ archivedCount }}
+        </strong>
+
+        <small>
+          Archived alerts
+        </small>
+
+      </div>
+
+    </article>
+
+  </section>
+
+
+  <!-- ======================================================
+       CONTROL PANEL
+  ======================================================= -->
+
+  <section class="control-panel">
+
+    <div class="search-box">
+
+      <i class="bi bi-search"></i>
+
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="onSearchChange()"
+        placeholder="Search by reference, title or message..."
+      />
+
+      <button
+        type="button"
+        *ngIf="searchTerm"
+        (click)="clearSearch()"
+      >
+
+        <i class="bi bi-x"></i>
+
+      </button>
+
+    </div>
+
+
+    <div class="filter-group">
+
+      <button
+        type="button"
+        class="filter-button"
+        [class.active]="
+          statusFilter === 'ALL' &&
+          !showArchive
+        "
+        (click)="showActiveView()"
+      >
+        All
+      </button>
+
+
+      <button
+        type="button"
+        class="filter-button"
+        [class.active]="
+          statusFilter === 'PENDING' &&
+          !showArchive
+        "
+        (click)="showPendingView()"
+      >
+        Pending
+      </button>
+
+
+      <button
+        type="button"
+        class="filter-button"
+        [class.active]="
+          statusFilter === 'TREATED' &&
+          !showArchive
+        "
+        (click)="showTreatedView()"
+      >
+        Treated
+      </button>
+
+
+      <button
+        type="button"
+        class="filter-button archive-filter-button"
+        [class.active]="showArchive"
+        (click)="showArchivedView()"
+      >
+
+        <i class="bi bi-archive"></i>
+
+        Archived
+
+        <span
+          class="archive-count"
+          *ngIf="archivedCount > 0"
+        >
+          {{ archivedCount }}
+        </span>
+
+      </button>
+
+    </div>
+
+
+    <div class="toolbar-actions">
+
+      <button
+        type="button"
+        class="secondary-button"
+        (click)="refreshFromHistory()"
+      >
+
+        <i class="bi bi-arrow-clockwise"></i>
+
+        Refresh
+
+      </button>
+
+
+      <button
+        type="button"
+        class="success-button"
+        *ngIf="
+          pendingCount > 0 &&
+          !showArchive
+        "
+        (click)="markAllAsRead()"
+      >
+
+        <i class="bi bi-check2-all"></i>
+
+        Treat all
+
+      </button>
+
+
+      <button
+        type="button"
+        class="danger-button"
+        *ngIf="
+          pendingCount > 0 &&
+          !showArchive
+        "
+        (click)="clearNotifications()"
+      >
+
+        <i class="bi bi-archive"></i>
+
+        Archive all
+
+      </button>
+
+    </div>
+
+  </section>
+
+
+  <!-- ======================================================
+       ACTIVE VIEW
+       IMPORTANT:
+       This entire block disappears when showArchive=true.
+  ======================================================= -->
+
+  <ng-container *ngIf="!showArchive">
+
+    <!-- RESULT BAR -->
+
+    <div
+      class="result-bar"
+      *ngIf="tableNotifications.length > 0"
+    >
+
+      <div class="result-summary">
+
+        <strong>
+          {{ tableNotifications.length }}
+        </strong>
+
+        alert{{ tableNotifications.length > 1 ? 's' : '' }}
+
+        <span class="separator">
+          •
+        </span>
+
+        Sorted by ticket opening date
+
+        <strong>
+          newest first
+        </strong>
+
+      </div>
+
+
+      <span class="sla-info">
+
+        <i class="bi bi-clock-history"></i>
+
+        SLA:
+        {{ SLA_DAYS }}
+        days
+
+      </span>
+
+    </div>
+
+
+    <!-- ====================================================
+         MAIN TABLE
+    ===================================================== -->
+
+    <section
+      class="table-card"
+      *ngIf="tableNotifications.length > 0"
+    >
+
+      <div class="table-container">
+
+        <table>
+
+          <thead>
+
+            <tr>
+
+              <th>STATUS</th>
+
+              <th>REFERENCE</th>
+
+              <th>INCIDENT</th>
+
+              <th>RISK</th>
+
+              <th>AGE</th>
+
+              <th>PROBABILITY</th>
+
+              <th>OPENED</th>
+
+              <th>ACTIONS</th>
+
+            </tr>
+
+          </thead>
+
+
+          <tbody>
+
+            <tr
+              *ngFor="
+                let notification of paginatedTableNotifications;
+                trackBy: trackByNotification
+              "
+              [class.unread-row]="
+                !notification.read &&
+                !notification.treated
+              "
+            >
+
+              <!-- STATUS -->
+
+              <td>
+
+                <span
+                  class="status-badge"
+                  [ngClass]="statusClass(notification)"
+                >
+
+                  <i
+                    class="bi"
+                    [ngClass]="iconFor(notification)"
+                  ></i>
+
+                  {{ statusLabel(notification) }}
+
+                </span>
+
+              </td>
+
+
+              <!-- REFERENCE -->
+
+              <td>
+
+                <span class="reference">
+
+                  {{ notification.reference }}
+
+                </span>
+
+              </td>
+
+
+              <!-- INCIDENT -->
+
+              <td class="incident-cell">
+
+                <strong>
+
+                  {{ notification.title }}
+
+                </strong>
+
+                <small>
+
+                  {{ notification.message }}
+
+                </small>
+
+              </td>
+
+
+              <!-- RISK -->
+
+              <td>
+
+                <span class="risk-badge">
+
+                  <span class="risk-dot"></span>
+
+                  {{ getTypeLabel(notification.type) }}
+
+                </span>
+
+              </td>
+
+
+              <!-- AGE -->
+
+              <td>
+
+                <span
+                  class="age"
+                  [class.age-critical]="
+                    getTicketAge(notification) > 10
+                  "
+                >
+
+                  {{ getTicketAge(notification) }}
+
+                  <small>
+                    days
+                  </small>
+
+                </span>
+
+              </td>
+
+
+              <!-- PROBABILITY -->
+
+              <td>
+
+                <div class="probability">
+
+                  <div class="probability-bar">
+
+                    <span
+                      [style.width.%]="
+                        notification.probability * 100
+                      "
+                    ></span>
+
+                  </div>
+
+                  <strong>
+
+                    {{
+                      notification.probability * 100
+                      | number:'1.0-1'
+                    }}%
+
+                  </strong>
+
+                </div>
+
+              </td>
+
+
+              <!-- OPENED -->
+
+              <td class="date-cell">
+
+                {{ formatDate(notification.openedAt) }}
+
+              </td>
+
+
+              <!-- ACTIONS -->
+
+              <td>
+
+                <div class="actions">
+
+                  <!-- ==================================
+                       PENDING ONLY
+                       ================================== -->
+
+                  <ng-container
+                    *ngIf="!notification.treated"
+                  >
+
+                    <!-- TREAT -->
+
+                    <button
+                      type="button"
+                      class="action-button treat"
+                      (click)="markAsRead(notification)"
+                      title="Mark as treated"
+                      aria-label="Mark as treated"
+                    >
+
+                      <i class="bi bi-check2"></i>
+
+                    </button>
+
+
+                    <!-- ARCHIVE -->
+
+                    <button
+                      type="button"
+                      class="action-button archive"
+                      (click)="archiveNotification(notification)"
+                      title="Archive"
+                      aria-label="Archive notification"
+                    >
+
+                      <i class="bi bi-archive"></i>
+
+                    </button>
+
+                  </ng-container>
+
+
+                  <!-- ==================================
+                       TREATED
+                       NO ARCHIVE BUTTON
+                       ================================== -->
+
+                  <span
+                    class="treated-indicator"
+                    *ngIf="notification.treated"
+                    title="Already treated"
+                  >
+
+                    <i class="bi bi-check-circle"></i>
+
+                  </span>
+
+                </div>
+
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+
+      <!-- PAGINATION -->
+
+      <div
+        class="pagination"
+        *ngIf="totalPages > 1"
+      >
+
+        <button
+          type="button"
+          (click)="previousPage()"
+          [disabled]="currentPage === 1"
+        >
+
+          <i class="bi bi-chevron-left"></i>
+
+        </button>
+
+
+        <button
+          type="button"
+          *ngFor="let page of pageNumbers"
+          [class.active]="page === currentPage"
+          (click)="goToPage(page)"
+        >
+
+          {{ page }}
+
+        </button>
+
+
+        <button
+          type="button"
+          (click)="nextPage()"
+          [disabled]="currentPage === totalPages"
+        >
+
+          <i class="bi bi-chevron-right"></i>
+
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <!-- EMPTY ACTIVE -->
+
+    <section
+      class="empty-state"
+      *ngIf="tableNotifications.length === 0"
+    >
+
+      <div class="empty-icon">
+
+        <i class="bi bi-shield-check"></i>
+
+      </div>
+
+
+      <h2>
+        No active alerts
+      </h2>
+
+
+      <p>
+
+        No HIGH-risk ticket currently exceeds
+        the {{ SLA_DAYS }}-day SLA.
+
+      </p>
+
+
+      <button
+        type="button"
+        class="secondary-button"
+        (click)="refreshFromHistory()"
+      >
+
+        <i class="bi bi-arrow-clockwise"></i>
+
+        Refresh
+
+      </button>
+
+    </section>
+
+  </ng-container>
+
+
+  <!-- ======================================================
+       ARCHIVE VIEW
+       IMPORTANT:
+       It replaces the main table.
+       It is NOT under the main table.
+  ======================================================= -->
+
+  <ng-container *ngIf="showArchive">
+
+    <section class="archive-card">
+
+      <div class="archive-header">
+
+        <div>
+
+          <span class="eyebrow">
+            PERMANENT ARCHIVE
+          </span>
+
+          <h2>
+            Archived Alerts
+          </h2>
+
+          <p>
+            Previously archived alerts are permanently
+            preserved for historical tracking.
+          </p>
+
+        </div>
+
+
+        <span class="archive-total">
+
+          {{ archivedCount }}
+
+        </span>
+
+      </div>
+
+
+      <!-- EMPTY ARCHIVE -->
+
+      <div
+        class="empty-state archive-empty"
+        *ngIf="archivedNotifications.length === 0"
+      >
+
+        <div class="empty-icon">
+
+          <i class="bi bi-archive"></i>
+
+        </div>
+
+
+        <h2>
+          No archived alerts
+        </h2>
+
+
+        <p>
+          Archived alerts will appear here.
+        </p>
+
+
+        <button
+          type="button"
+          class="secondary-button"
+          (click)="showActiveView()"
+        >
+
+          <i class="bi bi-arrow-left"></i>
+
+          Back to alerts
+
+        </button>
+
+      </div>
+
+
+      <!-- ARCHIVE TABLE -->
+
+      <div
+        class="table-container"
+        *ngIf="archivedNotifications.length > 0"
+      >
+
+        <table>
+
+          <thead>
+
+            <tr>
+
+              <th>STATUS</th>
+
+              <th>REFERENCE</th>
+
+              <th>INCIDENT</th>
+
+              <th>RISK</th>
+
+              <th>AGE</th>
+
+              <th>PROBABILITY</th>
+
+              <th>OPENED</th>
+
+              <th>ARCHIVED</th>
+
+            </tr>
+
+          </thead>
+
+
+          <tbody>
+
+            <tr
+              *ngFor="
+                let notification of paginatedArchive;
+                trackBy: trackByNotification
+              "
+            >
+
+              <td>
+
+                <span
+                  class="status-badge status-archived"
+                >
+
+                  <i class="bi bi-archive"></i>
+
+                  Archived
+
+                </span>
+
+              </td>
+
+
+              <td>
+
+                <span class="reference">
+
+                  {{ notification.reference }}
+
+                </span>
+
+              </td>
+
+
+              <td class="incident-cell">
+
+                <strong>
+
+                  {{ notification.title }}
+
+                </strong>
+
+                <small>
+
+                  {{ notification.message }}
+
+                </small>
+
+              </td>
+
+
+              <td>
+
+                <span class="risk-badge">
+
+                  <span class="risk-dot"></span>
+
+                  {{ getTypeLabel(notification.type) }}
+
+                </span>
+
+              </td>
+
+
+              <td>
+
+                <span class="age">
+
+                  {{ getTicketAge(notification) }}
+
+                  <small>
+                    days
+                  </small>
+
+                </span>
+
+              </td>
+
+
+              <td>
+
+                <div class="probability">
+
+                  <div class="probability-bar">
+
+                    <span
+                      [style.width.%]="
+                        notification.probability * 100
+                      "
+                    ></span>
+
+                  </div>
+
+                  <strong>
+
+                    {{
+                      notification.probability * 100
+                      | number:'1.0-1'
+                    }}%
+
+                  </strong>
+
+                </div>
+
+              </td>
+
+
+              <td class="date-cell">
+
+                {{ formatDate(notification.openedAt) }}
+
+              </td>
+
+
+              <td class="date-cell">
+
+                {{
+                  formatDate(
+                    notification.archivedAt ?? ''
+                  )
+                }}
+
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+
+      <!-- ARCHIVE PAGINATION -->
+
+      <div
+        class="pagination"
+        *ngIf="
+          archivedNotifications.length > 0 &&
+          archiveTotalPages > 1
+        "
+      >
+
+        <button
+          type="button"
+          (click)="previousArchivePage()"
+          [disabled]="archivePage === 1"
+        >
+
+          <i class="bi bi-chevron-left"></i>
+
+        </button>
+
+
+        <button
+          type="button"
+          *ngFor="let page of archivePageNumbers"
+          [class.active]="page === archivePage"
+          (click)="goToArchivePage(page)"
+        >
+
+          {{ page }}
+
+        </button>
+
+
+        <button
+          type="button"
+          (click)="nextArchivePage()"
+          [disabled]="archivePage === archiveTotalPages"
+        >
+
+          <i class="bi bi-chevron-right"></i>
+
+        </button>
+
+      </div>
+
+    </section>
+
+  </ng-container>
+
+</div>

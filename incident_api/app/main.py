@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import math
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Literal
@@ -10,6 +11,9 @@ from typing import Any, Literal
 import joblib
 import numpy as np
 import pandas as pd
+
+from dotenv import load_dotenv
+from groq import Groq
 
 from fastapi import (
     FastAPI,
@@ -32,6 +36,32 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger("sla-breach-api")
+
+
+# ============================================================
+# ENVIRONMENT - AI AGENT
+# ============================================================
+
+load_dotenv(
+    Path(__file__).resolve().parent.parent / ".env"
+)
+
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
+GROQ_MODEL = os.getenv(
+    "GROQ_MODEL",
+    "llama-3.3-70b-versatile"
+)
+
+GROQ_CLIENT: Groq | None = None
+
+if GROQ_API_KEY:
+    try:
+        GROQ_CLIENT = Groq(api_key=GROQ_API_KEY)
+        logger = logging.getLogger("sla-breach-api")
+    except Exception as error:
+        GROQ_CLIENT = None
+
 
 
 # ============================================================
@@ -291,6 +321,86 @@ class GlobalFeatureImportanceResponse(BaseModel):
     features: list[
         GlobalFeatureImportanceItem
     ]
+
+
+# ============================================================
+# AI AGENT REQUEST
+# ============================================================
+
+class AIAgentRequest(BaseModel):
+
+    model_config = ConfigDict(
+        extra="forbid"
+    )
+
+    question: str = Field(
+        ...,
+        min_length=1,
+        max_length=2000
+    )
+
+    risk_level: str = Field(
+        default="UNKNOWN"
+    )
+
+    probability: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=1.0
+    )
+
+    prediction: str = Field(
+        default=""
+    )
+
+    incident: dict[str, Any] = Field(
+        default_factory=dict
+    )
+
+    influential_features: list[
+        dict[str, Any]
+    ] = Field(
+        default_factory=list
+    )
+
+
+# ============================================================
+# AI AGENT RESPONSE
+# ============================================================
+
+class AIAgentResponse(BaseModel):
+
+    success: bool
+
+    question: str
+
+    risk_level: str
+
+    probability: float
+
+    prediction: str
+
+    intent: str
+
+    summary: str
+
+    risk_analysis: str
+
+    immediate_actions: list[str]
+
+    preventive_actions: list[str]
+
+    recommended_actions: list[str]
+
+    monitoring_actions: list[str]
+
+    priority: str
+
+    expected_outcome: str
+
+    llm_model: str
+
+    generated_by: str
 
 
 # ============================================================
@@ -1029,6 +1139,12 @@ def root():
         "roc_curve_image":
             "/model/roc-curve/image",
 
+        "ai_agent":
+            "/ai-agent/solutions",
+
+        "ai_agent_health":
+            "/ai-agent/health",
+
         "docs":
             "/docs",
     }
@@ -1142,6 +1258,9 @@ def health():
 
         "metadata_loaded":
             metadata_loaded,
+
+        "ai_agent_available":
+            GROQ_CLIENT is not None,
 
         "model_version":
             METADATA.get(
@@ -2153,3 +2272,639 @@ def get_roc_curve():
             "ROC curve of the "
             "SLA Breach Risk Classifier.",
     }
+
+# ============================================================
+# AGENT CONTEXT
+# ============================================================
+
+def build_agent_context(
+    request: AIAgentRequest
+):
+
+    probability_percent = round(
+
+        request.probability * 100,
+
+        1
+
+    )
+
+    context = {
+
+        "risk_level":
+            request.risk_level,
+
+        "risk_probability_percent":
+            probability_percent,
+
+        "prediction":
+            request.prediction,
+
+        "incident":
+            request.incident,
+
+        "influential_features":
+            request.influential_features,
+
+        "model_version":
+            METADATA.get(
+                "model_version",
+                "unknown"
+            ),
+
+        "sla_target_days":
+            METADATA.get(
+                "sla_target_days",
+                5
+            ),
+
+        "high_threshold":
+            get_high_threshold(),
+
+        "medium_threshold":
+            get_medium_threshold(),
+    }
+
+    return json.dumps(
+
+        context,
+
+        indent=2,
+
+        ensure_ascii=False,
+
+        default=str
+
+    )
+
+
+# ============================================================
+# AI SYSTEM PROMPT
+# ============================================================
+
+AI_AGENT_SYSTEM_PROMPT = """
+
+You are QUALITY INSIGHT AI.
+
+You are an intelligent enterprise assistant specialized
+in IT service quality, incident management, SLA monitoring,
+risk prediction, operational quality and corrective actions.
+
+You are conversational, dynamic, analytical and helpful.
+
+============================================================
+CONVERSATION
+============================================================
+
+You must understand natural language.
+
+If the user says:
+
+"hello"
+"bonjour"
+"salut"
+"hi"
+
+respond naturally and professionally.
+
+Do NOT say that you only answer SLA questions.
+
+If the user says:
+
+"merci"
+"thank you"
+
+respond naturally.
+
+If the user asks a simple conversational question,
+answer it naturally.
+
+Do not repeat the same response every time.
+
+Adapt your response to:
+
+- the exact question
+- the current risk
+- the incident context
+- the previous context supplied by the application
+
+============================================================
+QUALITY INSIGHT AI SPECIALIZATION
+============================================================
+
+Your main expertise is:
+
+- IT incidents
+- SLA
+- SLA breach
+- service quality
+- incident prioritization
+- risk management
+- impact
+- urgency
+- priority
+- escalation
+- corrective actions
+- preventive actions
+- monitoring
+- operational performance
+- quality improvement
+- AI-based risk prediction
+
+When the question concerns these subjects,
+provide expert and practical answers.
+
+============================================================
+ML PREDICTION
+============================================================
+
+The machine-learning model produces the risk prediction.
+
+You MUST NOT change or contradict it.
+
+The prediction is:
+
+- HIGH
+- MEDIUM
+- LOW
+
+The probability is supplied by the application.
+
+Influential features represent model sensitivity,
+not causal proof.
+
+Never claim that a feature causes the risk.
+
+============================================================
+HIGH RISK
+============================================================
+
+For HIGH risk, consider:
+
+- immediate intervention
+- ownership confirmation
+- escalation
+- SLA monitoring
+- resolution prioritization
+- blocker identification
+- active follow-up
+
+============================================================
+MEDIUM RISK
+============================================================
+
+For MEDIUM risk, consider:
+
+- proactive monitoring
+- blocker detection
+- ownership review
+- preventive actions
+- priority review
+
+============================================================
+LOW RISK
+============================================================
+
+For LOW risk:
+
+- normal monitoring
+- maintain controls
+- avoid unnecessary escalation
+
+============================================================
+IMPORTANT
+============================================================
+
+Do NOT invent incident information.
+
+Use the supplied context when discussing the current incident.
+
+For general conversation, you do not need to force
+the answer into SLA terminology.
+
+Answer the actual question.
+
+Be concise when the question is simple.
+
+Be more detailed when the question requires analysis.
+
+Avoid generic repetitive answers.
+
+============================================================
+OUTPUT
+============================================================
+
+Return ONLY valid JSON.
+
+Use this structure:
+
+{
+    "intent": "greeting | general | sla | risk | incident | recommendation | explanation",
+    "summary": "...",
+    "risk_analysis": "...",
+    "immediate_actions": [],
+    "preventive_actions": [],
+    "recommended_actions": [],
+    "monitoring_actions": [],
+    "priority": "NORMAL",
+    "expected_outcome": "..."
+}
+
+For greetings:
+
+intent = "greeting"
+
+risk_analysis = ""
+
+immediate_actions = []
+
+preventive_actions = []
+
+recommended_actions = []
+
+monitoring_actions = []
+
+priority = "NORMAL"
+
+For general questions:
+
+intent = "general"
+
+For SLA/risk questions:
+
+use the supplied ML context.
+
+"""
+
+
+# ============================================================
+# CALL GROQ
+# ============================================================
+
+def call_ai_agent(
+    question: str,
+    context: str
+):
+
+    if GROQ_CLIENT is None:
+
+        raise HTTPException(
+
+            status_code=503,
+
+            detail={
+
+                "message":
+                    "AI Agent is not configured.",
+
+                "hint":
+                    "Configure GROQ_API_KEY "
+                    "in the backend .env file."
+            }
+        )
+
+    user_prompt = f"""
+
+USER QUESTION:
+
+{question}
+
+CURRENT QUALITY INSIGHT AI CONTEXT:
+
+{context}
+
+Answer the user naturally.
+
+If this is a greeting or general question,
+do not force it into an SLA answer.
+
+If this concerns the current incident,
+use the supplied incident and prediction data.
+
+Return ONLY valid JSON.
+
+"""
+
+    try:
+
+        response = GROQ_CLIENT.chat.completions.create(
+
+            model=GROQ_MODEL,
+
+            temperature=0.7,
+
+            max_tokens=1200,
+
+            messages=[
+
+                {
+                    "role":
+                        "system",
+
+                    "content":
+                        AI_AGENT_SYSTEM_PROMPT
+                },
+
+                {
+                    "role":
+                        "user",
+
+                    "content":
+                        user_prompt
+                }
+            ]
+        )
+
+        content = (
+
+            response
+
+            .choices[0]
+
+            .message
+
+            .content
+
+        )
+
+        if not content:
+
+            raise ValueError(
+                "Groq returned an empty response."
+            )
+
+        content = content.strip()
+
+        if content.startswith(
+            "```json"
+        ):
+
+            content = content[7:]
+
+        if content.startswith(
+            "```"
+        ):
+
+            content = content[3:]
+
+        if content.endswith(
+            "```"
+        ):
+
+            content = content[:-3]
+
+        content = content.strip()
+
+        result = json.loads(
+            content
+        )
+
+        if not isinstance(
+            result,
+            dict
+        ):
+
+            raise ValueError(
+                "Groq response is not a JSON object."
+            )
+
+        return result
+
+    except json.JSONDecodeError as error:
+
+        logger.exception(
+            "Groq JSON parsing error: %s",
+            error
+        )
+
+        raise HTTPException(
+
+            status_code=500,
+
+            detail={
+
+                "message":
+                    "AI Agent returned invalid JSON.",
+
+                "error":
+                    str(error)
+            }
+        )
+
+    except HTTPException:
+
+        raise
+
+    except Exception as error:
+
+        logger.exception(
+            "Groq request failed: %s",
+            error
+        )
+
+        raise HTTPException(
+
+            status_code=500,
+
+            detail={
+
+                "message":
+                    "AI Agent request failed.",
+
+                "error":
+                    str(error)
+            }
+        )
+
+
+# ============================================================
+# NORMALIZE LIST
+# ============================================================
+
+def normalize_agent_list(
+    value
+):
+
+    if not isinstance(
+        value,
+        list
+    ):
+
+        return []
+
+    return [
+
+        str(item).strip()
+
+        for item in value
+
+        if str(item).strip()
+
+    ]
+
+
+# ============================================================
+# AI AGENT SOLUTIONS
+# ============================================================
+
+@app.post(
+    "/ai-agent/solutions",
+    response_model=AIAgentResponse,
+    tags=["AI Agent"]
+)
+def ai_agent_solutions(
+    request: AIAgentRequest
+):
+
+    logger.info(
+        "AI Agent request | question=%s",
+        request.question
+    )
+
+    context = build_agent_context(
+        request
+    )
+
+    result = call_ai_agent(
+
+        request.question,
+
+        context
+
+    )
+
+    return AIAgentResponse(
+
+        success=True,
+
+        question=request.question,
+
+        risk_level=request.risk_level,
+
+        probability=round(
+            request.probability,
+            6
+        ),
+
+        prediction=request.prediction,
+
+        intent=str(
+            result.get(
+                "intent",
+                "general"
+            )
+        ),
+
+        summary=str(
+            result.get(
+                "summary",
+                ""
+            )
+        ),
+
+        risk_analysis=str(
+            result.get(
+                "risk_analysis",
+                ""
+            )
+        ),
+
+        immediate_actions=
+            normalize_agent_list(
+                result.get(
+                    "immediate_actions",
+                    []
+                )
+            ),
+
+        preventive_actions=
+            normalize_agent_list(
+                result.get(
+                    "preventive_actions",
+                    []
+                )
+            ),
+
+        recommended_actions=
+            normalize_agent_list(
+                result.get(
+                    "recommended_actions",
+                    []
+                )
+            ),
+
+        monitoring_actions=
+            normalize_agent_list(
+                result.get(
+                    "monitoring_actions",
+                    []
+                )
+            ),
+
+        priority=str(
+            result.get(
+                "priority",
+                "NORMAL"
+            )
+        ).upper(),
+
+        expected_outcome=str(
+            result.get(
+                "expected_outcome",
+                ""
+            )
+        ),
+
+        llm_model=GROQ_MODEL,
+
+        generated_by=
+            "Quality Insight AI"
+    )
+
+
+# ============================================================
+# AI AGENT HEALTH
+# ============================================================
+
+@app.get(
+    "/ai-agent/health",
+    tags=["AI Agent"]
+)
+def ai_agent_health():
+
+    return {
+
+        "available":
+            GROQ_CLIENT is not None,
+
+        "model":
+            GROQ_MODEL,
+
+        "provider":
+            "Groq",
+
+        "service":
+            "Quality Insight AI",
+
+        "specialization": [
+
+            "IT Incident Management",
+
+            "SLA Management",
+
+            "Risk Prediction",
+
+            "Service Quality",
+
+            "Corrective Actions",
+
+            "Preventive Actions",
+
+            "Operational Monitoring"
+
+        ]
+    }
+
+# ============================================================
+# END
+# ======================================

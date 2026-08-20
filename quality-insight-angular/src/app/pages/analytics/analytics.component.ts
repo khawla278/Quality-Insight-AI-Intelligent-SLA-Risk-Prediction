@@ -7,8 +7,13 @@ import {
   inject
 } from '@angular/core';
 
-import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import {
+  CommonModule
+} from '@angular/common';
+
+import {
+  RouterLink
+} from '@angular/router';
 
 import {
   Chart,
@@ -16,7 +21,9 @@ import {
   registerables
 } from 'chart.js';
 
-import { ApiService } from '../../service/api.service';
+import {
+  ApiService
+} from '../../service/api.service';
 
 import {
   HistoryItem,
@@ -24,187 +31,354 @@ import {
   ImportanceResponse,
   PredictionInfluence,
   RiskLevel,
-  ExplanationResponse
+  ExplanationResponse,
+  PredictionResponse
 } from '../../models/api.models';
 
-Chart.register(...registerables);
+
+Chart.register(
+  ...registerables
+);
+
 
 @Component({
-  selector: 'app-analytics',
-  standalone: true,
+
+  selector:
+    'app-analytics',
+
+  standalone:
+    true,
 
   imports: [
     CommonModule,
     RouterLink
   ],
 
-  templateUrl: './analytics.component.html',
-  styleUrl: './analytics.component.css'
+  templateUrl:
+    './analytics.component.html',
+
+  styleUrl:
+    './analytics.component.css'
+
 })
 export class AnalyticsComponent
   implements OnInit, OnDestroy {
+
 
   // ============================================================
   // API
   // ============================================================
 
-  private readonly api = inject(ApiService);
+  private readonly api =
+    inject(ApiService);
+
 
   // ============================================================
   // DATA
   // ============================================================
 
-  history: HistoryItem[] = [];
+  history:
+    HistoryItem[] =
+    [];
 
-  globalImportance: ImportanceResponse | null = null;
 
-  latestExplanation: ExplanationResponse | null = null;
+  globalImportance:
+    ImportanceResponse | null =
+    null;
 
-  loading = false;
 
-  loadingImportance = false;
+  latestExplanation:
+    ExplanationResponse | null =
+    null;
 
-  errorMessage = '';
+
+  /*
+   * Dernière prédiction réellement envoyée
+   * depuis le Dashboard.
+   */
+
+  latestPrediction:
+    PredictionResponse | null =
+    null;
+
+
+  /*
+   * Données de la dernière prédiction.
+   */
+
+  latestInput:
+    Record<string, unknown> | null =
+    null;
+
+
+  latestTitle =
+    '';
+
+
+  latestSource =
+    '';
+
+
+  loading =
+    false;
+
+
+  loadingImportance =
+    false;
+
+
+  errorMessage =
+    '';
+
 
   // ============================================================
   // AUTO REFRESH
   // ============================================================
 
-  private refreshInterval: ReturnType<typeof setInterval> | null = null;
+  private refreshInterval:
+    ReturnType<typeof setInterval> | null =
+    null;
 
-  private lastStorageSnapshot = '';
+
+  /*
+   * Snapshot complet du stockage.
+   */
+
+  private lastStorageSnapshot =
+    '';
+
 
   // ============================================================
   // CANVAS
   // ============================================================
 
-  private riskCanvas: HTMLCanvasElement | null = null;
+  private riskCanvas:
+    HTMLCanvasElement | null =
+    null;
 
-  private histogramCanvas: HTMLCanvasElement | null = null;
 
-  private evolutionCanvas: HTMLCanvasElement | null = null;
+  private histogramCanvas:
+    HTMLCanvasElement | null =
+    null;
 
-  private comparisonCanvas: HTMLCanvasElement | null = null;
 
-  private influenceCanvas: HTMLCanvasElement | null = null;
+  private evolutionCanvas:
+    HTMLCanvasElement | null =
+    null;
 
-  private importanceCanvas: HTMLCanvasElement | null = null;
+
+  private comparisonCanvas:
+    HTMLCanvasElement | null =
+    null;
+
+
+  private influenceCanvas:
+    HTMLCanvasElement | null =
+    null;
+
+
+  private importanceCanvas:
+    HTMLCanvasElement | null =
+    null;
+
 
   // ============================================================
   // CHARTS
   // ============================================================
 
-  private riskChart: Chart | null = null;
+  private riskChart:
+    Chart | null =
+    null;
 
-  private histogramChart: Chart | null = null;
 
-  private evolutionChart: Chart | null = null;
+  private histogramChart:
+    Chart | null =
+    null;
 
-  private comparisonChart: Chart | null = null;
 
-  private influenceChart: Chart | null = null;
+  private evolutionChart:
+    Chart | null =
+    null;
 
-  private importanceChart: Chart | null = null;
+
+  private comparisonChart:
+    Chart | null =
+    null;
+
+
+  private influenceChart:
+    Chart | null =
+    null;
+
+
+  private importanceChart:
+    Chart | null =
+    null;
+
 
   // ============================================================
   // COLORS
   // ============================================================
 
-  private readonly highColor = '#ef4444';
+  private readonly highColor =
+    '#ef4444';
 
-  private readonly mediumColor = '#f59e0b';
 
-  private readonly lowColor = '#22c55e';
+  private readonly mediumColor =
+    '#f59e0b';
 
-  private readonly primaryColor = '#6366f1';
 
-  private readonly blueColor = '#2563eb';
+  private readonly lowColor =
+    '#22c55e';
+
+
+  private readonly primaryColor =
+    '#6366f1';
+
+
+  private readonly blueColor =
+    '#2563eb';
+
 
   // ============================================================
   // VIEW CHILD
   // ============================================================
 
-  @ViewChild('riskDistributionChart')
+  @ViewChild(
+    'riskDistributionChart'
+  )
+
   set riskDistributionCanvas(
-    reference: ElementRef<HTMLCanvasElement> | undefined
+    reference:
+      ElementRef<HTMLCanvasElement>
+      | undefined
   ) {
 
     this.riskCanvas =
-      reference?.nativeElement ?? null;
+      reference?.nativeElement
+      ?? null;
+
 
     this.scheduleChartCreation(
-      () => this.createRiskChart()
+      () =>
+        this.createRiskChart()
     );
+
   }
 
 
-  @ViewChild('probabilityHistogramChart')
+  @ViewChild(
+    'probabilityHistogramChart'
+  )
+
   set probabilityHistogramCanvas(
-    reference: ElementRef<HTMLCanvasElement> | undefined
+    reference:
+      ElementRef<HTMLCanvasElement>
+      | undefined
   ) {
 
     this.histogramCanvas =
-      reference?.nativeElement ?? null;
+      reference?.nativeElement
+      ?? null;
+
 
     this.scheduleChartCreation(
-      () => this.createHistogramChart()
+      () =>
+        this.createHistogramChart()
     );
+
   }
 
 
-  @ViewChild('probabilityEvolutionChart')
+  @ViewChild(
+    'probabilityEvolutionChart'
+  )
+
   set probabilityEvolutionCanvas(
-    reference: ElementRef<HTMLCanvasElement> | undefined
+    reference:
+      ElementRef<HTMLCanvasElement>
+      | undefined
   ) {
 
     this.evolutionCanvas =
-      reference?.nativeElement ?? null;
+      reference?.nativeElement
+      ?? null;
+
 
     this.scheduleChartCreation(
-      () => this.createEvolutionChart()
+      () =>
+        this.createEvolutionChart()
     );
+
   }
 
 
-  @ViewChild('predictionComparisonChart')
+  @ViewChild(
+    'predictionComparisonChart'
+  )
+
   set predictionComparisonCanvas(
-    reference: ElementRef<HTMLCanvasElement> | undefined
+    reference:
+      ElementRef<HTMLCanvasElement>
+      | undefined
   ) {
 
     this.comparisonCanvas =
-      reference?.nativeElement ?? null;
+      reference?.nativeElement
+      ?? null;
+
 
     this.scheduleChartCreation(
-      () => this.createComparisonChart()
+      () =>
+        this.createComparisonChart()
     );
+
   }
 
 
-  @ViewChild('influenceChart')
+  @ViewChild(
+    'influenceChart'
+  )
+
   set localInfluenceCanvas(
-    reference: ElementRef<HTMLCanvasElement> | undefined
+    reference:
+      ElementRef<HTMLCanvasElement>
+      | undefined
   ) {
 
     this.influenceCanvas =
-      reference?.nativeElement ?? null;
+      reference?.nativeElement
+      ?? null;
+
 
     this.scheduleChartCreation(
-      () => this.createInfluenceChart()
+      () =>
+        this.createInfluenceChart()
     );
+
   }
 
 
-  @ViewChild('globalImportanceChart')
+  @ViewChild(
+    'globalImportanceChart'
+  )
+
   set featureImportanceCanvas(
-    reference: ElementRef<HTMLCanvasElement> | undefined
+    reference:
+      ElementRef<HTMLCanvasElement>
+      | undefined
   ) {
 
     this.importanceCanvas =
-      reference?.nativeElement ?? null;
+      reference?.nativeElement
+      ?? null;
+
 
     this.scheduleChartCreation(
-      () => this.createImportanceChart()
+      () =>
+        this.createImportanceChart()
     );
+
   }
 
 
@@ -216,46 +390,69 @@ export class AnalyticsComponent
 
     this.loadAllData();
 
+
+    /*
+     * IMPORTANT :
+     * Prendre immédiatement le snapshot actuel.
+     */
+
+    this.lastStorageSnapshot =
+      this.getStorageSnapshot();
+
+
     this.refreshInterval =
       setInterval(
-        () => this.checkForNewPrediction(),
+        () =>
+          this.checkForNewPrediction(),
         1000
       );
+
 
     window.addEventListener(
       'focus',
       this.handleWindowFocus
     );
 
+
     document.addEventListener(
       'visibilitychange',
       this.handleVisibilityChange
     );
+
   }
 
 
   ngOnDestroy(): void {
 
-    if (this.refreshInterval !== null) {
+    if (
+      this.refreshInterval !== null
+    ) {
 
       clearInterval(
         this.refreshInterval
       );
 
-      this.refreshInterval = null;
+
+      this.refreshInterval =
+        null;
+
     }
+
 
     window.removeEventListener(
       'focus',
       this.handleWindowFocus
     );
 
+
     document.removeEventListener(
       'visibilitychange',
       this.handleVisibilityChange
     );
 
+
     this.destroyAllCharts();
+
   }
 
 
@@ -263,100 +460,173 @@ export class AnalyticsComponent
   // WINDOW EVENTS
   // ============================================================
 
-  private handleWindowFocus = (): void => {
-
-    this.loadAllData();
-  };
-
-
-  private handleVisibilityChange = (): void => {
-
-    if (
-      document.visibilityState === 'visible'
-    ) {
+  private handleWindowFocus =
+    (): void => {
 
       this.loadAllData();
-    }
-  };
+
+      this.lastStorageSnapshot =
+        this.getStorageSnapshot();
+
+    };
+
+
+  private handleVisibilityChange =
+    (): void => {
+
+      if (
+        document.visibilityState ===
+        'visible'
+      ) {
+
+        this.loadAllData();
+
+        this.lastStorageSnapshot =
+          this.getStorageSnapshot();
+
+      }
+
+    };
 
 
   // ============================================================
   // LOAD ALL DATA
   // ============================================================
 
-  private loadAllData(): void {
+  private loadAllData():
+    void {
 
     this.loadHistory();
 
+    this.loadLatestPrediction();
+
     this.loadLatestExplanation();
+
 
     if (
       !this.globalImportance
     ) {
 
       this.loadGlobalImportance();
+
     }
+
   }
 
 
   // ============================================================
-  // KPI
+  // TOTAL
   // ============================================================
 
-  get total(): number {
+  get total():
+    number {
 
-    return this.history.length;
+    return (
+      this.history.length
+    );
+
   }
 
 
-  get highCount(): number {
+  // ============================================================
+  // HIGH COUNT
+  // ============================================================
 
-    return this.count('HIGH');
+  get highCount():
+    number {
+
+    return this.count(
+      'HIGH'
+    );
+
   }
 
 
-  get mediumCount(): number {
+  // ============================================================
+  // MEDIUM COUNT
+  // ============================================================
 
-    return this.count('MEDIUM');
+  get mediumCount():
+    number {
+
+    return this.count(
+      'MEDIUM'
+    );
+
   }
 
 
-  get lowCount(): number {
+  // ============================================================
+  // LOW COUNT
+  // ============================================================
 
-    return this.count('LOW');
+  get lowCount():
+    number {
+
+    return this.count(
+      'LOW'
+    );
+
   }
 
 
-  get highPercentage(): number {
+  // ============================================================
+  // HIGH %
+  // ============================================================
+
+  get highPercentage():
+    number {
 
     return this.calculatePercentage(
       this.highCount
     );
+
   }
 
 
-  get mediumPercentage(): number {
+  // ============================================================
+  // MEDIUM %
+  // ============================================================
+
+  get mediumPercentage():
+    number {
 
     return this.calculatePercentage(
       this.mediumCount
     );
+
   }
 
 
-  get lowPercentage(): number {
+  // ============================================================
+  // LOW %
+  // ============================================================
+
+  get lowPercentage():
+    number {
 
     return this.calculatePercentage(
       this.lowCount
     );
+
   }
 
 
-  get average(): number {
+  // ============================================================
+  // AVERAGE
+  // ============================================================
 
-    if (!this.total) {
+  get average():
+    number {
+
+    if (
+      !this.total
+    ) {
 
       return 0;
+
     }
+
 
     const totalProbability =
       this.history.reduce(
@@ -366,30 +636,49 @@ export class AnalyticsComponent
         ) => {
 
           return (
+
             sum +
+
             this.normalizeProbability(
               item.probability
             )
+
           );
+
         },
         0
       );
 
+
     return (
+
       totalProbability /
+
       this.total
+
     ) * 100;
+
   }
 
 
-  get maximum(): number {
+  // ============================================================
+  // MAXIMUM
+  // ============================================================
 
-    if (!this.total) {
+  get maximum():
+    number {
+
+    if (
+      !this.total
+    ) {
 
       return 0;
+
     }
 
+
     return (
+
       Math.max(
         ...this.history.map(
           item =>
@@ -397,19 +686,33 @@ export class AnalyticsComponent
               item.probability
             )
         )
-      ) * 100
+      )
+
+      * 100
+
     );
+
   }
 
 
-  get minimum(): number {
+  // ============================================================
+  // MINIMUM
+  // ============================================================
 
-    if (!this.total) {
+  get minimum():
+    number {
+
+    if (
+      !this.total
+    ) {
 
       return 0;
+
     }
 
+
     return (
+
       Math.min(
         ...this.history.map(
           item =>
@@ -417,139 +720,296 @@ export class AnalyticsComponent
               item.probability
             )
         )
-      ) * 100
+      )
+
+      * 100
+
     );
+
   }
 
 
   // ============================================================
-  // DERNIERE PREDICTION
+  // LAST HISTORY ITEM
   // ============================================================
 
-  get latest(): HistoryItem | null {
+  get latest():
+    HistoryItem | null {
 
-    if (!this.history.length) {
+    if (
+      !this.history.length
+    ) {
 
       return null;
+
     }
 
-    /*
-     * IMPORTANT :
-     *
-     * history est déjà trié par date dans loadHistory().
-     * Le dernier élément correspond donc toujours
-     * à la dernière prédiction enregistrée.
-     */
 
     return this.history[
       this.history.length - 1
     ];
+
   }
 
 
   // ============================================================
-  // DERNIERS DRIVERS
+  // LAST DRIVERS
   // ============================================================
 
-  get latestDrivers(): PredictionInfluence[] {
+  get latestDrivers():
+    PredictionInfluence[] {
 
     /*
-     * 1. PRIORITE AUX DRIVERS ENREGISTRES
-     *    DANS LA DERNIERE PREDICTION.
+     * PRIORITE 1 :
+     *
+     * Drivers de l'explication réellement fournie
+     * par le Dashboard.
      */
 
     if (
-      this.latest?.drivers &&
-      Array.isArray(
-        this.latest.drivers
-      ) &&
-      this.latest.drivers.length
+
+      this.latestExplanation
+        ?.most_influential_features
+        ?.length
+
     ) {
 
-      return this.latest.drivers;
+      return (
+
+        this.latestExplanation
+          .most_influential_features
+
+      );
+
     }
 
 
     /*
-     * 2. FALLBACK SUR latestPredictionExplanation
+     * PRIORITE 2 :
      *
-     * Utilisé seulement si la dernière entrée
-     * de l'historique ne contient pas les drivers.
+     * Drivers enregistrés dans l'historique.
      */
 
     if (
-      this.latestExplanation
-        ?.most_influential_features
-        ?.length
+
+      this.latest?.drivers &&
+
+      Array.isArray(
+        this.latest.drivers
+      ) &&
+
+      this.latest.drivers.length
+
     ) {
 
-      return (
-        this.latestExplanation
-          .most_influential_features
-      );
+      return this.latest.drivers;
+
     }
 
 
     return [];
+
   }
 
 
   // ============================================================
-  // DERNIER RISQUE
+  // LAST RISK
   // ============================================================
 
-  get latestRisk(): RiskLevel {
+  get latestRisk():
+    RiskLevel {
 
     /*
-     * IMPORTANT :
+     * PRIORITE 1 :
      *
-     * On utilise TOUJOURS le risque de la dernière
-     * prédiction enregistrée dans l'historique.
-     *
-     * latestPredictionExplanation ne doit pas
-     * remplacer cette valeur.
+     * Résultat exact de la dernière prédiction
+     * du Dashboard.
      */
 
-    if (this.latest) {
+    if (
+      this.latestPrediction
+    ) {
+
+      return this.normalizeRisk(
+        this.latestPrediction.risk_level
+      );
+
+    }
+
+
+    /*
+     * PRIORITE 2 :
+     * Explication.
+     */
+
+    if (
+      this.latestExplanation?.prediction
+    ) {
+
+      return this.normalizeRisk(
+        this.latestExplanation
+          .prediction
+          .risk_level
+      );
+
+    }
+
+
+    /*
+     * PRIORITE 3 :
+     * Historique.
+     */
+
+    if (
+      this.latest
+    ) {
 
       return this.normalizeRisk(
         this.latest.risk
       );
+
     }
 
+
     return 'LOW';
+
   }
 
 
   // ============================================================
-  // DERNIERE PROBABILITE
+  // LAST PROBABILITY
   // ============================================================
 
-  get latestProbability(): number {
+  get latestProbability():
+    number {
 
     /*
-     * Même logique :
-     * la probabilité vient de la dernière prédiction.
+     * PRIORITE 1 :
+     * latestPrediction
      */
 
-    if (this.latest) {
+    if (
+      this.latestPrediction
+    ) {
+
+      return this.normalizeProbability(
+        this.latestPrediction.probability
+      );
+
+    }
+
+
+    /*
+     * PRIORITE 2 :
+     * explanation
+     */
+
+    if (
+      this.latestExplanation?.prediction
+    ) {
+
+      return this.normalizeProbability(
+        this.latestExplanation
+          .prediction
+          .probability
+      );
+
+    }
+
+
+    /*
+     * PRIORITE 3 :
+     * historique
+     */
+
+    if (
+      this.latest
+    ) {
 
       return this.normalizeProbability(
         this.latest.probability
       );
+
     }
 
+
     return 0;
+
   }
 
 
   // ============================================================
-  // DERNIERE DATE
+  // LAST DATE
   // ============================================================
 
-  get latestDate(): string {
+  get latestDate():
+    string {
+
+    /*
+     * La date de latestPrediction est prioritaire.
+     */
+
+    try {
+
+      const stored =
+        localStorage.getItem(
+          'latestPrediction'
+        );
+
+
+      if (
+        stored
+      ) {
+
+        const parsed:
+          unknown =
+          JSON.parse(
+            stored
+          );
+
+
+        if (
+          parsed &&
+          typeof parsed ===
+            'object'
+        ) {
+
+          const data =
+            parsed as {
+              createdAt?:
+                string;
+            };
+
+
+          if (
+            data.createdAt
+          ) {
+
+            return String(
+              data.createdAt
+            );
+
+          }
+
+        }
+
+      }
+
+    }
+    catch (
+      error: unknown
+    ) {
+
+      console.error(
+        'Latest prediction date error:',
+        error
+      );
+
+    }
+
 
     return this.latest?.date ?? '';
+
   }
 
 
@@ -559,7 +1019,8 @@ export class AnalyticsComponent
 
   count(
     risk: RiskLevel
-  ): number {
+  ):
+    number {
 
     return this.history.filter(
       item =>
@@ -567,22 +1028,36 @@ export class AnalyticsComponent
           item.risk
         ) === risk
     ).length;
+
   }
 
 
+  // ============================================================
+  // PERCENTAGE
+  // ============================================================
+
   private calculatePercentage(
     value: number
-  ): number {
+  ):
+    number {
 
-    if (!this.total) {
+    if (
+      !this.total
+    ) {
 
       return 0;
+
     }
 
+
     return (
+
       value /
+
       this.total
+
     ) * 100;
+
   }
 
 
@@ -590,11 +1065,16 @@ export class AnalyticsComponent
   // LOAD HISTORY
   // ============================================================
 
-  loadHistory(): void {
+  loadHistory():
+    void {
 
-    this.loading = true;
+    this.loading =
+      true;
 
-    this.errorMessage = '';
+
+    this.errorMessage =
+      '';
+
 
     try {
 
@@ -604,17 +1084,22 @@ export class AnalyticsComponent
         );
 
 
-      if (!storedValue) {
+      if (
+        !storedValue
+      ) {
 
-        this.history = [];
+        this.history =
+          [];
 
         this.scheduleAllCharts();
 
         return;
+
       }
 
 
-      const parsedValue: unknown =
+      const parsedValue:
+        unknown =
         JSON.parse(
           storedValue
         );
@@ -626,15 +1111,18 @@ export class AnalyticsComponent
         )
       ) {
 
-        this.history = [];
+        this.history =
+          [];
 
         this.scheduleAllCharts();
 
         return;
+
       }
 
 
       this.history =
+
         parsedValue
 
           .filter(
@@ -643,24 +1131,39 @@ export class AnalyticsComponent
             ): item is HistoryItem => {
 
               if (
+
                 item === null ||
-                typeof item !== 'object'
+
+                typeof item !==
+                'object'
+
               ) {
 
                 return false;
+
               }
+
 
               const candidate =
                 item as Partial<HistoryItem>;
 
-              return Boolean(
-                candidate.risk
-              ) &&
-              Number.isFinite(
-                Number(
-                  candidate.probability
+
+              return (
+
+                Boolean(
+                  candidate.risk
                 )
+
+                &&
+
+                Number.isFinite(
+                  Number(
+                    candidate.probability
+                  )
+                )
+
               );
+
             }
           )
 
@@ -697,16 +1200,12 @@ export class AnalyticsComponent
                   )
                     ? item.drivers
                     : []
+
               };
+
             }
           )
 
-
-          /*
-           * TRI PAR DATE
-           *
-           * Ancienne -> récente
-           */
 
           .sort(
             (
@@ -719,34 +1218,29 @@ export class AnalyticsComponent
                   first.date
                 ).getTime();
 
+
               const secondTime =
                 new Date(
                   second.date
                 ).getTime();
 
+
               return (
+
                 firstTime -
+
                 secondTime
+
               );
+
             }
           )
 
 
-          /*
-           * Garder les 100 dernières prédictions.
-           */
+          .slice(
+            -100
+          );
 
-          .slice(-100);
-
-
-      /*
-       * Snapshot uniquement de l'historique.
-       *
-       * On ne mélange pas ici latestExplanation.
-       */
-
-      this.lastStorageSnapshot =
-        storedValue;
 
     }
 
@@ -755,22 +1249,206 @@ export class AnalyticsComponent
     ) {
 
       console.error(
-        'Erreur Analytics:',
+        'Analytics history error:',
         error
       );
 
-      this.history = [];
+
+      this.history =
+        [];
+
 
       this.errorMessage =
         'Impossible de lire l’historique.';
+
     }
 
     finally {
 
-      this.loading = false;
+      this.loading =
+        false;
+
 
       this.scheduleAllCharts();
+
     }
+
+  }
+
+
+  // ============================================================
+  // LOAD LATEST PREDICTION
+  // ============================================================
+
+  private loadLatestPrediction():
+    void {
+
+    try {
+
+      const stored =
+        localStorage.getItem(
+          'latestPrediction'
+        );
+
+
+      /*
+       * Aucune prédiction fournie par le Dashboard.
+       */
+
+      if (
+        !stored
+      ) {
+
+        this.latestPrediction =
+          null;
+
+        this.latestInput =
+          null;
+
+        this.latestTitle =
+          '';
+
+        this.latestSource =
+          '';
+
+        return;
+
+      }
+
+
+      const parsed:
+        unknown =
+        JSON.parse(
+          stored
+        );
+
+
+      if (
+
+        !parsed ||
+
+        typeof parsed !==
+        'object'
+
+      ) {
+
+        this.latestPrediction =
+          null;
+
+        this.latestInput =
+          null;
+
+        this.latestTitle =
+          '';
+
+        this.latestSource =
+          '';
+
+        return;
+
+      }
+
+
+      /*
+       * Structure attendue :
+       *
+       * {
+       *   prediction: {...},
+       *   input: {...},
+       *   title: "...",
+       *   source: "...",
+       *   createdAt: "..."
+       * }
+       */
+
+      const data =
+        parsed as {
+
+          prediction?:
+            PredictionResponse;
+
+          input?:
+            Record<string, unknown>;
+
+          title?:
+            string;
+
+          source?:
+            string;
+
+          createdAt?:
+            string;
+
+        };
+
+
+      /*
+       * IMPORTANT :
+       * on récupère directement le résultat
+       * fourni par le Dashboard.
+       */
+
+      if (
+        data.prediction
+      ) {
+
+        this.latestPrediction =
+          data.prediction;
+
+      }
+
+      else {
+
+        this.latestPrediction =
+          null;
+
+      }
+
+
+      this.latestInput =
+        data.input
+        ?? null;
+
+
+      this.latestTitle =
+        String(
+          data.title
+          ?? ''
+        );
+
+
+      this.latestSource =
+        String(
+          data.source
+          ?? ''
+        );
+
+    }
+
+    catch (
+      error: unknown
+    ) {
+
+      console.error(
+        'Latest prediction loading error:',
+        error
+      );
+
+
+      this.latestPrediction =
+        null;
+
+      this.latestInput =
+        null;
+
+      this.latestTitle =
+        '';
+
+      this.latestSource =
+        '';
+
+    }
+
   }
 
 
@@ -778,7 +1456,8 @@ export class AnalyticsComponent
   // LOAD LATEST EXPLANATION
   // ============================================================
 
-  private loadLatestExplanation(): void {
+  private loadLatestExplanation():
+    void {
 
     try {
 
@@ -788,28 +1467,44 @@ export class AnalyticsComponent
         );
 
 
-      if (!stored) {
+      if (
+        !stored
+      ) {
 
-        this.latestExplanation = null;
+        this.latestExplanation =
+          null;
+
+        this.scheduleChartCreation(
+          () =>
+            this.createInfluenceChart()
+        );
 
         return;
+
       }
 
 
-      const parsed: unknown =
+      const parsed:
+        unknown =
         JSON.parse(
           stored
         );
 
 
       if (
+
         !parsed ||
-        typeof parsed !== 'object'
+
+        typeof parsed !==
+        'object'
+
       ) {
 
-        this.latestExplanation = null;
+        this.latestExplanation =
+          null;
 
         return;
+
       }
 
 
@@ -825,10 +1520,12 @@ export class AnalyticsComponent
           explanation;
 
       }
+
       else {
 
         this.latestExplanation =
           null;
+
       }
 
     }
@@ -838,120 +1535,111 @@ export class AnalyticsComponent
     ) {
 
       console.error(
-        'Erreur latestPredictionExplanation:',
+        'Latest explanation loading error:',
         error
       );
 
-      this.latestExplanation = null;
+
+      this.latestExplanation =
+        null;
+
     }
 
-
-    /*
-     * IMPORTANT :
-     *
-     * On reconstruit Feature Influence après
-     * avoir chargé l'explication.
-     */
 
     this.scheduleChartCreation(
       () =>
         this.createInfluenceChart()
     );
+
   }
 
 
   // ============================================================
-  // DETECT NEW PREDICTION
+  // STORAGE SNAPSHOT
   // ============================================================
 
-  private checkForNewPrediction(): void {
+  private getStorageSnapshot():
+    string {
 
-    const currentHistory =
-      localStorage.getItem(
-        'predictionHistory'
-      ) ?? '';
+    return (
+
+      (
+        localStorage.getItem(
+          'predictionHistory'
+        )
+        ?? ''
+      )
+
+      +
+
+      '||'
+
+      +
+
+      (
+        localStorage.getItem(
+          'latestPredictionExplanation'
+        )
+        ?? ''
+      )
+
+      +
+
+      '||'
+
+      +
+
+      (
+        localStorage.getItem(
+          'latestPrediction'
+        )
+        ?? ''
+      )
+
+    );
+
+  }
 
 
-    /*
-     * On surveille également l'explication
-     * car elle contient les drivers de la
-     * dernière prédiction.
-     */
+  // ============================================================
+  // CHECK NEW PREDICTION
+  // ============================================================
 
-    const currentExplanation =
-      localStorage.getItem(
-        'latestPredictionExplanation'
-      ) ?? '';
-
+  private checkForNewPrediction():
+    void {
 
     const currentSnapshot =
-      currentHistory +
-      '||' +
-      currentExplanation;
+      this.getStorageSnapshot();
 
-
-    const previousSnapshot =
-      this.lastStorageSnapshot;
-
-
-    /*
-     * Première initialisation.
-     */
-
-    if (!previousSnapshot) {
-
-      this.lastStorageSnapshot =
-        currentSnapshot;
-
-      return;
-    }
-
-
-    /*
-     * Nouvelle prédiction détectée.
-     */
 
     if (
-      currentSnapshot !==
-      previousSnapshot
+      currentSnapshot ===
+      this.lastStorageSnapshot
     ) {
 
-      this.lastStorageSnapshot =
-        currentHistory;
+      return;
 
-
-      /*
-       * Recharger les deux sources.
-       */
-
-      this.loadHistory();
-
-      this.loadLatestExplanation();
-
-
-      /*
-       * IMPORTANT :
-       *
-       * Reconstruction immédiate des graphiques.
-       */
-
-      this.scheduleChartCreation(
-        () => {
-
-          this.createRiskChart();
-
-          this.createHistogramChart();
-
-          this.createEvolutionChart();
-
-          this.createComparisonChart();
-
-          this.createInfluenceChart();
-
-          this.createImportanceChart();
-        }
-      );
     }
+
+
+    /*
+     * Une nouvelle prédiction du Dashboard
+     * a été détectée.
+     */
+
+    this.lastStorageSnapshot =
+      currentSnapshot;
+
+
+    this.loadHistory();
+
+    this.loadLatestPrediction();
+
+    this.loadLatestExplanation();
+
+
+    this.scheduleAllCharts();
+
   }
 
 
@@ -959,46 +1647,61 @@ export class AnalyticsComponent
   // GLOBAL IMPORTANCE
   // ============================================================
 
-  loadGlobalImportance(): void {
+  loadGlobalImportance():
+    void {
 
-    this.loadingImportance = true;
+    this.loadingImportance =
+      true;
+
 
     this.api
       .featureImportance(12)
       .subscribe({
 
-        next: (
-          response: ImportanceResponse
-        ) => {
+        next:
+          (
+            response:
+              ImportanceResponse
+          ) => {
 
-          this.globalImportance =
-            response;
+            this.globalImportance =
+              response;
 
-          this.loadingImportance =
-            false;
 
-          this.scheduleChartCreation(
-            () =>
-              this.createImportanceChart()
-          );
-        },
+            this.loadingImportance =
+              false;
 
-        error: (
-          error: unknown
-        ) => {
 
-          console.error(
-            'Importance indisponible:',
-            error
-          );
+            this.scheduleChartCreation(
+              () =>
+                this.createImportanceChart()
+            );
 
-          this.globalImportance =
-            null;
+          },
 
-          this.loadingImportance =
-            false;
-        }
+
+        error:
+          (
+            error: unknown
+          ) => {
+
+            console.error(
+              'Importance indisponible:',
+              error
+            );
+
+
+            this.globalImportance =
+              null;
+
+
+            this.loadingImportance =
+              false;
+
+          }
+
       });
+
   }
 
 
@@ -1006,13 +1709,21 @@ export class AnalyticsComponent
   // REFRESH
   // ============================================================
 
-  refresh(): void {
+  refresh():
+    void {
 
     this.loadHistory();
+
+    this.loadLatestPrediction();
 
     this.loadLatestExplanation();
 
     this.loadGlobalImportance();
+
+
+    this.lastStorageSnapshot =
+      this.getStorageSnapshot();
+
   }
 
 
@@ -1020,17 +1731,21 @@ export class AnalyticsComponent
   // CLEAR
   // ============================================================
 
-  clear(): void {
+  clear():
+    void {
 
     const shouldClear =
       window.confirm(
-        'Supprimer tout l’historique ?'
+        'Supprimer tout l’historique et la dernière prédiction ?'
       );
 
 
-    if (!shouldClear) {
+    if (
+      !shouldClear
+    ) {
 
       return;
+
     }
 
 
@@ -1044,16 +1759,45 @@ export class AnalyticsComponent
     );
 
 
-    this.history = [];
+    localStorage.removeItem(
+      'latestPrediction'
+    );
 
-    this.latestExplanation = null;
 
-    this.globalImportance = null;
+    this.history =
+      [];
 
-    this.lastStorageSnapshot = '';
+
+    this.latestExplanation =
+      null;
+
+
+    this.latestPrediction =
+      null;
+
+
+    this.latestInput =
+      null;
+
+
+    this.latestTitle =
+      '';
+
+
+    this.latestSource =
+      '';
+
+
+    this.globalImportance =
+      null;
+
+
+    this.lastStorageSnapshot =
+      '';
 
 
     this.destroyAllCharts();
+
   }
 
 
@@ -1062,14 +1806,18 @@ export class AnalyticsComponent
   // ============================================================
 
   private scheduleChartCreation(
-    callback: () => void
-  ): void {
+    callback:
+      () => void
+  ):
+    void {
 
     if (
-      typeof window === 'undefined'
+      typeof window ===
+      'undefined'
     ) {
 
       return;
+
     }
 
 
@@ -1080,12 +1828,15 @@ export class AnalyticsComponent
           callback,
           0
         );
+
       }
     );
+
   }
 
 
-  private scheduleAllCharts(): void {
+  private scheduleAllCharts():
+    void {
 
     this.scheduleChartCreation(
       () => {
@@ -1101,8 +1852,10 @@ export class AnalyticsComponent
         this.createInfluenceChart();
 
         this.createImportanceChart();
+
       }
     );
+
   }
 
 
@@ -1110,20 +1863,27 @@ export class AnalyticsComponent
   // RISK DISTRIBUTION
   // ============================================================
 
-  private createRiskChart(): void {
+  private createRiskChart():
+    void {
 
-    if (!this.riskCanvas) {
+    if (
+      !this.riskCanvas
+    ) {
 
       return;
+
     }
 
 
     this.riskChart?.destroy();
 
 
-    if (!this.total) {
+    if (
+      !this.total
+    ) {
 
       return;
+
     }
 
 
@@ -1131,7 +1891,8 @@ export class AnalyticsComponent
       ChartConfiguration<'doughnut'> =
       {
 
-        type: 'doughnut',
+        type:
+          'doughnut',
 
         data: {
 
@@ -1145,49 +1906,77 @@ export class AnalyticsComponent
             {
 
               data: [
+
                 this.highCount,
+
                 this.mediumCount,
+
                 this.lowCount
+
               ],
 
               backgroundColor: [
+
                 this.highColor,
+
                 this.mediumColor,
+
                 this.lowColor
+
               ],
 
-              borderWidth: 0,
+              borderWidth:
+                0,
 
-              hoverOffset: 8
+              hoverOffset:
+                8
+
             }
           ]
+
         },
 
         options: {
 
-          responsive: true,
+          responsive:
+            true,
 
-          maintainAspectRatio: false,
+          maintainAspectRatio:
+            false,
 
-          cutout: '72%',
+          cutout:
+            '72%',
 
           animation: {
-            duration: 650
+
+            duration:
+              650
+
           },
 
           plugins: {
 
             legend: {
 
-              position: 'bottom',
+              position:
+                'bottom',
 
               labels: {
-                usePointStyle: true,
-                padding: 18
+
+                usePointStyle:
+                  true,
+
+                padding:
+                  18
+
               }
+
             }
+
           }
+
         }
+
       };
 
 
@@ -1196,6 +1985,7 @@ export class AnalyticsComponent
         this.riskCanvas,
         configuration
       );
+
   }
 
 
@@ -1203,60 +1993,98 @@ export class AnalyticsComponent
   // HISTOGRAM
   // ============================================================
 
-  private createHistogramChart(): void {
+  private createHistogramChart():
+    void {
 
-    if (!this.histogramCanvas) {
+    if (
+      !this.histogramCanvas
+    ) {
 
       return;
+
     }
 
 
     this.histogramChart?.destroy();
 
 
-    if (!this.total) {
+    if (
+      !this.total
+    ) {
 
       return;
+
     }
 
 
     const ranges = [
 
       {
-        label: '0–20%',
-        minimum: 0,
-        maximum: 20
+        label:
+          '0–20%',
+
+        minimum:
+          0,
+
+        maximum:
+          20
       },
 
       {
-        label: '20–35%',
-        minimum: 20,
-        maximum: 35
+        label:
+          '20–35%',
+
+        minimum:
+          20,
+
+        maximum:
+          35
       },
 
       {
-        label: '35–50%',
-        minimum: 35,
-        maximum: 50
+        label:
+          '35–50%',
+
+        minimum:
+          35,
+
+        maximum:
+          50
       },
 
       {
-        label: '50–68%',
-        minimum: 50,
-        maximum: 68
+        label:
+          '50–68%',
+
+        minimum:
+          50,
+
+        maximum:
+          68
       },
 
       {
-        label: '68–85%',
-        minimum: 68,
-        maximum: 85
+        label:
+          '68–85%',
+
+        minimum:
+          68,
+
+        maximum:
+          85
       },
 
       {
-        label: '85–100%',
-        minimum: 85,
-        maximum: 101
+        label:
+          '85–100%',
+
+        minimum:
+          85,
+
+        maximum:
+          101
       }
+
     ];
 
 
@@ -1272,15 +2100,22 @@ export class AnalyticsComponent
                   item.probability
                 ) * 100;
 
+
               return (
+
                 probability >=
                   range.minimum
+
                 &&
+
                 probability <
                   range.maximum
+
               );
+
             }
           ).length;
+
         }
       );
 
@@ -1289,7 +2124,8 @@ export class AnalyticsComponent
       ChartConfiguration<'bar'> =
       {
 
-        type: 'bar',
+        type:
+          'bar',
 
         data: {
 
@@ -1302,60 +2138,94 @@ export class AnalyticsComponent
           datasets: [
             {
 
-              data: values,
+              data:
+                values,
 
               backgroundColor: [
+
                 '#22c55e',
+
                 '#4ade80',
+
                 '#fbbf24',
+
                 '#f59e0b',
+
                 '#f87171',
+
                 '#ef4444'
+
               ],
 
-              borderRadius: 7,
+              borderRadius:
+                7,
 
-              borderSkipped: false
+              borderSkipped:
+                false
+
             }
+
           ]
+
         },
 
         options: {
 
-          responsive: true,
+          responsive:
+            true,
 
-          maintainAspectRatio: false,
+          maintainAspectRatio:
+            false,
 
           scales: {
 
             y: {
 
-              beginAtZero: true,
+              beginAtZero:
+                true,
 
               ticks: {
-                precision: 0
+
+                precision:
+                  0
+
               },
 
               grid: {
-                color: '#eef2f7'
+
+                color:
+                  '#eef2f7'
+
               }
+
             },
 
             x: {
 
               grid: {
-                display: false
+
+                display:
+                  false
+
               }
+
             }
+
           },
 
           plugins: {
 
             legend: {
-              display: false
+
+              display:
+                false
+
             }
+
           }
+
         }
+
       };
 
 
@@ -1364,6 +2234,7 @@ export class AnalyticsComponent
         this.histogramCanvas,
         configuration
       );
+
   }
 
 
@@ -1371,20 +2242,27 @@ export class AnalyticsComponent
   // EVOLUTION
   // ============================================================
 
-  private createEvolutionChart(): void {
+  private createEvolutionChart():
+    void {
 
-    if (!this.evolutionCanvas) {
+    if (
+      !this.evolutionCanvas
+    ) {
 
       return;
+
     }
 
 
     this.evolutionChart?.destroy();
 
 
-    if (!this.total) {
+    if (
+      !this.total
+    ) {
 
       return;
+
     }
 
 
@@ -1410,7 +2288,8 @@ export class AnalyticsComponent
       ChartConfiguration<'line'> =
       {
 
-        type: 'line',
+        type:
+          'line',
 
         data: {
 
@@ -1420,9 +2299,11 @@ export class AnalyticsComponent
 
             {
 
-              label: 'Probability',
+              label:
+                'Probability',
 
-              data: probabilities,
+              data:
+                probabilities,
 
               borderColor:
                 this.primaryColor,
@@ -1441,24 +2322,32 @@ export class AnalyticsComponent
               pointBorderColor:
                 '#ffffff',
 
-              pointBorderWidth: 2,
+              pointBorderWidth:
+                2,
 
-              pointRadius: 4,
+              pointRadius:
+                4,
 
-              borderWidth: 3,
+              borderWidth:
+                3,
 
-              tension: .35,
+              tension:
+                .35,
 
-              fill: true
+              fill:
+                true
+
             },
 
             {
 
-              label: 'HIGH 68%',
+              label:
+                'HIGH 68%',
 
               data:
                 this.history.map(
-                  () => 68
+                  () =>
+                    68
                 ),
 
               borderColor:
@@ -1469,18 +2358,23 @@ export class AnalyticsComponent
                 6
               ],
 
-              pointRadius: 0,
+              pointRadius:
+                0,
 
-              borderWidth: 1.5
+              borderWidth:
+                1.5
+
             },
 
             {
 
-              label: 'MEDIUM 35%',
+              label:
+                'MEDIUM 35%',
 
               data:
                 this.history.map(
-                  () => 35
+                  () =>
+                    35
                 ),
 
               borderColor:
@@ -1491,64 +2385,96 @@ export class AnalyticsComponent
                 6
               ],
 
-              pointRadius: 0,
+              pointRadius:
+                0,
 
-              borderWidth: 1.5
+              borderWidth:
+                1.5
+
             }
+
           ]
+
         },
 
         options: {
 
-          responsive: true,
+          responsive:
+            true,
 
-          maintainAspectRatio: false,
+          maintainAspectRatio:
+            false,
 
           interaction: {
-            mode: 'index',
-            intersect: false
+
+            mode:
+              'index',
+
+            intersect:
+              false
+
           },
 
           scales: {
 
             y: {
 
-              min: 0,
+              min:
+                0,
 
-              max: 100,
+              max:
+                100,
 
               ticks: {
 
                 callback:
                   value =>
                     `${value}%`
+
               },
 
               grid: {
-                color: '#eef2f7'
+
+                color:
+                  '#eef2f7'
+
               }
+
             },
 
             x: {
 
               grid: {
-                display: false
+
+                display:
+                  false
+
               }
+
             }
+
           },
 
           plugins: {
 
             legend: {
 
-              position: 'bottom',
+              position:
+                'bottom',
 
               labels: {
-                usePointStyle: true
+
+                usePointStyle:
+                  true
+
               }
+
             }
+
           }
+
         }
+
       };
 
 
@@ -1557,6 +2483,7 @@ export class AnalyticsComponent
         this.evolutionCanvas,
         configuration
       );
+
   }
 
 
@@ -1564,25 +2491,34 @@ export class AnalyticsComponent
   // COMPARISON
   // ============================================================
 
-  private createComparisonChart(): void {
+  private createComparisonChart():
+    void {
 
-    if (!this.comparisonCanvas) {
+    if (
+      !this.comparisonCanvas
+    ) {
 
       return;
+
     }
 
 
     this.comparisonChart?.destroy();
 
 
-    if (!this.total) {
+    if (
+      !this.total
+    ) {
 
       return;
+
     }
 
 
     const visibleHistory =
-      this.history.slice(-20);
+      this.history.slice(
+        -20
+      );
 
 
     const startingIndex =
@@ -1594,7 +2530,8 @@ export class AnalyticsComponent
       ChartConfiguration<'bar'> =
       {
 
-        type: 'bar',
+        type:
+          'bar',
 
         data: {
 
@@ -1604,13 +2541,18 @@ export class AnalyticsComponent
                 _,
                 index
               ) =>
-                `P${startingIndex + index + 1}`
+                `P${
+                  startingIndex +
+                  index +
+                  1
+                }`
             ),
 
           datasets: [
             {
 
-              label: 'Probability',
+              label:
+                'Probability',
 
               data:
                 visibleHistory.map(
@@ -1637,54 +2579,79 @@ export class AnalyticsComponent
                     )
                 ),
 
-              borderWidth: 1,
+              borderWidth:
+                1,
 
-              borderRadius: 6
+              borderRadius:
+                6
+
             }
+
           ]
+
         },
 
         options: {
 
-          responsive: true,
+          responsive:
+            true,
 
-          maintainAspectRatio: false,
+          maintainAspectRatio:
+            false,
 
           scales: {
 
             y: {
 
-              min: 0,
+              min:
+                0,
 
-              max: 100,
+              max:
+                100,
 
               ticks: {
 
                 callback:
                   value =>
                     `${value}%`
+
               },
 
               grid: {
-                color: '#eef2f7'
+
+                color:
+                  '#eef2f7'
+
               }
+
             },
 
             x: {
 
               grid: {
-                display: false
+
+                display:
+                  false
+
               }
+
             }
+
           },
 
           plugins: {
 
             legend: {
-              display: false
+
+              display:
+                false
+
             }
+
           }
+
         }
+
       };
 
 
@@ -1693,6 +2660,7 @@ export class AnalyticsComponent
         this.comparisonCanvas,
         configuration
       );
+
   }
 
 
@@ -1700,62 +2668,76 @@ export class AnalyticsComponent
   // FEATURE INFLUENCE
   // ============================================================
 
-  private createInfluenceChart(): void {
+  private createInfluenceChart():
+    void {
 
-    if (!this.influenceCanvas) {
+    if (
+      !this.influenceCanvas
+    ) {
 
       return;
+
     }
 
 
     this.influenceChart?.destroy();
 
 
-    /*
-     * Drivers de la DERNIERE prédiction.
-     */
-
     const drivers =
-      [...this.latestDrivers]
+      [
+        ...this.latestDrivers
+      ]
+
         .filter(
           driver =>
+
             driver &&
-            typeof driver.feature === 'string' &&
+
+            typeof driver.feature ===
+              'string'
+
+            &&
+
             Number.isFinite(
               Number(
                 driver.influence
               )
             )
         )
+
         .sort(
           (
             first,
             second
           ) =>
+
             Math.abs(
               Number(
                 second.influence
               )
-            ) -
+            )
+
+            -
+
             Math.abs(
               Number(
                 first.influence
               )
             )
         )
+
         .slice(
           0,
           10
         );
 
 
-    /*
-     * Aucun driver disponible.
-     */
-
-    if (!drivers.length) {
+    if (
+      !drivers.length
+    ) {
 
       return;
+
     }
 
 
@@ -1763,7 +2745,8 @@ export class AnalyticsComponent
       ChartConfiguration<'bar'> =
       {
 
-        type: 'bar',
+        type:
+          'bar',
 
         data: {
 
@@ -1789,14 +2772,10 @@ export class AnalyticsComponent
                     ) * 100
                 ),
 
-              /*
-               * Rouge = influence positive
-               * Bleu = influence négative
-               */
-
               backgroundColor:
                 drivers.map(
                   driver =>
+
                     Number(
                       driver.influence
                     ) >= 0
@@ -1806,20 +2785,28 @@ export class AnalyticsComponent
                       : 'rgba(14,165,233,.72)'
                 ),
 
-              borderRadius: 6,
+              borderRadius:
+                6,
 
-              borderWidth: 0
+              borderWidth:
+                0
+
             }
+
           ]
+
         },
 
         options: {
 
-          indexAxis: 'y',
+          indexAxis:
+            'y',
 
-          responsive: true,
+          responsive:
+            true,
 
-          maintainAspectRatio: false,
+          maintainAspectRatio:
+            false,
 
           scales: {
 
@@ -1830,25 +2817,38 @@ export class AnalyticsComponent
                 callback:
                   value =>
                     `${value}%`
+
               },
 
               grid: {
-                color: '#eef2f7'
+
+                color:
+                  '#eef2f7'
+
               }
+
             },
 
             y: {
 
               grid: {
-                display: false
+
+                display:
+                  false
+
               }
+
             }
+
           },
 
           plugins: {
 
             legend: {
-              display: false
+
+              display:
+                false
+
             },
 
             tooltip: {
@@ -1863,16 +2863,25 @@ export class AnalyticsComponent
                         context.raw
                       );
 
+
                     return (
+
                       ` Influence: ${
                         value.toFixed(2)
                       }%`
+
                     );
+
                   }
+
               }
+
             }
+
           }
+
         }
+
       };
 
 
@@ -1881,6 +2890,7 @@ export class AnalyticsComponent
         this.influenceCanvas,
         configuration
       );
+
   }
 
 
@@ -1888,37 +2898,66 @@ export class AnalyticsComponent
   // GLOBAL IMPORTANCE
   // ============================================================
 
-  private createImportanceChart(): void {
+  private createImportanceChart():
+    void {
 
     const features =
-      this.globalImportance?.features ?? [];
+      this.globalImportance
+        ?.features
+      ?? [];
 
 
-    if (!this.importanceCanvas) {
+    if (
+      !this.importanceCanvas
+    ) {
 
       return;
+
     }
 
 
     this.importanceChart?.destroy();
 
 
-    if (!features.length) {
+    if (
+      !features.length
+    ) {
 
       return;
+
     }
 
 
     const items =
-      [...features]
+      [
+        ...features
+      ]
+
         .sort(
           (
-            first: ImportanceItem,
-            second: ImportanceItem
+            first:
+              ImportanceItem,
+
+            second:
+              ImportanceItem
+
           ) =>
-            (second.normalized_importance ?? 0) -
-            (first.normalized_importance ?? 0)
+
+            (
+              second
+                .normalized_importance
+              ?? 0
+            )
+
+            -
+
+            (
+              first
+                .normalized_importance
+              ?? 0
+            )
         )
+
         .slice(
           0,
           12
@@ -1929,7 +2968,8 @@ export class AnalyticsComponent
       ChartConfiguration<'bar'> =
       {
 
-        type: 'bar',
+        type:
+          'bar',
 
         data: {
 
@@ -1947,8 +2987,11 @@ export class AnalyticsComponent
               data:
                 items.map(
                   item =>
-                    (item.normalized_importance ?? 0) *
-                    100
+                    (
+                      item
+                        .normalized_importance
+                      ?? 0
+                    ) * 100
                 ),
 
               backgroundColor:
@@ -1957,54 +3000,79 @@ export class AnalyticsComponent
               borderColor:
                 this.primaryColor,
 
-              borderWidth: 1,
+              borderWidth:
+                1,
 
-              borderRadius: 6
+              borderRadius:
+                6
+
             }
+
           ]
+
         },
 
         options: {
 
-          indexAxis: 'y',
+          indexAxis:
+            'y',
 
-          responsive: true,
+          responsive:
+            true,
 
-          maintainAspectRatio: false,
+          maintainAspectRatio:
+            false,
 
           scales: {
 
             x: {
 
-              beginAtZero: true,
+              beginAtZero:
+                true,
 
               ticks: {
 
                 callback:
                   value =>
                     `${value}%`
+
               },
 
               grid: {
-                color: '#eef2f7'
+
+                color:
+                  '#eef2f7'
+
               }
+
             },
 
             y: {
 
               grid: {
-                display: false
+
+                display:
+                  false
+
               }
+
             }
+
           },
 
           plugins: {
 
             legend: {
-              display: false
+
+              display:
+                false
+
             }
+
           }
+
         }
+
       };
 
 
@@ -2013,6 +3081,7 @@ export class AnalyticsComponent
         this.importanceCanvas,
         configuration
       );
+
   }
 
 
@@ -2022,21 +3091,26 @@ export class AnalyticsComponent
 
   formatFeatureName(
     value: string
-  ): string {
+  ):
+    string {
 
     return String(
       value ?? ''
     )
+
       .replace(
         /[_-]+/g,
         ' '
       )
+
       .replace(
         /\b\w/g,
         character =>
           character.toUpperCase()
       )
+
       .trim();
+
   }
 
 
@@ -2046,10 +3120,13 @@ export class AnalyticsComponent
 
   formatDate(
     value: string
-  ): string {
+  ):
+    string {
 
     const date =
-      new Date(value);
+      new Date(
+        value
+      );
 
 
     if (
@@ -2059,29 +3136,39 @@ export class AnalyticsComponent
     ) {
 
       return 'N/A';
+
     }
 
 
     return date.toLocaleDateString(
       'fr-FR',
       {
-        day: '2-digit',
-        month: '2-digit'
+
+        day:
+          '2-digit',
+
+        month:
+          '2-digit'
+
       }
     );
+
   }
 
 
   // ============================================================
-  // DATE + TIME
+  // DATE TIME
   // ============================================================
 
   formatDateTime(
     value: string
-  ): string {
+  ):
+    string {
 
     const date =
-      new Date(value);
+      new Date(
+        value
+      );
 
 
     if (
@@ -2091,19 +3178,32 @@ export class AnalyticsComponent
     ) {
 
       return 'N/A';
+
     }
 
 
     return date.toLocaleString(
       'fr-FR',
       {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+
+        day:
+          '2-digit',
+
+        month:
+          '2-digit',
+
+        year:
+          'numeric',
+
+        hour:
+          '2-digit',
+
+        minute:
+          '2-digit'
+
       }
     );
+
   }
 
 
@@ -2113,13 +3213,19 @@ export class AnalyticsComponent
 
   formatProbability(
     value: unknown
-  ): string {
+  ):
+    string {
 
     return (
+
       this.normalizeProbability(
         value
       ) * 100
-    ).toFixed(1) + '%';
+
+    ).toFixed(
+      1
+    ) + '%';
+
   }
 
 
@@ -2128,9 +3234,13 @@ export class AnalyticsComponent
   // ============================================================
 
   getRiskColor(
-    risk: RiskLevel | string,
-    alpha?: number
-  ): string {
+    risk:
+      RiskLevel | string,
+
+    alpha?:
+      number
+  ):
+    string {
 
     const normalized =
       this.normalizeRisk(
@@ -2140,9 +3250,13 @@ export class AnalyticsComponent
 
     const color =
       normalized === 'HIGH'
+
         ? this.highColor
+
         : normalized === 'MEDIUM'
+
           ? this.mediumColor
+
           : this.lowColor;
 
 
@@ -2151,6 +3265,7 @@ export class AnalyticsComponent
     ) {
 
       return color;
+
     }
 
 
@@ -2163,28 +3278,48 @@ export class AnalyticsComponent
 
     const red =
       parseInt(
-        hex.substring(0, 2),
+        hex.substring(
+          0,
+          2
+        ),
         16
       );
 
 
     const green =
       parseInt(
-        hex.substring(2, 4),
+        hex.substring(
+          2,
+          4
+        ),
         16
       );
 
 
     const blue =
       parseInt(
-        hex.substring(4, 6),
+        hex.substring(
+          4,
+          6
+        ),
         16
       );
 
 
     return (
-      `rgba(${red},${green},${blue},${alpha})`
+
+      `rgba(${
+        red
+      },${
+        green
+      },${
+        blue
+      },${
+        alpha
+      })`
+
     );
+
   }
 
 
@@ -2193,8 +3328,10 @@ export class AnalyticsComponent
   // ============================================================
 
   getRiskLabel(
-    risk: RiskLevel | string
-  ): string {
+    risk:
+      RiskLevel | string
+  ):
+    string {
 
     const normalized =
       this.normalizeRisk(
@@ -2202,11 +3339,20 @@ export class AnalyticsComponent
       );
 
 
-    return normalized === 'HIGH'
-      ? 'High'
-      : normalized === 'MEDIUM'
-        ? 'Medium'
-        : 'Low';
+    return (
+
+      normalized === 'HIGH'
+
+        ? 'High'
+
+        : normalized === 'MEDIUM'
+
+          ? 'Medium'
+
+          : 'Low'
+
+    );
+
   }
 
 
@@ -2215,8 +3361,10 @@ export class AnalyticsComponent
   // ============================================================
 
   getRiskClass(
-    risk: RiskLevel | string
-  ): string {
+    risk:
+      RiskLevel | string
+  ):
+    string {
 
     const normalized =
       this.normalizeRisk(
@@ -2224,11 +3372,20 @@ export class AnalyticsComponent
       );
 
 
-    return normalized === 'HIGH'
-      ? 'risk-high'
-      : normalized === 'MEDIUM'
-        ? 'risk-medium'
-        : 'risk-low';
+    return (
+
+      normalized === 'HIGH'
+
+        ? 'risk-high'
+
+        : normalized === 'MEDIUM'
+
+          ? 'risk-medium'
+
+          : 'risk-low'
+
+    );
+
   }
 
 
@@ -2238,7 +3395,8 @@ export class AnalyticsComponent
 
   normalizeRisk(
     value: unknown
-  ): RiskLevel {
+  ):
+    RiskLevel {
 
     const normalized =
       String(
@@ -2249,25 +3407,47 @@ export class AnalyticsComponent
 
 
     if (
-      normalized === 'HIGH' ||
-      normalized.includes('HIGH')
+
+      normalized === 'HIGH'
+
+      ||
+
+      normalized.includes(
+        'HIGH'
+      )
+
     ) {
 
       return 'HIGH';
+
     }
 
 
     if (
-      normalized === 'MEDIUM' ||
-      normalized.includes('MEDIUM') ||
-      normalized.includes('MED')
+
+      normalized === 'MEDIUM'
+
+      ||
+
+      normalized.includes(
+        'MEDIUM'
+      )
+
+      ||
+
+      normalized.includes(
+        'MED'
+      )
+
     ) {
 
       return 'MEDIUM';
+
     }
 
 
     return 'LOW';
+
   }
 
 
@@ -2277,10 +3457,13 @@ export class AnalyticsComponent
 
   normalizeProbability(
     value: unknown
-  ): number {
+  ):
+    number {
 
     let probability =
-      Number(value);
+      Number(
+        value
+      );
 
 
     if (
@@ -2290,6 +3473,7 @@ export class AnalyticsComponent
     ) {
 
       return 0;
+
     }
 
 
@@ -2299,16 +3483,21 @@ export class AnalyticsComponent
 
       probability /=
         100;
+
     }
 
 
     return Math.min(
+
       Math.max(
         probability,
         0
       ),
+
       1
+
     );
+
   }
 
 
@@ -2316,7 +3505,8 @@ export class AnalyticsComponent
   // DESTROY CHARTS
   // ============================================================
 
-  private destroyAllCharts(): void {
+  private destroyAllCharts():
+    void {
 
     this.riskChart?.destroy();
 
@@ -2331,16 +3521,29 @@ export class AnalyticsComponent
     this.importanceChart?.destroy();
 
 
-    this.riskChart = null;
+    this.riskChart =
+      null;
 
-    this.histogramChart = null;
 
-    this.evolutionChart = null;
+    this.histogramChart =
+      null;
 
-    this.comparisonChart = null;
 
-    this.influenceChart = null;
+    this.evolutionChart =
+      null;
 
-    this.importanceChart = null;
+
+    this.comparisonChart =
+      null;
+
+
+    this.influenceChart =
+      null;
+
+
+    this.importanceChart =
+      null;
+
   }
+
 }

@@ -23,6 +23,44 @@
 
     </div>
 
+
+    <!-- =======================================================
+         LATEST RISK
+    ======================================================== -->
+
+    <div
+      class="latest-risk-header"
+      *ngIf="latest"
+      [ngClass]="getRiskClass(latestRisk)"
+    >
+
+      <div class="latest-risk-dot"></div>
+
+      <div class="latest-risk-info">
+
+        <span>
+          Latest Risk
+        </span>
+
+        <strong>
+          {{ getRiskLabel(latestRisk) }}
+        </strong>
+
+      </div>
+
+      <div class="latest-risk-probability">
+
+        {{ formatProbability(latestProbability) }}
+
+      </div>
+
+    </div>
+
+
+    <!-- =======================================================
+         REFRESH
+    ======================================================== -->
+
     <button
       type="button"
       class="refresh-btn"
@@ -39,7 +77,11 @@
         "
       ></i>
 
-      {{ isLoading ? 'Loading...' : 'Refresh' }}
+      {{
+        isLoading
+          ? 'Loading...'
+          : 'Refresh'
+      }}
 
     </button>
 
@@ -56,7 +98,9 @@
   >
 
     <div class="empty-icon">
+
       <i class="bi bi-lightbulb"></i>
+
     </div>
 
     <h2>
@@ -64,7 +108,7 @@
     </h2>
 
     <p>
-      Run a prediction from the Analysis page to see
+      Run a prediction from the Dashboard to see
       the latest model explanation here.
     </p>
 
@@ -72,7 +116,9 @@
       class="empty-message"
       *ngIf="errorMessage"
     >
+
       {{ errorMessage }}
+
     </div>
 
   </section>
@@ -88,7 +134,9 @@
   >
 
     <div class="loading-spinner">
+
       <i class="bi bi-arrow-repeat spin"></i>
+
     </div>
 
     <strong>
@@ -103,24 +151,26 @@
 
 
   <!-- =========================================================
-       MAIN CONTENT
+       MAIN
   ========================================================== -->
 
   <ng-container *ngIf="data">
 
     <!-- =======================================================
-         CURRENT PREDICTION
+         LATEST PREDICTION
     ======================================================== -->
 
     <section class="prediction-hero">
 
       <div class="hero-left">
 
+        <!-- Risk icon -->
+
         <div
           class="risk-icon"
           [ngClass]="
             getRiskClass(
-              data.prediction.risk_level
+              latestRisk
             )
           "
         >
@@ -129,12 +179,15 @@
             class="bi"
             [ngClass]="
               getRiskIcon(
-                data.prediction.risk_level
+                latestRisk
               )
             "
           ></i>
 
         </div>
+
+
+        <!-- Text -->
 
         <div class="hero-text">
 
@@ -142,36 +195,62 @@
             LATEST MODEL PREDICTION
           </span>
 
+
           <div class="risk-line">
 
             <h2
               [ngClass]="
                 getRiskClass(
-                  data.prediction.risk_level
+                  latestRisk
                 )
               "
             >
-              {{ data.prediction.risk_level }}
+
+              {{ getRiskLabel(latestRisk) }}
+
             </h2>
 
+
             <span class="live-badge">
+
               <span class="live-dot"></span>
+
               Latest
+
             </span>
 
           </div>
 
+
           <p class="decision">
+
             {{ data.prediction.prediction }}
+
           </p>
 
+
           <p class="risk-description">
+
             {{
               getRiskDescription(
-                data.prediction.risk_level
+                latestRisk
               )
             }}
+
           </p>
+
+
+          <!-- Date -->
+
+          <div class="latest-date">
+
+            <i class="bi bi-clock"></i>
+
+            <span>
+              {{ formatDateTime(latestDate) }}
+            </span>
+
+          </div>
 
         </div>
 
@@ -191,15 +270,11 @@
           </span>
 
           <strong>
-            {{
-              formatProbability(
-                data.prediction.probability
-              )
-              | number:'1.0-1'
-            }}%
+            {{ formatProbability(latestProbability) }}
           </strong>
 
         </div>
+
 
         <div class="probability-track">
 
@@ -207,17 +282,18 @@
             class="probability-fill"
             [ngClass]="
               getRiskClass(
-                data.prediction.risk_level
+                latestRisk
               )
             "
             [style.width.%]="
-              formatProbability(
-                data.prediction.probability
+              getProbabilityPercent(
+                latestProbability
               )
             "
           ></div>
 
         </div>
+
 
         <div class="probability-labels">
 
@@ -241,18 +317,22 @@
 
 
     <!-- =======================================================
-         SUMMARY CARDS
+         SUMMARY
     ======================================================== -->
 
     <section class="summary-grid">
+
 
       <!-- Probability -->
 
       <article class="summary-card">
 
         <div class="summary-icon purple">
+
           <i class="bi bi-speedometer2"></i>
+
         </div>
+
 
         <div class="summary-content">
 
@@ -261,26 +341,28 @@
           </span>
 
           <strong>
-            {{
-              formatProbability(
-                data.prediction.probability
-              )
-              | number:'1.0-1'
-            }}%
+            {{ formatProbability(latestProbability) }}
           </strong>
+
+          <small>
+            latest prediction
+          </small>
 
         </div>
 
       </article>
 
 
-      <!-- Features -->
+      <!-- Influential factors -->
 
       <article class="summary-card">
 
         <div class="summary-icon blue">
+
           <i class="bi bi-diagram-3-fill"></i>
+
         </div>
+
 
         <div class="summary-content">
 
@@ -293,6 +375,10 @@
               data.most_influential_features.length
             }}
           </strong>
+
+          <small>
+            latest prediction
+          </small>
 
         </div>
 
@@ -307,7 +393,7 @@
           class="summary-icon"
           [ngClass]="
             getRiskClass(
-              data.prediction.risk_level
+              latestRisk
             )
           "
         >
@@ -316,12 +402,13 @@
             class="bi"
             [ngClass]="
               getRiskIcon(
-                data.prediction.risk_level
+                latestRisk
               )
             "
           ></i>
 
         </div>
+
 
         <div class="summary-content">
 
@@ -332,22 +419,31 @@
           <strong
             [ngClass]="
               getRiskClass(
-                data.prediction.risk_level
+                latestRisk
               )
             "
           >
-            {{ data.prediction.risk_level }}
+            {{ getRiskLabel(latestRisk) }}
           </strong>
+
+          <small>
+            latest prediction
+          </small>
 
         </div>
 
       </article>
 
+
+      <!-- Date -->
+
+      
+
     </section>
 
 
     <!-- =======================================================
-         FEATURE SECTION
+         LOCAL EXPLANATION
     ======================================================== -->
 
     <section class="features-section">
@@ -361,21 +457,25 @@
           </span>
 
           <h2>
-            What influenced the prediction?
+            What influenced the latest prediction?
           </h2>
 
           <p>
-            Select a factor to see a detailed explanation
-            of its contribution to the latest prediction.
+            These factors explain the most recent
+            risk prediction generated by the model.
           </p>
 
         </div>
 
+
         <span class="feature-count">
+
           {{
             data.most_influential_features.length
           }}
+
           factors
+
         </span>
 
       </div>
@@ -394,6 +494,7 @@
 
         <i class="bi bi-info-circle"></i>
 
+
         <div>
 
           <strong>
@@ -401,8 +502,9 @@
           </strong>
 
           <p>
-            The latest prediction was loaded, but the
-            model did not return local feature explanations.
+            The latest prediction was loaded,
+            but no local feature explanation
+            is available.
           </p>
 
         </div>
@@ -411,7 +513,7 @@
 
 
       <!-- =====================================================
-           FEATURE CARDS
+           FEATURES
       ====================================================== -->
 
       <div
@@ -432,6 +534,9 @@
           tabindex="0"
           role="button"
         >
+
+
+          <!-- Header -->
 
           <div class="driver-header">
 
@@ -455,11 +560,13 @@
 
             </div>
 
+
             <div class="driver-title">
 
               <strong>
                 {{ format(driver.feature) }}
               </strong>
+
 
               <span
                 [ngClass]="
@@ -468,14 +575,17 @@
                   )
                 "
               >
+
                 {{
                   getInfluenceLabel(
                     driver.influence
                   )
                 }}
+
               </span>
 
             </div>
+
 
             <div class="open-icon">
 
@@ -486,22 +596,25 @@
           </div>
 
 
+          <!-- Description -->
+
           <div class="driver-description">
 
             <p>
-              {{
-                driver.explanation
-              }}
+              {{ driver.explanation }}
             </p>
 
           </div>
 
+
+          <!-- Influence -->
 
           <div class="driver-footer">
 
             <span>
               Feature influence
             </span>
+
 
             <strong
               [ngClass]="
@@ -517,12 +630,14 @@
                 ) > 0
                   ? '+'
                   : ''
-              }}{{
+              }}
+
+              {{
                 formatInfluence(
                   driver.influence
                 )
                 | number:'1.1-1'
-              }}
+              }}%
 
             </strong>
 
@@ -547,27 +662,38 @@
 
       </div>
 
+
       <div>
 
         <span class="section-eyebrow">
           MODEL INTERPRETATION
         </span>
 
+
         <h3>
           How to read this explanation
         </h3>
 
+
         <p>
+
           Factors marked as
+
           <strong class="text-increase">
             increasing risk
           </strong>
-          push the prediction toward a higher-risk outcome.
+
+          push the latest prediction
+          toward a higher-risk outcome.
+
           Factors marked as
+
           <strong class="text-decrease">
             reducing risk
           </strong>
-          contribute to a more favorable prediction.
+
+          contribute to a lower-risk outcome.
+
         </p>
 
       </div>
@@ -578,12 +704,15 @@
 
 
   <!-- =========================================================
-       FEATURE DETAIL POPUP
+       FEATURE MODAL
   ========================================================== -->
 
   <div
     class="modal-backdrop"
-    *ngIf="isFeatureModalOpen && selectedFeature"
+    *ngIf="
+      isFeatureModalOpen &&
+      selectedFeature
+    "
     (click)="closeFeature()"
   >
 
@@ -591,6 +720,7 @@
       class="feature-modal"
       (click)="$event.stopPropagation()"
     >
+
 
       <!-- =====================================================
            MODAL HEADER
@@ -620,6 +750,7 @@
 
           </div>
 
+
           <div>
 
             <span class="modal-eyebrow">
@@ -638,6 +769,7 @@
 
         </div>
 
+
         <button
           type="button"
           class="close-btn"
@@ -653,10 +785,11 @@
 
 
       <!-- =====================================================
-           MODAL CONTENT
+           MODAL BODY
       ====================================================== -->
 
       <div class="modal-body">
+
 
         <!-- Influence -->
 
@@ -665,7 +798,7 @@
           <div>
 
             <span>
-              Influence on prediction
+              Influence on latest prediction
             </span>
 
             <strong
@@ -682,16 +815,19 @@
                 ) > 0
                   ? '+'
                   : ''
-              }}{{
+              }}
+
+              {{
                 formatInfluence(
                   selectedFeature.influence
                 )
                 | number:'1.1-1'
-              }}
+              }}%
 
             </strong>
 
           </div>
+
 
           <div
             class="influence-status"
@@ -727,8 +863,11 @@
         <div class="detail-block">
 
           <div class="detail-icon">
+
             <i class="bi bi-compass"></i>
+
           </div>
+
 
           <div>
 
@@ -737,9 +876,7 @@
             </span>
 
             <strong>
-              {{
-                selectedFeature.direction
-              }}
+              {{ selectedFeature.direction }}
             </strong>
 
           </div>
@@ -761,16 +898,15 @@
 
           </div>
 
+
           <p>
-            {{
-              selectedFeature.explanation
-            }}
+            {{ selectedFeature.explanation }}
           </p>
 
         </div>
 
 
-        <!-- Dynamic interpretation -->
+        <!-- Dynamic message -->
 
         <div
           class="dynamic-message"
@@ -790,6 +926,7 @@
             "
           ></i>
 
+
           <p>
 
             <ng-container
@@ -801,18 +938,23 @@
               "
             >
 
-              This factor is pushing the current model
+              This factor is pushing the latest model
               prediction toward a
-              <strong>higher risk</strong>
+              <strong>
+                higher risk
+              </strong>
               outcome.
 
             </ng-container>
 
+
             <ng-template #decreaseMessage>
 
-              This factor is pushing the current model
+              This factor is pushing the latest model
               prediction toward a
-              <strong>lower risk</strong>
+              <strong>
+                lower risk
+              </strong>
               outcome.
 
             </ng-template>
@@ -834,12 +976,15 @@
           Based on the latest model prediction
         </span>
 
+
         <button
           type="button"
           class="modal-close-btn"
           (click)="closeFeature()"
         >
+
           Close
+
         </button>
 
       </div>

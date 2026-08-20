@@ -1,4 +1,3 @@
-
 import {
   Component,
   OnInit,
@@ -200,11 +199,9 @@ export class DashboardComponent
   /*
    * Current prediction only.
    *
-   * IMPORTANT:
-   * This is NOT loaded from localStorage.
+   * This is the prediction currently displayed by Dashboard.
    *
-   * Therefore, when the page is refreshed,
-   * the old prediction does not appear again.
+   * It is NOT loaded from localStorage when Dashboard starts.
    */
 
   prediction:
@@ -213,9 +210,7 @@ export class DashboardComponent
 
 
   /*
-   * Explanation is kept in memory only.
-   *
-   * It is not saved as the "latest prediction".
+   * Explanation currently displayed by Dashboard.
    */
 
   explanation:
@@ -247,34 +242,15 @@ export class DashboardComponent
 
   ngOnInit(): void {
 
-    /*
-     * Load backend status.
-     */
-
     this.loadHealth();
-
-
-    /*
-     * Load historical predictions.
-     *
-     * This is different from the current prediction.
-     *
-     * History can remain available while the AI result
-     * panel starts empty.
-     */
 
     this.loadPredictionHistory();
 
-
     /*
-     * IMPORTANT:
+     * Do not restore the old prediction into the Dashboard UI.
      *
-     * We intentionally DO NOT call:
-     *
-     * loadLatestPredictionExplanation()
-     *
-     * because the previous prediction must not reappear
-     * after a page refresh.
+     * The last prediction remains available to Explainability
+     * through localStorage['latestPrediction'].
      */
 
     this.clearCurrentPrediction();
@@ -326,10 +302,14 @@ export class DashboardComponent
         3,
 
       date:
-        this.formatDateForInput(now),
+        this.formatDateForInput(
+          now
+        ),
 
       time:
-        this.formatTimeForInput(now)
+        this.formatTimeForInput(
+          now
+        )
 
     };
 
@@ -433,7 +413,6 @@ export class DashboardComponent
 
       this.currentStep++;
 
-
       this.clearMessages();
 
     }
@@ -453,7 +432,6 @@ export class DashboardComponent
 
       this.currentStep--;
 
-
       this.clearMessages();
 
     }
@@ -467,11 +445,6 @@ export class DashboardComponent
 
   private validateCurrentStep():
     boolean {
-
-
-    // ========================================================
-    // STEP 1
-    // ========================================================
 
     if (
       this.currentStep === 1
@@ -512,10 +485,6 @@ export class DashboardComponent
 
     }
 
-
-    // ========================================================
-    // STEP 2
-    // ========================================================
 
     if (
       this.currentStep === 2
@@ -579,10 +548,6 @@ export class DashboardComponent
     }
 
 
-    // ========================================================
-    // STEP 3
-    // ========================================================
-
     if (
       this.currentStep === 3
     ) {
@@ -626,13 +591,10 @@ export class DashboardComponent
       .health()
       .subscribe({
 
-        // ====================================================
-        // SUCCESS
-        // ====================================================
-
         next:
           (
-            response: HealthResponse
+            response:
+              HealthResponse
           ) => {
 
             this.healthResponse =
@@ -644,8 +606,7 @@ export class DashboardComponent
 
 
             this.modelLoaded =
-              this.health
-              &&
+              this.health &&
               response.model_loaded === true;
 
 
@@ -668,10 +629,6 @@ export class DashboardComponent
 
           },
 
-
-        // ====================================================
-        // ERROR
-        // ====================================================
 
         error:
           (
@@ -841,11 +798,6 @@ export class DashboardComponent
 
   predictRisk(): void {
 
-
-    // ========================================================
-    // PREVENT DOUBLE REQUEST
-    // ========================================================
-
     if (
       this.loading
     ) {
@@ -855,29 +807,17 @@ export class DashboardComponent
     }
 
 
-    // ========================================================
-    // CLEAR MESSAGES
-    // ========================================================
-
     this.clearMessages();
 
 
-    // ========================================================
-    // IMPORTANT:
-    //
-    // Remove the previous prediction BEFORE starting
-    // a new prediction.
-    //
-    // This prevents the old result from remaining visible
-    // while the new prediction is being calculated.
-    // ========================================================
+    /*
+     * Clear only the Dashboard display.
+     *
+     * Do NOT delete latestPrediction from localStorage.
+     */
 
     this.clearCurrentPrediction();
 
-
-    // ========================================================
-    // BACKEND CHECK
-    // ========================================================
 
     if (
       !this.health
@@ -893,10 +833,6 @@ export class DashboardComponent
     }
 
 
-    // ========================================================
-    // MODEL CHECK
-    // ========================================================
-
     if (
       !this.modelLoaded
     ) {
@@ -911,10 +847,6 @@ export class DashboardComponent
     }
 
 
-    // ========================================================
-    // FORM CHECK
-    // ========================================================
-
     if (
       !this.isFormValid()
     ) {
@@ -926,10 +858,6 @@ export class DashboardComponent
 
     }
 
-
-    // ========================================================
-    // BUILD PAYLOAD
-    // ========================================================
 
     let payload:
       IncidentRequest;
@@ -959,17 +887,9 @@ export class DashboardComponent
     }
 
 
-    // ========================================================
-    // START LOADING
-    // ========================================================
-
     this.loading =
       true;
 
-
-    // ========================================================
-    // API REQUEST
-    // ========================================================
 
     this.api
       .explain(
@@ -988,13 +908,12 @@ export class DashboardComponent
               ExplanationResponse
           ) => {
 
-
             this.loading =
               false;
 
 
             // ==================================================
-            // CURRENT RESULT
+            // CURRENT DASHBOARD RESULT
             // ==================================================
 
             this.explanation =
@@ -1006,10 +925,22 @@ export class DashboardComponent
 
 
             // ==================================================
-            // HISTORY
+            // IMPORTANT
             //
-            // The drivers array is intentionally empty because
-            // influential features are no longer displayed.
+            // SAVE THE EXACT LATEST PREDICTION GENERATED
+            // BY THE DASHBOARD.
+            //
+            // Explainability reads this value.
+            // ==================================================
+
+            this.saveLatestPrediction(
+              payload,
+              response
+            );
+
+
+            // ==================================================
+            // HISTORY
             // ==================================================
 
             const historyItem:
@@ -1082,7 +1013,7 @@ export class DashboardComponent
 
 
             // ==================================================
-            // SUCCESS MESSAGE
+            // SUCCESS
             // ==================================================
 
             this.successMessage =
@@ -1101,7 +1032,6 @@ export class DashboardComponent
             error: unknown
           ) => {
 
-
             console.error(
               'Prediction API error:',
               error
@@ -1111,11 +1041,6 @@ export class DashboardComponent
             this.loading =
               false;
 
-
-            /*
-             * Make absolutely sure that no old result
-             * remains visible after an API error.
-             */
 
             this.clearCurrentPrediction();
 
@@ -1133,13 +1058,111 @@ export class DashboardComponent
 
 
   // ==========================================================
+  // SAVE LATEST PREDICTION
+  //
+  // THIS IS THE IMPORTANT NEW METHOD.
+  //
+  // It creates the single source of truth used by
+  // Explainability.
+  // ==========================================================
+
+  private saveLatestPrediction(
+
+    input:
+      IncidentRequest,
+
+    response:
+      ExplanationResponse
+
+  ): void {
+
+    try {
+
+      const latestPrediction = {
+
+        prediction:
+          response.prediction,
+
+        input:
+          {
+
+            ...input,
+
+            title:
+              this.incident.title.trim()
+
+          },
+
+        title:
+          this.incident.title.trim(),
+
+        source:
+          'DASHBOARD',
+
+        createdAt:
+          new Date().toISOString()
+
+      };
+
+
+      // ======================================================
+      // LAST PREDICTION
+      // ======================================================
+
+      localStorage.setItem(
+
+        'latestPrediction',
+
+        JSON.stringify(
+          latestPrediction
+        )
+
+      );
+
+
+      // ======================================================
+      // COMPLETE EXPLANATION
+      // ======================================================
+
+      localStorage.setItem(
+
+        'latestPredictionExplanation',
+
+        JSON.stringify(
+          response
+        )
+
+      );
+
+
+      console.log(
+        'Latest Dashboard prediction saved:',
+        latestPrediction
+      );
+
+    }
+
+    catch (
+      error: unknown
+    ) {
+
+      console.error(
+        'Unable to save latest prediction:',
+        error
+      );
+
+    }
+
+  }
+
+
+  // ==========================================================
   // CLEAR CURRENT PREDICTION
   //
   // IMPORTANT:
+  // This clears only the Dashboard UI.
   //
-  // This removes ONLY the current AI result.
-  //
-  // It does NOT delete the prediction history.
+  // It DOES NOT delete latestPrediction.
   // ==========================================================
 
   private clearCurrentPrediction():
@@ -1161,10 +1184,6 @@ export class DashboardComponent
 
   // ==========================================================
   // BUILD PREDICTION PAYLOAD
-  //
-  // IMPORTANT:
-  //
-  // title is NOT sent to FastAPI.
   // ==========================================================
 
   private buildPredictionPayload():
@@ -1177,36 +1196,30 @@ export class DashboardComponent
           this.incident.incident_state
         ),
 
-
       category:
         this.cleanString(
           this.incident.category
         ),
-
 
       subcategory:
         this.cleanString(
           this.incident.subcategory
         ),
 
-
       u_symptom:
         this.cleanString(
           this.incident.u_symptom
         ),
-
 
       assignment_group:
         this.cleanString(
           this.incident.assignment_group
         ),
 
-
       assigned_to:
         this.cleanString(
           this.incident.assigned_to
         ),
-
 
       impact:
         this.normalizeNumericLevel(
@@ -1214,20 +1227,17 @@ export class DashboardComponent
           'impact'
         ),
 
-
       urgency:
         this.normalizeNumericLevel(
           this.incident.urgency,
           'urgency'
         ),
 
-
       priority:
         this.normalizeNumericLevel(
           this.incident.priority,
           'priority'
         ),
-
 
       opened_at:
         this.buildOpenedAt()
@@ -1488,16 +1498,13 @@ export class DashboardComponent
 
         return 'bi-exclamation-octagon-fill';
 
-
       case 'MEDIUM':
 
         return 'bi-exclamation-triangle-fill';
 
-
       case 'LOW':
 
         return 'bi-check-circle-fill';
-
 
       default:
 
@@ -1579,14 +1586,12 @@ export class DashboardComponent
 
         break;
 
-
       case 'MEDIUM':
 
         this.alertMessage =
           'Medium risk of SLA breach. Close monitoring is recommended.';
 
         break;
-
 
       case 'LOW':
 
@@ -1602,12 +1607,6 @@ export class DashboardComponent
 
   // ==========================================================
   // RESET FORM
-  //
-  // IMPORTANT:
-  //
-  // Reset removes the current prediction completely.
-  //
-  // It does NOT delete the historical records.
   // ==========================================================
 
   resetForm(): void {
@@ -1634,9 +1633,6 @@ export class DashboardComponent
 
   // ==========================================================
   // LOAD PREDICTION HISTORY
-  //
-  // This history is intentionally separate from the
-  // current AI prediction.
   // ==========================================================
 
   private loadPredictionHistory():
@@ -1693,8 +1689,7 @@ export class DashboardComponent
             ): item is HistoryItem => {
 
               if (
-                !item
-                ||
+                !item ||
                 typeof item !== 'object'
               ) {
 
@@ -1724,7 +1719,6 @@ export class DashboardComponent
             }
           )
 
-
           .map(
             (
               item: HistoryItem
@@ -1741,18 +1735,15 @@ export class DashboardComponent
                     'Incident prediction'
                   ),
 
-
                 risk:
                   this.normalizeRisk(
                     item.risk
                   ),
 
-
                 probability:
                   this.normalizeProbability(
                     item.probability
                   ),
-
 
                 date:
                   String(
@@ -1761,14 +1752,8 @@ export class DashboardComponent
                     new Date().toISOString()
                   ),
 
-
-                /*
-                 * Drivers are deliberately ignored.
-                 */
-
                 drivers:
                   [],
-
 
                 input:
                   item.input
@@ -1777,7 +1762,6 @@ export class DashboardComponent
 
             }
           )
-
 
           .slice(-100);
 
@@ -1863,10 +1847,6 @@ export class DashboardComponent
           [];
 
 
-      // ======================================================
-      // LOAD EXISTING NC RECORDS
-      // ======================================================
-
       if (
         stored
       ) {
@@ -1893,8 +1873,7 @@ export class DashboardComponent
                 ): item is NonConformanceRecord => {
 
                   if (
-                    !item
-                    ||
+                    !item ||
                     typeof item !== 'object'
                   ) {
 
@@ -1934,19 +1913,11 @@ export class DashboardComponent
       }
 
 
-      // ======================================================
-      // GENERATE NC REFERENCE
-      // ======================================================
-
       const ref =
         this.generateNextNCRef(
           records
         );
 
-
-      // ======================================================
-      // GENERATE NC TITLE
-      // ======================================================
 
       const title =
         this.generateNCTitle(
@@ -1961,10 +1932,6 @@ export class DashboardComponent
         );
 
 
-      // ======================================================
-      // CREATE NC RECORD
-      // ======================================================
-
       const record:
         NonConformanceRecord =
         {
@@ -1973,24 +1940,20 @@ export class DashboardComponent
 
           title,
 
-
           category:
             input.category
             ||
             '—',
-
 
           assignment_group:
             input.assignment_group
             ||
             '—',
 
-
           state:
             this.normalizeNCState(
               input.incident_state
             ),
-
 
           risk:
             this.normalizeRisk(
@@ -1999,7 +1962,6 @@ export class DashboardComponent
                 .risk_level
             ),
 
-
           probability:
             this.normalizeProbability(
               response
@@ -2007,16 +1969,13 @@ export class DashboardComponent
                 .probability
             ),
 
-
           raised:
             input.opened_at
             ||
             new Date().toISOString(),
 
-
           source:
             'DASHBOARD',
-
 
           input:
             {
@@ -2028,16 +1987,11 @@ export class DashboardComponent
 
             },
 
-
           prediction:
             response.prediction
 
         };
 
-
-      // ======================================================
-      // ADD NEW RECORD
-      // ======================================================
 
       records = [
 
@@ -2050,10 +2004,6 @@ export class DashboardComponent
         100
       );
 
-
-      // ======================================================
-      // SAVE
-      // ======================================================
 
       localStorage.setItem(
 
@@ -2117,9 +2067,7 @@ export class DashboardComponent
 
 
         if (
-          Number.isFinite(
-            number
-          )
+          Number.isFinite(number)
           &&
           number > max
         ) {
@@ -2204,23 +2152,16 @@ export class DashboardComponent
 
 
     if (
-      category
-      &&
+      category &&
       subcategory
     ) {
 
       return (
-
         category
-
         +
-
         ' - '
-
         +
-
         subcategory
-
       );
 
     }
@@ -2243,9 +2184,7 @@ export class DashboardComponent
       this.cleanString(
         value
       )
-
         .toUpperCase()
-
         .replace(
           /[\s-]+/g,
           '_'
@@ -2260,7 +2199,6 @@ export class DashboardComponent
 
         return 'ASSIGNED';
 
-
       case 'UNDER_INVESTIGATION':
 
       case 'INVESTIGATION':
@@ -2269,21 +2207,17 @@ export class DashboardComponent
 
         return 'UNDER_INVESTIGATION';
 
-
       case 'CORRECTIVE_ACTION':
 
         return 'CORRECTIVE_ACTION';
-
 
       case 'CLOSED':
 
         return 'CLOSED';
 
-
       case 'REJECTED':
 
         return 'REJECTED';
-
 
       default:
 
@@ -2319,13 +2253,9 @@ export class DashboardComponent
 
 
     if (
-
       risk.includes('MEDIUM')
-
       ||
-
       risk.includes('MED')
-
     ) {
 
       return 'MEDIUM';
@@ -2397,10 +2327,6 @@ export class DashboardComponent
       error as ApiErrorShape;
 
 
-    // ========================================================
-    // CONNECTION ERROR
-    // ========================================================
-
     if (
       apiError?.status === 0
     ) {
@@ -2413,17 +2339,9 @@ export class DashboardComponent
     }
 
 
-    // ========================================================
-    // DETAIL
-    // ========================================================
-
     const detail =
       apiError?.error?.detail;
 
-
-    // ========================================================
-    // VALIDATION ERRORS
-    // ========================================================
 
     if (
       Array.isArray(
@@ -2448,11 +2366,9 @@ export class DashboardComponent
                 Array.isArray(
                   item.loc
                 )
-
                   ? item.loc.join(
                       ' → '
                     )
-
                   : 'field';
 
 
@@ -2476,10 +2392,6 @@ export class DashboardComponent
     }
 
 
-    // ========================================================
-    // STRING DETAIL
-    // ========================================================
-
     if (
       typeof detail === 'string'
     ) {
@@ -2489,18 +2401,9 @@ export class DashboardComponent
     }
 
 
-    // ========================================================
-    // OBJECT DETAIL
-    // ========================================================
-
     if (
-
-      detail
-
-      &&
-
+      detail &&
       typeof detail === 'object'
-
     ) {
 
       const obj =
@@ -2538,10 +2441,6 @@ export class DashboardComponent
     }
 
 
-    // ========================================================
-    // ERROR MESSAGE
-    // ========================================================
-
     if (
       typeof apiError?.error?.message === 'string'
     ) {
@@ -2553,10 +2452,6 @@ export class DashboardComponent
     }
 
 
-    // ========================================================
-    // HTTP STATUS
-    // ========================================================
-
     switch (
       apiError?.status
     ) {
@@ -2567,13 +2462,11 @@ export class DashboardComponent
           'The prediction data is invalid.'
         );
 
-
       case 404:
 
         return (
           'The requested FastAPI endpoint was not found.'
         );
-
 
       case 422:
 
@@ -2581,20 +2474,17 @@ export class DashboardComponent
           'The data format is not accepted by FastAPI.'
         );
 
-
       case 500:
 
         return (
           'An internal error occurred during prediction.'
         );
 
-
       case 503:
 
         return (
           'The backend is available, but the ML model is not available.'
         );
-
 
       default:
 
@@ -2605,13 +2495,9 @@ export class DashboardComponent
           +
 
           (
-
             apiError?.status
-
               ? ` — HTTP ${apiError.status}`
-
               : ''
-
           )
 
           +
@@ -2683,4 +2569,3 @@ export class DashboardComponent
   }
 
 }
-

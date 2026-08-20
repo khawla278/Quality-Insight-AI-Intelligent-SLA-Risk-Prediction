@@ -54,7 +54,9 @@
 }
 
 
-/* COLLAPSED */
+/* =========================================================
+   COLLAPSED
+========================================================= */
 
 .sidebar.collapsed {
   width: 72px;
@@ -254,11 +256,14 @@
 ========================================================= */
 
 .main-content {
-  width: calc(100% - 245px);
+  width:
+    calc(100% - 245px);
 
-  margin-left: 245px;
+  margin-left:
+    245px;
 
-  min-height: 100vh;
+  min-height:
+    100vh;
 
   transition:
     width 0.25s ease,
@@ -266,9 +271,11 @@
 }
 
 .main-content.expanded {
-  width: calc(100% - 72px);
+  width:
+    calc(100% - 72px);
 
-  margin-left: 72px;
+  margin-left:
+    72px;
 }
 
 
@@ -295,7 +302,12 @@
     0 25px;
 
   background:
-    rgba(255, 255, 255, 0.94);
+    rgba(
+      255,
+      255,
+      255,
+      0.94
+    );
 
   backdrop-filter:
     blur(10px);
@@ -317,6 +329,24 @@
 
   font-size: 14px;
 }
+
+
+/* =========================================================
+   TOPBAR RIGHT
+========================================================= */
+
+.topbar-right {
+  display: flex;
+
+  align-items: center;
+
+  gap: 18px;
+}
+
+
+/* =========================================================
+   MENU
+========================================================= */
 
 .menu-button {
   width: 36px;
@@ -341,6 +371,83 @@
   background: #eef2ff;
 
   color: #4f46e5;
+}
+
+
+/* =========================================================
+   NOTIFICATION BUTTON
+========================================================= */
+
+.notification-button {
+  position: relative;
+
+  width: 38px;
+  height: 38px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border: 0;
+
+  border-radius: 9px;
+
+  background: #f8fafc;
+
+  color: #64748b;
+
+  cursor: pointer;
+
+  font-size: 18px;
+
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+
+.notification-button:hover {
+  background: #eef2ff;
+
+  color: #4f46e5;
+}
+
+
+/* =========================================================
+   NOTIFICATION BADGE
+========================================================= */
+
+.notification-badge {
+  position: absolute;
+
+  top: -4px;
+  right: -5px;
+
+  min-width: 18px;
+  height: 18px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  padding:
+    0 4px;
+
+  border-radius: 999px;
+
+  background: #dc2626;
+
+  color: #ffffff;
+
+  border:
+    2px solid #ffffff;
+
+  font-size: 9px;
+
+  font-weight: 800;
+
+  line-height: 1;
 }
 
 
@@ -400,13 +507,24 @@
   }
 
   .main-content {
-    width: calc(100% - 72px);
+    width:
+      calc(100% - 72px);
 
-    margin-left: 72px;
+    margin-left:
+      72px;
   }
 
   .topbar {
     padding:
       0 15px;
   }
+
+  .topbar-right {
+    gap: 10px;
+  }
+
+  .system-status {
+    display: none;
+  }
+
 }

@@ -10,7 +10,10 @@
     [class.collapsed]="!menuOpen"
   >
 
-    <!-- BRAND -->
+
+    <!-- ===================================================
+         BRAND
+    ==================================================== -->
 
     <div
       class="brand"
@@ -20,6 +23,7 @@
       <div class="brand-logo">
         Q
       </div>
+
 
       <div
         class="brand-text"
@@ -39,23 +43,30 @@
     </div>
 
 
-    <!-- NAVIGATION -->
+    <!-- ===================================================
+         NAVIGATION
+    ==================================================== -->
 
     <nav class="sidebar-nav">
 
 
+      <!-- HOME -->
 
-<a
-  routerLink="/home"
-  routerLinkActive="active"
-  [routerLinkActiveOptions]="{ exact: true }"
->
-  <i class="bi bi-house"></i>
+      <a
+        routerLink="/home"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{
+          exact: true
+        }"
+      >
 
-  <span *ngIf="menuOpen">
-    Home
-  </span>
-</a>
+        <i class="bi bi-house"></i>
+
+        <span *ngIf="menuOpen">
+          Home
+        </span>
+
+      </a>
 
 
       <!-- DASHBOARD -->
@@ -75,23 +86,23 @@
         </span>
 
       </a>
-      <!-- MODEL OVERVIEW -->
-
-<a
-  routerLink="/model"
-  routerLinkActive="active"
->
-  
-  <i class="bi bi-cpu"></i>
-
-  <span *ngIf="menuOpen">
-    Model Overview
-  </span>
-
-</a>
 
 
-    
+      <!-- MODEL -->
+
+      <a
+        routerLink="/model"
+        routerLinkActive="active"
+      >
+
+        <i class="bi bi-cpu"></i>
+
+        <span *ngIf="menuOpen">
+          Model Overview
+        </span>
+
+      </a>
+
 
       <!-- ANALYTICS -->
 
@@ -123,7 +134,9 @@
         </span>
 
       </a>
-  <!-- HISTORIQUE -->
+
+
+      <!-- HISTORIQUE -->
 
       <a
         routerLink="/historique"
@@ -155,17 +168,41 @@
       </a>
 
 
-      <!-- PIPELINE -->
+      <!-- =================================================
+           NOTIFICATIONS
+      ================================================== -->
 
       <a
-        routerLink="/pipeline"
+        routerLink="/notifications"
         routerLinkActive="active"
       >
 
-        <i class="bi bi-diagram-3"></i>
+        <i class="bi bi-bell"></i>
 
         <span *ngIf="menuOpen">
-          Pipeline
+          Notifications
+        </span>
+
+
+        <!-- ===============================================
+             BADGE
+             ONLY PENDING ALERTS
+        ================================================ -->
+
+        <span
+          class="sidebar-notification-badge"
+          *ngIf="
+            menuOpen &&
+            unreadNotifications > 0
+          "
+        >
+
+          {{
+            unreadNotifications > 99
+              ? '99+'
+              : unreadNotifications
+          }}
+
         </span>
 
       </a>
@@ -173,7 +210,9 @@
     </nav>
 
 
-    <!-- SIDEBAR FOOTER -->
+    <!-- ===================================================
+         SIDEBAR FOOTER
+    ==================================================== -->
 
     <div
       class="sidebar-footer"
@@ -201,9 +240,14 @@
   >
 
 
-    <!-- TOPBAR -->
+    <!-- ===================================================
+         TOPBAR
+    ==================================================== -->
 
     <header class="topbar">
+
+
+      <!-- LEFT -->
 
       <div class="topbar-left">
 
@@ -211,11 +255,13 @@
           type="button"
           class="menu-button"
           (click)="toggleMenu()"
+          aria-label="Toggle menu"
         >
 
           <i class="bi bi-list"></i>
 
         </button>
+
 
         <strong>
           Quality Insight AI
@@ -224,20 +270,73 @@
       </div>
 
 
-      <div class="system-status">
+      <!-- =================================================
+           RIGHT
+      ================================================== -->
 
-        <span class="status-dot"></span>
+      <div class="topbar-right">
 
-        <span>
-          AI System
-        </span>
+
+        <!-- ===============================================
+             NOTIFICATION BUTTON
+        ================================================ -->
+
+        <button
+          type="button"
+          class="notification-button"
+          routerLink="/notifications"
+          title="Notifications"
+          aria-label="Open notifications"
+        >
+
+          <i class="bi bi-bell"></i>
+
+
+          <!-- =============================================
+               BADGE
+               ONLY PENDING ALERTS
+          ============================================== -->
+
+          <span
+            class="notification-badge"
+            *ngIf="
+              unreadNotifications > 0
+            "
+          >
+
+            {{
+              unreadNotifications > 99
+                ? '99+'
+                : unreadNotifications
+            }}
+
+          </span>
+
+        </button>
+
+
+        <!-- ===============================================
+             SYSTEM STATUS
+        ================================================ -->
+
+        <div class="system-status">
+
+          <span class="status-dot"></span>
+
+          <span>
+            AI System
+          </span>
+
+        </div>
 
       </div>
 
     </header>
 
 
-    <!-- PAGE -->
+    <!-- ===================================================
+         PAGE
+    ==================================================== -->
 
     <section class="content">
 

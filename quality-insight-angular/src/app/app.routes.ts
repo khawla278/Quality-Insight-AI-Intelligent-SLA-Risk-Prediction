@@ -2,11 +2,20 @@ import { Routes } from '@angular/router';
 
 export const routes: Routes = [
 
+  /* =========================================================
+     DEFAULT
+  ========================================================= */
+
   {
     path: '',
     redirectTo: 'home',
     pathMatch: 'full'
   },
+
+
+  /* =========================================================
+     HOME
+  ========================================================= */
 
   {
     path: 'home',
@@ -15,12 +24,22 @@ export const routes: Routes = [
         .then(m => m.HomeComponent)
   },
 
+
+  /* =========================================================
+     DASHBOARD
+  ========================================================= */
+
   {
     path: 'dashboard',
     loadComponent: () =>
       import('./pages/dashboard/dashboard.component')
         .then(m => m.DashboardComponent)
   },
+
+
+  /* =========================================================
+     HISTORIQUE / NON-CONFORMANCES
+  ========================================================= */
 
   {
     path: 'historique',
@@ -29,32 +48,22 @@ export const routes: Routes = [
         .then(m => m.HistoriqueComponent)
   },
 
-  {
-    path: 'analytics',
-    loadComponent: () =>
-      import('./pages/analytics/analytics.component')
-        .then(m => m.AnalyticsComponent)
-  },
+
+  /* =========================================================
+     NOTIFICATIONS
+  ========================================================= */
 
   {
-    path: 'explainability',
+    path: 'notifications',
     loadComponent: () =>
-      import('./pages/explainability/explainability.component')
-        .then(m => m.ExplainabilityComponent)
+      import('./pages/notification/notification-center.component')
+        .then(m => m.NotificationCenterComponent)
   },
 
-  {
-    path: 'model',
-    loadComponent: () =>
-      import('./pages/model/model')
-        .then(m => m.ModelComponent)
-  },
 
-  {
-    path: 'predict',
-    redirectTo: 'dashboard',
-    pathMatch: 'full'
-  },
+  /* =========================================================
+     AI ASSISTANT
+  ========================================================= */
 
   {
     path: 'ai-assistant',
@@ -63,12 +72,46 @@ export const routes: Routes = [
         .then(m => m.AiAssistantComponent)
   },
 
+
+  /* =========================================================
+     EXPLAINABILITY
+  ========================================================= */
+
   {
-    path: 'pipeline',
+    path: 'explainability',
     loadComponent: () =>
-      import('./pages/pipeline/pipeline.component')
-        .then(m => m.PipelineComponent)
+      import('./pages/explainability/explainability.component')
+        .then(m => m.ExplainabilityComponent)
   },
+
+
+  /* =========================================================
+     ANALYTICS
+  ========================================================= */
+
+  {
+    path: 'analytics',
+    loadComponent: () =>
+      import('./pages/analytics/analytics.component')
+        .then(m => m.AnalyticsComponent)
+  },
+
+
+  /* =========================================================
+     MODEL
+  ========================================================= */
+
+  {
+    path: 'model',
+    loadComponent: () =>
+      import('./pages/model/model')
+        .then(m => m.ModelComponent)
+  },
+
+
+  /* =========================================================
+     UNKNOWN ROUTE
+  ========================================================= */
 
   {
     path: '**',
