@@ -1,5 +1,8 @@
-<div class="app-layout">
-
+<div
+  class="app-layout"
+  [class.dark-mode]="darkMode"
+  [class.reduced-motion]="reducedMotion"
+>
 
   <!-- =====================================================
        SIDEBAR
@@ -10,10 +13,7 @@
     [class.collapsed]="!menuOpen"
   >
 
-
-    <!-- ===================================================
-         BRAND
-    ==================================================== -->
+    <!-- BRAND -->
 
     <div
       class="brand"
@@ -24,12 +24,10 @@
         Q
       </div>
 
-
       <div
         class="brand-text"
         *ngIf="menuOpen"
       >
-
         <strong>
           Quality
         </strong>
@@ -37,7 +35,6 @@
         <span>
           Insight AI
         </span>
-
       </div>
 
     </div>
@@ -49,23 +46,18 @@
 
     <nav class="sidebar-nav">
 
-
       <!-- HOME -->
 
       <a
         routerLink="/home"
         routerLinkActive="active"
-        [routerLinkActiveOptions]="{
-          exact: true
-        }"
+        [routerLinkActiveOptions]="{ exact: true }"
       >
-
         <i class="bi bi-house"></i>
 
         <span *ngIf="menuOpen">
           Home
         </span>
-
       </a>
 
 
@@ -74,17 +66,13 @@
       <a
         routerLink="/dashboard"
         routerLinkActive="active"
-        [routerLinkActiveOptions]="{
-          exact: true
-        }"
+        [routerLinkActiveOptions]="{ exact: true }"
       >
-
         <i class="bi bi-grid"></i>
 
         <span *ngIf="menuOpen">
           Dashboard
         </span>
-
       </a>
 
 
@@ -94,13 +82,11 @@
         routerLink="/model"
         routerLinkActive="active"
       >
-
         <i class="bi bi-cpu"></i>
 
         <span *ngIf="menuOpen">
           Model Overview
         </span>
-
       </a>
 
 
@@ -110,13 +96,11 @@
         routerLink="/analytics"
         routerLinkActive="active"
       >
-
         <i class="bi bi-graph-up"></i>
 
         <span *ngIf="menuOpen">
           Analytics
         </span>
-
       </a>
 
 
@@ -126,13 +110,11 @@
         routerLink="/explainability"
         routerLinkActive="active"
       >
-
         <i class="bi bi-lightbulb"></i>
 
         <span *ngIf="menuOpen">
           Explainability
         </span>
-
       </a>
 
 
@@ -142,13 +124,11 @@
         routerLink="/historique"
         routerLinkActive="active"
       >
-
         <i class="bi bi-clock-history"></i>
 
         <span *ngIf="menuOpen">
           Historique
         </span>
-
       </a>
 
 
@@ -158,19 +138,15 @@
         routerLink="/ai-assistant"
         routerLinkActive="active"
       >
-
         <i class="bi bi-robot"></i>
 
         <span *ngIf="menuOpen">
           AI Assistant
         </span>
-
       </a>
 
 
-      <!-- =================================================
-           NOTIFICATIONS
-      ================================================== -->
+      <!-- NOTIFICATIONS -->
 
       <a
         routerLink="/notifications"
@@ -183,26 +159,19 @@
           Notifications
         </span>
 
-
-        <!-- ===============================================
-             BADGE
-             ONLY PENDING ALERTS
-        ================================================ -->
-
         <span
           class="sidebar-notification-badge"
           *ngIf="
             menuOpen &&
+            notificationsEnabled &&
             unreadNotifications > 0
           "
         >
-
           {{
             unreadNotifications > 99
               ? '99+'
               : unreadNotifications
           }}
-
         </span>
 
       </a>
@@ -211,19 +180,44 @@
 
 
     <!-- ===================================================
-         SIDEBAR FOOTER
+         SIDEBAR BOTTOM
     ==================================================== -->
 
-    <div
-      class="sidebar-footer"
-      *ngIf="menuOpen"
-    >
+    <div class="sidebar-bottom">
 
-      <span class="online-dot"></span>
+      <!-- SETTINGS -->
 
-      <span>
-        AI System
-      </span>
+      <button
+        type="button"
+        class="settings-button"
+        [class.active]="settingsOpen"
+        (click)="toggleSettings()"
+        title="Settings"
+      >
+
+        <i class="bi bi-gear"></i>
+
+        <span *ngIf="menuOpen">
+          Settings
+        </span>
+
+      </button>
+
+
+      <!-- SYSTEM STATUS -->
+
+      <div
+        class="sidebar-footer"
+        *ngIf="menuOpen"
+      >
+
+        <span class="online-dot"></span>
+
+        <span>
+          AI System
+        </span>
+
+      </div>
 
     </div>
 
@@ -231,7 +225,351 @@
 
 
   <!-- =====================================================
-       MAIN
+       SETTINGS OVERLAY
+  ====================================================== -->
+
+  <div
+    class="settings-overlay"
+    *ngIf="settingsOpen"
+    (click)="closeSettings()"
+  >
+
+    <section
+      class="settings-panel"
+      (click)="$event.stopPropagation()"
+    >
+
+      <!-- HEADER -->
+
+      <div class="settings-header">
+
+        <div>
+
+          <span class="settings-eyebrow">
+            QUALITY INSIGHT AI
+          </span>
+
+          <h2>
+            Settings
+          </h2>
+
+          <p>
+            Customize your application experience.
+          </p>
+
+        </div>
+
+        <button
+          type="button"
+          class="settings-close"
+          (click)="closeSettings()"
+          aria-label="Close settings"
+        >
+          <i class="bi bi-x-lg"></i>
+        </button>
+
+      </div>
+
+
+      <!-- =================================================
+           APPEARANCE
+      ================================================== -->
+
+      <div class="settings-section">
+
+        <div class="settings-section-title">
+
+          <i class="bi bi-palette"></i>
+
+          <div>
+
+            <strong>
+              Appearance
+            </strong>
+
+            <span>
+              Customize the interface appearance.
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <!-- DARK MODE -->
+
+        <div class="setting-row">
+
+          <div class="setting-info">
+
+            <div class="setting-icon dark">
+
+              <i
+                class="bi"
+                [class.bi-moon-stars]="!darkMode"
+                [class.bi-sun]="darkMode"
+              ></i>
+
+            </div>
+
+            <div>
+
+              <strong>
+                Dark mode
+              </strong>
+
+              <span>
+                {{
+                  darkMode
+                    ? 'Dark theme is enabled'
+                    : 'Use the light theme'
+                }}
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <button
+            type="button"
+            class="toggle"
+            [class.on]="darkMode"
+            (click)="toggleDarkMode()"
+            [attr.aria-pressed]="darkMode"
+          >
+
+            <span></span>
+
+          </button>
+
+        </div>
+
+
+        <!-- REDUCED MOTION -->
+
+        <div class="setting-row">
+
+          <div class="setting-info">
+
+            <div class="setting-icon motion">
+
+              <i class="bi bi-magic"></i>
+
+            </div>
+
+            <div>
+
+              <strong>
+                Reduce animations
+              </strong>
+
+              <span>
+                Reduce interface transitions and animations.
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <button
+            type="button"
+            class="toggle"
+            [class.on]="reducedMotion"
+            (click)="toggleReducedMotion()"
+            [attr.aria-pressed]="reducedMotion"
+          >
+
+            <span></span>
+
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           NOTIFICATIONS
+      ================================================== -->
+
+      <div class="settings-section">
+
+        <div class="settings-section-title">
+
+          <i class="bi bi-bell"></i>
+
+          <div>
+
+            <strong>
+              Notifications
+            </strong>
+
+            <span>
+              Control notification indicators.
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <div class="setting-row">
+
+          <div class="setting-info">
+
+            <div class="setting-icon notification">
+
+              <i class="bi bi-bell"></i>
+
+            </div>
+
+            <div>
+
+              <strong>
+                Notification badge
+              </strong>
+
+              <span>
+                {{
+                  notificationsEnabled
+                    ? 'Notification badge is visible'
+                    : 'Notification badge is hidden'
+                }}
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <button
+            type="button"
+            class="toggle"
+            [class.on]="notificationsEnabled"
+            (click)="toggleNotifications()"
+            [attr.aria-pressed]="notificationsEnabled"
+          >
+
+            <span></span>
+
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           QUICK ACTIONS
+      ================================================== -->
+
+      <div class="settings-section">
+
+        <div class="settings-section-title">
+
+          <i class="bi bi-lightning"></i>
+
+          <div>
+
+            <strong>
+              Quick actions
+            </strong>
+
+            <span>
+              Useful application controls.
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <button
+          type="button"
+          class="action-button"
+          (click)="goToDashboard()"
+        >
+
+          <span>
+
+            <i class="bi bi-grid"></i>
+
+            Open Dashboard
+
+          </span>
+
+          <i class="bi bi-arrow-right"></i>
+
+        </button>
+
+
+        <button
+          type="button"
+          class="action-button"
+          (click)="goToNotifications()"
+        >
+
+          <span>
+
+            <i class="bi bi-bell"></i>
+
+            Open Notifications
+
+          </span>
+
+          <i class="bi bi-arrow-right"></i>
+
+        </button>
+
+
+        <button
+          type="button"
+          class="action-button"
+          (click)="goToAssistant()"
+        >
+
+          <span>
+
+            <i class="bi bi-robot"></i>
+
+            Open AI Assistant
+
+          </span>
+
+          <i class="bi bi-arrow-right"></i>
+
+        </button>
+
+      </div>
+
+
+      <!-- FOOTER -->
+
+      <div class="settings-footer">
+
+        <button
+          type="button"
+          class="reset-button"
+          (click)="resetSettings()"
+        >
+
+          <i class="bi bi-arrow-counterclockwise"></i>
+
+          Reset settings
+
+        </button>
+
+      </div>
+
+    </section>
+
+  </div>
+
+
+  <!-- =====================================================
+       MAIN CONTENT
   ====================================================== -->
 
   <main
@@ -239,15 +577,9 @@
     [class.expanded]="!menuOpen"
   >
 
-
-    <!-- ===================================================
-         TOPBAR
-    ==================================================== -->
+    <!-- TOPBAR -->
 
     <header class="topbar">
-
-
-      <!-- LEFT -->
 
       <div class="topbar-left">
 
@@ -262,7 +594,6 @@
 
         </button>
 
-
         <strong>
           Quality Insight AI
         </strong>
@@ -270,16 +601,9 @@
       </div>
 
 
-      <!-- =================================================
-           RIGHT
-      ================================================== -->
-
       <div class="topbar-right">
 
-
-        <!-- ===============================================
-             NOTIFICATION BUTTON
-        ================================================ -->
+        <!-- NOTIFICATIONS -->
 
         <button
           type="button"
@@ -287,37 +611,31 @@
           routerLink="/notifications"
           title="Notifications"
           aria-label="Open notifications"
+          [class.notifications-disabled]="
+            !notificationsEnabled
+          "
         >
 
           <i class="bi bi-bell"></i>
 
-
-          <!-- =============================================
-               BADGE
-               ONLY PENDING ALERTS
-          ============================================== -->
-
           <span
             class="notification-badge"
             *ngIf="
+              notificationsEnabled &&
               unreadNotifications > 0
             "
           >
-
             {{
               unreadNotifications > 99
                 ? '99+'
                 : unreadNotifications
             }}
-
           </span>
 
         </button>
 
 
-        <!-- ===============================================
-             SYSTEM STATUS
-        ================================================ -->
+        <!-- STATUS -->
 
         <div class="system-status">
 
@@ -334,9 +652,7 @@
     </header>
 
 
-    <!-- ===================================================
-         PAGE
-    ==================================================== -->
+    <!-- ROUTED PAGE -->
 
     <section class="content">
 

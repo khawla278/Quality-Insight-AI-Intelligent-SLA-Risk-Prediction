@@ -78,37 +78,23 @@ export class AnalyticsComponent
   // ============================================================
 
   history:
-    HistoryItem[] =
-    [];
+    HistoryItem[] = [];
 
 
   globalImportance:
-    ImportanceResponse | null =
-    null;
+    ImportanceResponse | null = null;
 
 
   latestExplanation:
-    ExplanationResponse | null =
-    null;
+    ExplanationResponse | null = null;
 
-
-  /*
-   * Dernière prédiction réellement envoyée
-   * depuis le Dashboard.
-   */
 
   latestPrediction:
-    PredictionResponse | null =
-    null;
+    PredictionResponse | null = null;
 
-
-  /*
-   * Données de la dernière prédiction.
-   */
 
   latestInput:
-    Record<string, unknown> | null =
-    null;
+    Record<string, unknown> | null = null;
 
 
   latestTitle =
@@ -136,16 +122,23 @@ export class AnalyticsComponent
   // ============================================================
 
   private refreshInterval:
-    ReturnType<typeof setInterval> | null =
-    null;
+    ReturnType<typeof setInterval> | null = null;
 
-
-  /*
-   * Snapshot complet du stockage.
-   */
 
   private lastStorageSnapshot =
     '';
+
+
+  // ============================================================
+  // DARK MODE OBSERVER
+  // ============================================================
+
+  private themeObserver:
+    MutationObserver | null = null;
+
+
+  private lastDarkMode =
+    false;
 
 
   // ============================================================
@@ -153,33 +146,27 @@ export class AnalyticsComponent
   // ============================================================
 
   private riskCanvas:
-    HTMLCanvasElement | null =
-    null;
+    HTMLCanvasElement | null = null;
 
 
   private histogramCanvas:
-    HTMLCanvasElement | null =
-    null;
+    HTMLCanvasElement | null = null;
 
 
   private evolutionCanvas:
-    HTMLCanvasElement | null =
-    null;
+    HTMLCanvasElement | null = null;
 
 
   private comparisonCanvas:
-    HTMLCanvasElement | null =
-    null;
+    HTMLCanvasElement | null = null;
 
 
   private influenceCanvas:
-    HTMLCanvasElement | null =
-    null;
+    HTMLCanvasElement | null = null;
 
 
   private importanceCanvas:
-    HTMLCanvasElement | null =
-    null;
+    HTMLCanvasElement | null = null;
 
 
   // ============================================================
@@ -187,33 +174,27 @@ export class AnalyticsComponent
   // ============================================================
 
   private riskChart:
-    Chart | null =
-    null;
+    Chart | null = null;
 
 
   private histogramChart:
-    Chart | null =
-    null;
+    Chart | null = null;
 
 
   private evolutionChart:
-    Chart | null =
-    null;
+    Chart | null = null;
 
 
   private comparisonChart:
-    Chart | null =
-    null;
+    Chart | null = null;
 
 
   private influenceChart:
-    Chart | null =
-    null;
+    Chart | null = null;
 
 
   private importanceChart:
-    Chart | null =
-    null;
+    Chart | null = null;
 
 
   // ============================================================
@@ -258,7 +239,6 @@ export class AnalyticsComponent
       reference?.nativeElement
       ?? null;
 
-
     this.scheduleChartCreation(
       () =>
         this.createRiskChart()
@@ -280,7 +260,6 @@ export class AnalyticsComponent
     this.histogramCanvas =
       reference?.nativeElement
       ?? null;
-
 
     this.scheduleChartCreation(
       () =>
@@ -304,7 +283,6 @@ export class AnalyticsComponent
       reference?.nativeElement
       ?? null;
 
-
     this.scheduleChartCreation(
       () =>
         this.createEvolutionChart()
@@ -326,7 +304,6 @@ export class AnalyticsComponent
     this.comparisonCanvas =
       reference?.nativeElement
       ?? null;
-
 
     this.scheduleChartCreation(
       () =>
@@ -350,7 +327,6 @@ export class AnalyticsComponent
       reference?.nativeElement
       ?? null;
 
-
     this.scheduleChartCreation(
       () =>
         this.createInfluenceChart()
@@ -373,7 +349,6 @@ export class AnalyticsComponent
       reference?.nativeElement
       ?? null;
 
-
     this.scheduleChartCreation(
       () =>
         this.createImportanceChart()
@@ -390,15 +365,13 @@ export class AnalyticsComponent
 
     this.loadAllData();
 
-
-    /*
-     * IMPORTANT :
-     * Prendre immédiatement le snapshot actuel.
-     */
-
     this.lastStorageSnapshot =
       this.getStorageSnapshot();
 
+    this.lastDarkMode =
+      this.isDarkMode();
+
+    this.startThemeObserver();
 
     this.refreshInterval =
       setInterval(
@@ -407,12 +380,10 @@ export class AnalyticsComponent
         1000
       );
 
-
     window.addEventListener(
       'focus',
       this.handleWindowFocus
     );
-
 
     document.addEventListener(
       'visibilitychange',
@@ -432,26 +403,185 @@ export class AnalyticsComponent
         this.refreshInterval
       );
 
-
       this.refreshInterval =
         null;
 
     }
-
 
     window.removeEventListener(
       'focus',
       this.handleWindowFocus
     );
 
-
     document.removeEventListener(
       'visibilitychange',
       this.handleVisibilityChange
     );
 
+    this.stopThemeObserver();
 
     this.destroyAllCharts();
+
+  }
+
+
+  // ============================================================
+  // DARK MODE
+  // ============================================================
+
+  private isDarkMode():
+    boolean {
+
+    if (
+      typeof document ===
+      'undefined'
+    ) {
+
+      return false;
+
+    }
+
+    return (
+
+      document.documentElement
+        .classList
+        .contains('dark-mode')
+
+      ||
+
+      document.body
+        .classList
+        .contains('dark-mode')
+
+      ||
+
+      !!document.querySelector(
+        '.app-layout.dark-mode'
+      )
+
+      ||
+
+      !!document.querySelector(
+        '.dark-mode'
+      )
+
+    );
+
+  }
+
+
+  private startThemeObserver():
+    void {
+
+    if (
+      typeof document ===
+      'undefined'
+    ) {
+
+      return;
+
+    }
+
+    this.themeObserver =
+      new MutationObserver(
+        () => {
+
+          const currentDarkMode =
+            this.isDarkMode();
+
+          if (
+            currentDarkMode ===
+            this.lastDarkMode
+          ) {
+
+            return;
+
+          }
+
+          this.lastDarkMode =
+            currentDarkMode;
+
+          this.rebuildChartsForTheme();
+
+        }
+      );
+
+
+    this.themeObserver.observe(
+      document.documentElement,
+      {
+        attributes: true,
+        attributeFilter: [
+          'class'
+        ],
+        subtree: true
+      }
+    );
+
+  }
+
+
+  private stopThemeObserver():
+    void {
+
+    this.themeObserver?.disconnect();
+
+    this.themeObserver =
+      null;
+
+  }
+
+
+  private rebuildChartsForTheme():
+    void {
+
+    this.destroyAllCharts();
+
+    this.scheduleAllCharts();
+
+  }
+
+
+  // ============================================================
+  // CHART THEME
+  // ============================================================
+
+  private getChartTextColor():
+    string {
+
+    return this.isDarkMode()
+      ? '#cbd5e1'
+      : '#475569';
+
+  }
+
+
+  private getChartMutedColor():
+    string {
+
+    return this.isDarkMode()
+      ? '#64748b'
+      : '#94a3b8';
+
+  }
+
+
+  private getChartGridColor():
+    string {
+
+    return this.isDarkMode()
+      ? 'rgba(148,163,184,.10)'
+      : '#eef2f7';
+
+  }
+
+
+  private getChartBorderColor():
+    string {
+
+    return this.isDarkMode()
+      ? '#0f172a'
+      : '#ffffff';
 
   }
 
@@ -502,7 +632,6 @@ export class AnalyticsComponent
 
     this.loadLatestExplanation();
 
-
     if (
       !this.globalImportance
     ) {
@@ -521,57 +650,41 @@ export class AnalyticsComponent
   get total():
     number {
 
-    return (
-      this.history.length
-    );
+    return this.history.length;
 
   }
 
 
   // ============================================================
-  // HIGH COUNT
+  // COUNTS
   // ============================================================
 
   get highCount():
     number {
 
-    return this.count(
-      'HIGH'
-    );
+    return this.count('HIGH');
 
   }
 
-
-  // ============================================================
-  // MEDIUM COUNT
-  // ============================================================
 
   get mediumCount():
     number {
 
-    return this.count(
-      'MEDIUM'
-    );
+    return this.count('MEDIUM');
 
   }
 
-
-  // ============================================================
-  // LOW COUNT
-  // ============================================================
 
   get lowCount():
     number {
 
-    return this.count(
-      'LOW'
-    );
+    return this.count('LOW');
 
   }
 
 
   // ============================================================
-  // HIGH %
+  // PERCENTAGES
   // ============================================================
 
   get highPercentage():
@@ -584,10 +697,6 @@ export class AnalyticsComponent
   }
 
 
-  // ============================================================
-  // MEDIUM %
-  // ============================================================
-
   get mediumPercentage():
     number {
 
@@ -597,10 +706,6 @@ export class AnalyticsComponent
 
   }
 
-
-  // ============================================================
-  // LOW %
-  // ============================================================
 
   get lowPercentage():
     number {
@@ -619,43 +724,26 @@ export class AnalyticsComponent
   get average():
     number {
 
-    if (
-      !this.total
-    ) {
-
+    if (!this.total) {
       return 0;
-
     }
-
 
     const totalProbability =
       this.history.reduce(
         (
           sum: number,
           item: HistoryItem
-        ) => {
-
-          return (
-
-            sum +
-
-            this.normalizeProbability(
-              item.probability
-            )
-
-          );
-
-        },
+        ) =>
+          sum +
+          this.normalizeProbability(
+            item.probability
+          ),
         0
       );
 
-
     return (
-
       totalProbability /
-
       this.total
-
     ) * 100;
 
   }
@@ -668,29 +756,18 @@ export class AnalyticsComponent
   get maximum():
     number {
 
-    if (
-      !this.total
-    ) {
-
+    if (!this.total) {
       return 0;
-
     }
 
-
-    return (
-
-      Math.max(
-        ...this.history.map(
-          item =>
-            this.normalizeProbability(
-              item.probability
-            )
-        )
+    return Math.max(
+      ...this.history.map(
+        item =>
+          this.normalizeProbability(
+            item.probability
+          )
       )
-
-      * 100
-
-    );
+    ) * 100;
 
   }
 
@@ -702,48 +779,32 @@ export class AnalyticsComponent
   get minimum():
     number {
 
-    if (
-      !this.total
-    ) {
-
+    if (!this.total) {
       return 0;
-
     }
 
-
-    return (
-
-      Math.min(
-        ...this.history.map(
-          item =>
-            this.normalizeProbability(
-              item.probability
-            )
-        )
+    return Math.min(
+      ...this.history.map(
+        item =>
+          this.normalizeProbability(
+            item.probability
+          )
       )
-
-      * 100
-
-    );
+    ) * 100;
 
   }
 
 
   // ============================================================
-  // LAST HISTORY ITEM
+  // LATEST
   // ============================================================
 
   get latest():
     HistoryItem | null {
 
-    if (
-      !this.history.length
-    ) {
-
+    if (!this.history.length) {
       return null;
-
     }
-
 
     return this.history[
       this.history.length - 1
@@ -753,59 +814,36 @@ export class AnalyticsComponent
 
 
   // ============================================================
-  // LAST DRIVERS
+  // LATEST DRIVERS
   // ============================================================
 
   get latestDrivers():
     PredictionInfluence[] {
 
-    /*
-     * PRIORITE 1 :
-     *
-     * Drivers de l'explication réellement fournie
-     * par le Dashboard.
-     */
-
     if (
-
       this.latestExplanation
         ?.most_influential_features
         ?.length
-
     ) {
 
       return (
-
         this.latestExplanation
           .most_influential_features
-
       );
 
     }
 
-
-    /*
-     * PRIORITE 2 :
-     *
-     * Drivers enregistrés dans l'historique.
-     */
-
     if (
-
       this.latest?.drivers &&
-
       Array.isArray(
         this.latest.drivers
       ) &&
-
       this.latest.drivers.length
-
     ) {
 
       return this.latest.drivers;
 
     }
-
 
     return [];
 
@@ -813,34 +851,19 @@ export class AnalyticsComponent
 
 
   // ============================================================
-  // LAST RISK
+  // LATEST RISK
   // ============================================================
 
   get latestRisk():
     RiskLevel {
 
-    /*
-     * PRIORITE 1 :
-     *
-     * Résultat exact de la dernière prédiction
-     * du Dashboard.
-     */
-
-    if (
-      this.latestPrediction
-    ) {
+    if (this.latestPrediction) {
 
       return this.normalizeRisk(
         this.latestPrediction.risk_level
       );
 
     }
-
-
-    /*
-     * PRIORITE 2 :
-     * Explication.
-     */
 
     if (
       this.latestExplanation?.prediction
@@ -854,15 +877,7 @@ export class AnalyticsComponent
 
     }
 
-
-    /*
-     * PRIORITE 3 :
-     * Historique.
-     */
-
-    if (
-      this.latest
-    ) {
+    if (this.latest) {
 
       return this.normalizeRisk(
         this.latest.risk
@@ -870,39 +885,25 @@ export class AnalyticsComponent
 
     }
 
-
     return 'LOW';
 
   }
 
 
   // ============================================================
-  // LAST PROBABILITY
+  // LATEST PROBABILITY
   // ============================================================
 
   get latestProbability():
     number {
 
-    /*
-     * PRIORITE 1 :
-     * latestPrediction
-     */
-
-    if (
-      this.latestPrediction
-    ) {
+    if (this.latestPrediction) {
 
       return this.normalizeProbability(
         this.latestPrediction.probability
       );
 
     }
-
-
-    /*
-     * PRIORITE 2 :
-     * explanation
-     */
 
     if (
       this.latestExplanation?.prediction
@@ -916,15 +917,7 @@ export class AnalyticsComponent
 
     }
 
-
-    /*
-     * PRIORITE 3 :
-     * historique
-     */
-
-    if (
-      this.latest
-    ) {
+    if (this.latest) {
 
       return this.normalizeProbability(
         this.latest.probability
@@ -932,22 +925,17 @@ export class AnalyticsComponent
 
     }
 
-
     return 0;
 
   }
 
 
   // ============================================================
-  // LAST DATE
+  // LATEST DATE
   // ============================================================
 
   get latestDate():
     string {
-
-    /*
-     * La date de latestPrediction est prioritaire.
-     */
 
     try {
 
@@ -956,10 +944,7 @@ export class AnalyticsComponent
           'latestPrediction'
         );
 
-
-      if (
-        stored
-      ) {
+      if (stored) {
 
         const parsed:
           unknown =
@@ -967,11 +952,9 @@ export class AnalyticsComponent
             stored
           );
 
-
         if (
           parsed &&
-          typeof parsed ===
-            'object'
+          typeof parsed === 'object'
         ) {
 
           const data =
@@ -980,10 +963,7 @@ export class AnalyticsComponent
                 string;
             };
 
-
-          if (
-            data.createdAt
-          ) {
+          if (data.createdAt) {
 
             return String(
               data.createdAt
@@ -1006,7 +986,6 @@ export class AnalyticsComponent
       );
 
     }
-
 
     return this.latest?.date ?? '';
 
@@ -1041,21 +1020,13 @@ export class AnalyticsComponent
   ):
     number {
 
-    if (
-      !this.total
-    ) {
-
+    if (!this.total) {
       return 0;
-
     }
 
-
     return (
-
       value /
-
       this.total
-
     ) * 100;
 
   }
@@ -1071,10 +1042,8 @@ export class AnalyticsComponent
     this.loading =
       true;
 
-
     this.errorMessage =
       '';
-
 
     try {
 
@@ -1083,10 +1052,7 @@ export class AnalyticsComponent
           'predictionHistory'
         );
 
-
-      if (
-        !storedValue
-      ) {
+      if (!storedValue) {
 
         this.history =
           [];
@@ -1097,13 +1063,11 @@ export class AnalyticsComponent
 
       }
 
-
       const parsedValue:
         unknown =
         JSON.parse(
           storedValue
         );
-
 
       if (
         !Array.isArray(
@@ -1120,7 +1084,6 @@ export class AnalyticsComponent
 
       }
 
-
       this.history =
 
         parsedValue
@@ -1131,42 +1094,30 @@ export class AnalyticsComponent
             ): item is HistoryItem => {
 
               if (
-
                 item === null ||
-
-                typeof item !==
-                'object'
-
+                typeof item !== 'object'
               ) {
 
                 return false;
 
               }
 
-
               const candidate =
                 item as Partial<HistoryItem>;
 
-
               return (
-
                 Boolean(
                   candidate.risk
-                )
-
-                &&
-
+                ) &&
                 Number.isFinite(
                   Number(
                     candidate.probability
                   )
                 )
-
               );
 
             }
           )
-
 
           .map(
             (
@@ -1206,7 +1157,6 @@ export class AnalyticsComponent
             }
           )
 
-
           .sort(
             (
               first,
@@ -1218,32 +1168,22 @@ export class AnalyticsComponent
                   first.date
                 ).getTime();
 
-
               const secondTime =
                 new Date(
                   second.date
                 ).getTime();
 
-
               return (
-
                 firstTime -
-
                 secondTime
-
               );
 
             }
           )
 
-
-          .slice(
-            -100
-          );
-
+          .slice(-100);
 
     }
-
     catch (
       error: unknown
     ) {
@@ -1253,21 +1193,17 @@ export class AnalyticsComponent
         error
       );
 
-
       this.history =
         [];
 
-
       this.errorMessage =
-        'Impossible de lire l’historique.';
+        'Unable to read prediction history.';
 
     }
-
     finally {
 
       this.loading =
         false;
-
 
       this.scheduleAllCharts();
 
@@ -1290,14 +1226,7 @@ export class AnalyticsComponent
           'latestPrediction'
         );
 
-
-      /*
-       * Aucune prédiction fournie par le Dashboard.
-       */
-
-      if (
-        !stored
-      ) {
+      if (!stored) {
 
         this.latestPrediction =
           null;
@@ -1314,7 +1243,6 @@ export class AnalyticsComponent
         return;
 
       }
-
 
       const parsed:
         unknown =
@@ -1322,14 +1250,9 @@ export class AnalyticsComponent
           stored
         );
 
-
       if (
-
         !parsed ||
-
-        typeof parsed !==
-        'object'
-
+        typeof parsed !== 'object'
       ) {
 
         this.latestPrediction =
@@ -1347,19 +1270,6 @@ export class AnalyticsComponent
         return;
 
       }
-
-
-      /*
-       * Structure attendue :
-       *
-       * {
-       *   prediction: {...},
-       *   input: {...},
-       *   title: "...",
-       *   source: "...",
-       *   createdAt: "..."
-       * }
-       */
 
       const data =
         parsed as {
@@ -1381,50 +1291,27 @@ export class AnalyticsComponent
 
         };
 
-
-      /*
-       * IMPORTANT :
-       * on récupère directement le résultat
-       * fourni par le Dashboard.
-       */
-
-      if (
+      this.latestPrediction =
         data.prediction
-      ) {
-
-        this.latestPrediction =
-          data.prediction;
-
-      }
-
-      else {
-
-        this.latestPrediction =
-          null;
-
-      }
-
+          ?? null;
 
       this.latestInput =
         data.input
-        ?? null;
-
+          ?? null;
 
       this.latestTitle =
         String(
-          data.title
-          ?? ''
+          data.title ??
+          ''
         );
-
 
       this.latestSource =
         String(
-          data.source
-          ?? ''
+          data.source ??
+          ''
         );
 
     }
-
     catch (
       error: unknown
     ) {
@@ -1433,7 +1320,6 @@ export class AnalyticsComponent
         'Latest prediction loading error:',
         error
       );
-
 
       this.latestPrediction =
         null;
@@ -1453,7 +1339,7 @@ export class AnalyticsComponent
 
 
   // ============================================================
-  // LOAD LATEST EXPLANATION
+  // LOAD EXPLANATION
   // ============================================================
 
   private loadLatestExplanation():
@@ -1466,10 +1352,7 @@ export class AnalyticsComponent
           'latestPredictionExplanation'
         );
 
-
-      if (
-        !stored
-      ) {
+      if (!stored) {
 
         this.latestExplanation =
           null;
@@ -1483,21 +1366,15 @@ export class AnalyticsComponent
 
       }
 
-
       const parsed:
         unknown =
         JSON.parse(
           stored
         );
 
-
       if (
-
         !parsed ||
-
-        typeof parsed !==
-        'object'
-
+        typeof parsed !== 'object'
       ) {
 
         this.latestExplanation =
@@ -1507,29 +1384,15 @@ export class AnalyticsComponent
 
       }
 
-
       const explanation =
         parsed as ExplanationResponse;
 
-
-      if (
+      this.latestExplanation =
         explanation.prediction
-      ) {
-
-        this.latestExplanation =
-          explanation;
-
-      }
-
-      else {
-
-        this.latestExplanation =
-          null;
-
-      }
+          ? explanation
+          : null;
 
     }
-
     catch (
       error: unknown
     ) {
@@ -1539,12 +1402,10 @@ export class AnalyticsComponent
         error
       );
 
-
       this.latestExplanation =
         null;
 
     }
-
 
     this.scheduleChartCreation(
       () =>
@@ -1566,8 +1427,7 @@ export class AnalyticsComponent
       (
         localStorage.getItem(
           'predictionHistory'
-        )
-        ?? ''
+        ) ?? ''
       )
 
       +
@@ -1579,8 +1439,7 @@ export class AnalyticsComponent
       (
         localStorage.getItem(
           'latestPredictionExplanation'
-        )
-        ?? ''
+        ) ?? ''
       )
 
       +
@@ -1592,8 +1451,7 @@ export class AnalyticsComponent
       (
         localStorage.getItem(
           'latestPrediction'
-        )
-        ?? ''
+        ) ?? ''
       )
 
     );
@@ -1611,7 +1469,6 @@ export class AnalyticsComponent
     const currentSnapshot =
       this.getStorageSnapshot();
 
-
     if (
       currentSnapshot ===
       this.lastStorageSnapshot
@@ -1621,22 +1478,14 @@ export class AnalyticsComponent
 
     }
 
-
-    /*
-     * Une nouvelle prédiction du Dashboard
-     * a été détectée.
-     */
-
     this.lastStorageSnapshot =
       currentSnapshot;
-
 
     this.loadHistory();
 
     this.loadLatestPrediction();
 
     this.loadLatestExplanation();
-
 
     this.scheduleAllCharts();
 
@@ -1653,7 +1502,6 @@ export class AnalyticsComponent
     this.loadingImportance =
       true;
 
-
     this.api
       .featureImportance(12)
       .subscribe({
@@ -1667,10 +1515,8 @@ export class AnalyticsComponent
             this.globalImportance =
               response;
 
-
             this.loadingImportance =
               false;
-
 
             this.scheduleChartCreation(
               () =>
@@ -1679,21 +1525,18 @@ export class AnalyticsComponent
 
           },
 
-
         error:
           (
             error: unknown
           ) => {
 
             console.error(
-              'Importance indisponible:',
+              'Feature importance unavailable:',
               error
             );
 
-
             this.globalImportance =
               null;
-
 
             this.loadingImportance =
               false;
@@ -1720,7 +1563,6 @@ export class AnalyticsComponent
 
     this.loadGlobalImportance();
 
-
     this.lastStorageSnapshot =
       this.getStorageSnapshot();
 
@@ -1736,65 +1578,48 @@ export class AnalyticsComponent
 
     const shouldClear =
       window.confirm(
-        'Supprimer tout l’historique et la dernière prédiction ?'
+        'Delete all prediction history and the latest prediction?'
       );
 
-
-    if (
-      !shouldClear
-    ) {
-
+    if (!shouldClear) {
       return;
-
     }
-
 
     localStorage.removeItem(
       'predictionHistory'
     );
 
-
     localStorage.removeItem(
       'latestPredictionExplanation'
     );
-
 
     localStorage.removeItem(
       'latestPrediction'
     );
 
-
     this.history =
       [];
-
 
     this.latestExplanation =
       null;
 
-
     this.latestPrediction =
       null;
-
 
     this.latestInput =
       null;
 
-
     this.latestTitle =
       '';
-
 
     this.latestSource =
       '';
 
-
     this.globalImportance =
       null;
 
-
     this.lastStorageSnapshot =
       '';
-
 
     this.destroyAllCharts();
 
@@ -1819,7 +1644,6 @@ export class AnalyticsComponent
       return;
 
     }
-
 
     requestAnimationFrame(
       () => {
@@ -1866,26 +1690,18 @@ export class AnalyticsComponent
   private createRiskChart():
     void {
 
-    if (
-      !this.riskCanvas
-    ) {
-
+    if (!this.riskCanvas) {
       return;
-
     }
-
 
     this.riskChart?.destroy();
 
-
-    if (
-      !this.total
-    ) {
-
+    if (!this.total) {
       return;
-
     }
 
+    const textColor =
+      this.getChartTextColor();
 
     const configuration:
       ChartConfiguration<'doughnut'> =
@@ -1906,23 +1722,15 @@ export class AnalyticsComponent
             {
 
               data: [
-
                 this.highCount,
-
                 this.mediumCount,
-
                 this.lowCount
-
               ],
 
               backgroundColor: [
-
                 this.highColor,
-
                 this.mediumColor,
-
                 this.lowColor
-
               ],
 
               borderWidth:
@@ -1948,10 +1756,8 @@ export class AnalyticsComponent
             '72%',
 
           animation: {
-
             duration:
               650
-
           },
 
           plugins: {
@@ -1962,6 +1768,9 @@ export class AnalyticsComponent
                 'bottom',
 
               labels: {
+
+                color:
+                  textColor,
 
                 usePointStyle:
                   true,
@@ -1979,7 +1788,6 @@ export class AnalyticsComponent
 
       };
 
-
     this.riskChart =
       new Chart(
         this.riskCanvas,
@@ -1996,103 +1804,61 @@ export class AnalyticsComponent
   private createHistogramChart():
     void {
 
-    if (
-      !this.histogramCanvas
-    ) {
-
+    if (!this.histogramCanvas) {
       return;
-
     }
-
 
     this.histogramChart?.destroy();
 
-
-    if (
-      !this.total
-    ) {
-
+    if (!this.total) {
       return;
-
     }
-
 
     const ranges = [
 
       {
-        label:
-          '0–20%',
-
-        minimum:
-          0,
-
-        maximum:
-          20
+        label: '0–20%',
+        minimum: 0,
+        maximum: 20
       },
 
       {
-        label:
-          '20–35%',
-
-        minimum:
-          20,
-
-        maximum:
-          35
+        label: '20–35%',
+        minimum: 20,
+        maximum: 35
       },
 
       {
-        label:
-          '35–50%',
-
-        minimum:
-          35,
-
-        maximum:
-          50
+        label: '35–50%',
+        minimum: 35,
+        maximum: 50
       },
 
       {
-        label:
-          '50–68%',
-
-        minimum:
-          50,
-
-        maximum:
-          68
+        label: '50–68%',
+        minimum: 50,
+        maximum: 68
       },
 
       {
-        label:
-          '68–85%',
-
-        minimum:
-          68,
-
-        maximum:
-          85
+        label: '68–85%',
+        minimum: 68,
+        maximum: 85
       },
 
       {
-        label:
-          '85–100%',
-
-        minimum:
-          85,
-
-        maximum:
-          101
+        label: '85–100%',
+        minimum: 85,
+        maximum: 101
       }
 
     ];
 
-
     const values =
       ranges.map(
-        range => {
+        range =>
 
-          return this.history.filter(
+          this.history.filter(
             item => {
 
               const probability =
@@ -2100,23 +1866,16 @@ export class AnalyticsComponent
                   item.probability
                 ) * 100;
 
-
               return (
-
                 probability >=
-                  range.minimum
-
+                range.minimum
                 &&
-
                 probability <
-                  range.maximum
-
+                range.maximum
               );
 
             }
-          ).length;
-
-        }
+          ).length
       );
 
 
@@ -2144,15 +1903,10 @@ export class AnalyticsComponent
               backgroundColor: [
 
                 '#22c55e',
-
                 '#4ade80',
-
                 '#fbbf24',
-
                 '#f59e0b',
-
                 '#f87171',
-
                 '#ef4444'
 
               ],
@@ -2186,6 +1940,9 @@ export class AnalyticsComponent
 
               ticks: {
 
+                color:
+                  this.getChartTextColor(),
+
                 precision:
                   0
 
@@ -2194,13 +1951,20 @@ export class AnalyticsComponent
               grid: {
 
                 color:
-                  '#eef2f7'
+                  this.getChartGridColor()
 
               }
 
             },
 
             x: {
+
+              ticks: {
+
+                color:
+                  this.getChartTextColor()
+
+              },
 
               grid: {
 
@@ -2216,10 +1980,8 @@ export class AnalyticsComponent
           plugins: {
 
             legend: {
-
               display:
                 false
-
             }
 
           }
@@ -2227,7 +1989,6 @@ export class AnalyticsComponent
         }
 
       };
-
 
     this.histogramChart =
       new Chart(
@@ -2245,26 +2006,15 @@ export class AnalyticsComponent
   private createEvolutionChart():
     void {
 
-    if (
-      !this.evolutionCanvas
-    ) {
-
+    if (!this.evolutionCanvas) {
       return;
-
     }
-
 
     this.evolutionChart?.destroy();
 
-
-    if (
-      !this.total
-    ) {
-
+    if (!this.total) {
       return;
-
     }
-
 
     const labels =
       this.history.map(
@@ -2274,7 +2024,6 @@ export class AnalyticsComponent
           )
       );
 
-
     const probabilities =
       this.history.map(
         item =>
@@ -2282,7 +2031,6 @@ export class AnalyticsComponent
             item.probability
           ) * 100
       );
-
 
     const configuration:
       ChartConfiguration<'line'> =
@@ -2309,7 +2057,9 @@ export class AnalyticsComponent
                 this.primaryColor,
 
               backgroundColor:
-                'rgba(99,102,241,.08)',
+                this.isDarkMode()
+                  ? 'rgba(129,140,248,.10)'
+                  : 'rgba(99,102,241,.08)',
 
               pointBackgroundColor:
                 this.history.map(
@@ -2320,7 +2070,7 @@ export class AnalyticsComponent
                 ),
 
               pointBorderColor:
-                '#ffffff',
+                this.getChartBorderColor(),
 
               pointBorderWidth:
                 2,
@@ -2346,8 +2096,7 @@ export class AnalyticsComponent
 
               data:
                 this.history.map(
-                  () =>
-                    68
+                  () => 68
                 ),
 
               borderColor:
@@ -2373,8 +2122,7 @@ export class AnalyticsComponent
 
               data:
                 this.history.map(
-                  () =>
-                    35
+                  () => 35
                 ),
 
               borderColor:
@@ -2427,6 +2175,9 @@ export class AnalyticsComponent
 
               ticks: {
 
+                color:
+                  this.getChartTextColor(),
+
                 callback:
                   value =>
                     `${value}%`
@@ -2436,13 +2187,20 @@ export class AnalyticsComponent
               grid: {
 
                 color:
-                  '#eef2f7'
+                  this.getChartGridColor()
 
               }
 
             },
 
             x: {
+
+              ticks: {
+
+                color:
+                  this.getChartTextColor()
+
+              },
 
               grid: {
 
@@ -2464,6 +2222,9 @@ export class AnalyticsComponent
 
               labels: {
 
+                color:
+                  this.getChartTextColor(),
+
                 usePointStyle:
                   true
 
@@ -2476,7 +2237,6 @@ export class AnalyticsComponent
         }
 
       };
-
 
     this.evolutionChart =
       new Chart(
@@ -2494,37 +2254,22 @@ export class AnalyticsComponent
   private createComparisonChart():
     void {
 
-    if (
-      !this.comparisonCanvas
-    ) {
-
+    if (!this.comparisonCanvas) {
       return;
-
     }
-
 
     this.comparisonChart?.destroy();
 
-
-    if (
-      !this.total
-    ) {
-
+    if (!this.total) {
       return;
-
     }
 
-
     const visibleHistory =
-      this.history.slice(
-        -20
-      );
-
+      this.history.slice(-20);
 
     const startingIndex =
       this.history.length -
       visibleHistory.length;
-
 
     const configuration:
       ChartConfiguration<'bar'> =
@@ -2611,6 +2356,9 @@ export class AnalyticsComponent
 
               ticks: {
 
+                color:
+                  this.getChartTextColor(),
+
                 callback:
                   value =>
                     `${value}%`
@@ -2620,13 +2368,20 @@ export class AnalyticsComponent
               grid: {
 
                 color:
-                  '#eef2f7'
+                  this.getChartGridColor()
 
               }
 
             },
 
             x: {
+
+              ticks: {
+
+                color:
+                  this.getChartTextColor()
+
+              },
 
               grid: {
 
@@ -2654,7 +2409,6 @@ export class AnalyticsComponent
 
       };
 
-
     this.comparisonChart =
       new Chart(
         this.comparisonCanvas,
@@ -2671,17 +2425,11 @@ export class AnalyticsComponent
   private createInfluenceChart():
     void {
 
-    if (
-      !this.influenceCanvas
-    ) {
-
+    if (!this.influenceCanvas) {
       return;
-
     }
 
-
     this.influenceChart?.destroy();
-
 
     const drivers =
       [
@@ -2731,15 +2479,9 @@ export class AnalyticsComponent
           10
         );
 
-
-    if (
-      !drivers.length
-    ) {
-
+    if (!drivers.length) {
       return;
-
     }
-
 
     const configuration:
       ChartConfiguration<'bar'> =
@@ -2775,13 +2517,10 @@ export class AnalyticsComponent
               backgroundColor:
                 drivers.map(
                   driver =>
-
                     Number(
                       driver.influence
                     ) >= 0
-
                       ? 'rgba(239,68,68,.72)'
-
                       : 'rgba(14,165,233,.72)'
                 ),
 
@@ -2814,6 +2553,9 @@ export class AnalyticsComponent
 
               ticks: {
 
+                color:
+                  this.getChartTextColor(),
+
                 callback:
                   value =>
                     `${value}%`
@@ -2823,13 +2565,20 @@ export class AnalyticsComponent
               grid: {
 
                 color:
-                  '#eef2f7'
+                  this.getChartGridColor()
 
               }
 
             },
 
             y: {
+
+              ticks: {
+
+                color:
+                  this.getChartTextColor()
+
+              },
 
               grid: {
 
@@ -2863,13 +2612,10 @@ export class AnalyticsComponent
                         context.raw
                       );
 
-
                     return (
-
                       ` Influence: ${
                         value.toFixed(2)
                       }%`
-
                     );
 
                   }
@@ -2883,7 +2629,6 @@ export class AnalyticsComponent
         }
 
       };
-
 
     this.influenceChart =
       new Chart(
@@ -2906,27 +2651,15 @@ export class AnalyticsComponent
         ?.features
       ?? [];
 
-
-    if (
-      !this.importanceCanvas
-    ) {
-
+    if (!this.importanceCanvas) {
       return;
-
     }
-
 
     this.importanceChart?.destroy();
 
-
-    if (
-      !features.length
-    ) {
-
+    if (!features.length) {
       return;
-
     }
-
 
     const items =
       [
@@ -2940,20 +2673,17 @@ export class AnalyticsComponent
 
             second:
               ImportanceItem
-
           ) =>
 
             (
-              second
-                .normalized_importance
+              second.normalized_importance
               ?? 0
             )
 
             -
 
             (
-              first
-                .normalized_importance
+              first.normalized_importance
               ?? 0
             )
         )
@@ -2962,7 +2692,6 @@ export class AnalyticsComponent
           0,
           12
         );
-
 
     const configuration:
       ChartConfiguration<'bar'> =
@@ -2988,14 +2717,15 @@ export class AnalyticsComponent
                 items.map(
                   item =>
                     (
-                      item
-                        .normalized_importance
+                      item.normalized_importance
                       ?? 0
                     ) * 100
                 ),
 
               backgroundColor:
-                'rgba(99,102,241,.72)',
+                this.isDarkMode()
+                  ? 'rgba(129,140,248,.72)'
+                  : 'rgba(99,102,241,.72)',
 
               borderColor:
                 this.primaryColor,
@@ -3032,6 +2762,9 @@ export class AnalyticsComponent
 
               ticks: {
 
+                color:
+                  this.getChartTextColor(),
+
                 callback:
                   value =>
                     `${value}%`
@@ -3041,13 +2774,20 @@ export class AnalyticsComponent
               grid: {
 
                 color:
-                  '#eef2f7'
+                  this.getChartGridColor()
 
               }
 
             },
 
             y: {
+
+              ticks: {
+
+                color:
+                  this.getChartTextColor()
+
+              },
 
               grid: {
 
@@ -3074,7 +2814,6 @@ export class AnalyticsComponent
         }
 
       };
-
 
     this.importanceChart =
       new Chart(
@@ -3128,7 +2867,6 @@ export class AnalyticsComponent
         value
       );
 
-
     if (
       Number.isNaN(
         date.getTime()
@@ -3138,7 +2876,6 @@ export class AnalyticsComponent
       return 'N/A';
 
     }
-
 
     return date.toLocaleDateString(
       'fr-FR',
@@ -3170,7 +2907,6 @@ export class AnalyticsComponent
         value
       );
 
-
     if (
       Number.isNaN(
         date.getTime()
@@ -3180,7 +2916,6 @@ export class AnalyticsComponent
       return 'N/A';
 
     }
-
 
     return date.toLocaleString(
       'fr-FR',
@@ -3247,18 +2982,12 @@ export class AnalyticsComponent
         risk
       );
 
-
     const color =
       normalized === 'HIGH'
-
         ? this.highColor
-
         : normalized === 'MEDIUM'
-
           ? this.mediumColor
-
           : this.lowColor;
-
 
     if (
       alpha === undefined
@@ -3268,13 +2997,11 @@ export class AnalyticsComponent
 
     }
 
-
     const hex =
       color.replace(
         '#',
         ''
       );
-
 
     const red =
       parseInt(
@@ -3285,7 +3012,6 @@ export class AnalyticsComponent
         16
       );
 
-
     const green =
       parseInt(
         hex.substring(
@@ -3294,7 +3020,6 @@ export class AnalyticsComponent
         ),
         16
       );
-
 
     const blue =
       parseInt(
@@ -3305,9 +3030,7 @@ export class AnalyticsComponent
         16
       );
 
-
     return (
-
       `rgba(${
         red
       },${
@@ -3317,7 +3040,6 @@ export class AnalyticsComponent
       },${
         alpha
       })`
-
     );
 
   }
@@ -3338,17 +3060,12 @@ export class AnalyticsComponent
         risk
       );
 
-
     return (
 
       normalized === 'HIGH'
-
         ? 'High'
-
         : normalized === 'MEDIUM'
-
           ? 'Medium'
-
           : 'Low'
 
     );
@@ -3371,17 +3088,12 @@ export class AnalyticsComponent
         risk
       );
 
-
     return (
 
       normalized === 'HIGH'
-
         ? 'risk-high'
-
         : normalized === 'MEDIUM'
-
           ? 'risk-medium'
-
           : 'risk-low'
 
     );
@@ -3405,46 +3117,24 @@ export class AnalyticsComponent
         .trim()
         .toUpperCase();
 
-
     if (
-
-      normalized === 'HIGH'
-
-      ||
-
-      normalized.includes(
-        'HIGH'
-      )
-
+      normalized === 'HIGH' ||
+      normalized.includes('HIGH')
     ) {
 
       return 'HIGH';
 
     }
 
-
     if (
-
-      normalized === 'MEDIUM'
-
-      ||
-
-      normalized.includes(
-        'MEDIUM'
-      )
-
-      ||
-
-      normalized.includes(
-        'MED'
-      )
-
+      normalized === 'MEDIUM' ||
+      normalized.includes('MEDIUM') ||
+      normalized.includes('MED')
     ) {
 
       return 'MEDIUM';
 
     }
-
 
     return 'LOW';
 
@@ -3465,7 +3155,6 @@ export class AnalyticsComponent
         value
       );
 
-
     if (
       !Number.isFinite(
         probability
@@ -3476,7 +3165,6 @@ export class AnalyticsComponent
 
     }
 
-
     if (
       probability > 1
     ) {
@@ -3486,16 +3174,12 @@ export class AnalyticsComponent
 
     }
 
-
     return Math.min(
-
       Math.max(
         probability,
         0
       ),
-
       1
-
     );
 
   }
@@ -3520,26 +3204,20 @@ export class AnalyticsComponent
 
     this.importanceChart?.destroy();
 
-
     this.riskChart =
       null;
-
 
     this.histogramChart =
       null;
 
-
     this.evolutionChart =
       null;
-
 
     this.comparisonChart =
       null;
 
-
     this.influenceChart =
       null;
-
 
     this.importanceChart =
       null;

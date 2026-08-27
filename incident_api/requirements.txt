@@ -7,4 +7,3 @@ joblib==1.5.1
 scikit-learn==1.6.1
 lightgbm==4.6.0
 python-dotenv==1.1.1
-openai==1.99.9

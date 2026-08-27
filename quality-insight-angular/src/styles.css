@@ -1,1 +1,706 @@
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,"Segoe UI",Arial,sans-serif;background:#f8fafc;color:#0f172a}button,input,select,textarea{font:inherit}button{cursor:pointer}
+/* =========================================================
+   QUALITY INSIGHT AI
+   GLOBAL DARK MODE
+   ========================================================= */
+
+/* =========================================================
+   ROOT / HTML / BODY
+   ========================================================= */
+
+html.app-dark-mode,
+body.app-dark-mode {
+  background: #070b14 !important;
+  color: #f8fafc !important;
+}
+
+body.app-dark-mode {
+  margin: 0;
+  min-height: 100vh;
+  background: #070b14 !important;
+}
+
+
+/* =========================================================
+   ANGULAR ROOT
+   ========================================================= */
+
+body.app-dark-mode app-root {
+  display: block;
+  min-height: 100vh;
+  background: #070b14 !important;
+  color: #f8fafc !important;
+}
+
+
+/* =========================================================
+   ROUTER / COMPONENT ROOTS
+   ========================================================= */
+
+body.app-dark-mode router-outlet + * {
+  display: block;
+  min-height: 100vh;
+  background: #070b14 !important;
+  color: #f8fafc !important;
+}
+
+
+/* =========================================================
+   APPLICATION LAYOUT
+   ========================================================= */
+
+body.app-dark-mode .app-layout {
+  min-height: 100vh !important;
+
+  background:
+    radial-gradient(
+      circle at 10% 0%,
+      rgba(99, 102, 241, 0.08),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 90% 10%,
+      rgba(139, 92, 246, 0.06),
+      transparent 30%
+    ),
+    #070b14 !important;
+
+  color: #f8fafc !important;
+}
+
+
+/* =========================================================
+   MAIN CONTENT
+   ========================================================= */
+
+body.app-dark-mode .main-content,
+body.app-dark-mode .main,
+body.app-dark-mode .content-area,
+body.app-dark-mode .page-content,
+body.app-dark-mode .router-content {
+  background:
+    linear-gradient(
+      180deg,
+      #0b1120 0%,
+      #070b14 100%
+    ) !important;
+
+  color: #f8fafc !important;
+}
+
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+
+body.app-dark-mode .sidebar {
+  background:
+    linear-gradient(
+      180deg,
+      #0b1120 0%,
+      #080d18 100%
+    ) !important;
+
+  color: #f8fafc !important;
+
+  border-right: 1px solid #1e293b !important;
+
+  box-shadow:
+    8px 0 30px rgba(0, 0, 0, 0.18) !important;
+}
+
+
+/* Sidebar brand */
+
+body.app-dark-mode .sidebar .brand,
+body.app-dark-mode .sidebar .brand * {
+  color: #f8fafc !important;
+}
+
+
+/* Sidebar navigation */
+
+body.app-dark-mode .sidebar .nav-item,
+body.app-dark-mode .sidebar .menu-item,
+body.app-dark-mode .sidebar a {
+  color: #94a3b8 !important;
+}
+
+
+body.app-dark-mode .sidebar .nav-item:hover,
+body.app-dark-mode .sidebar .menu-item:hover,
+body.app-dark-mode .sidebar a:hover {
+  background: #111827 !important;
+  color: #f8fafc !important;
+}
+
+
+body.app-dark-mode .sidebar .nav-item.active,
+body.app-dark-mode .sidebar .menu-item.active,
+body.app-dark-mode .sidebar a.active {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(99, 102, 241, 0.20),
+      rgba(139, 92, 246, 0.12)
+    ) !important;
+
+  color: #a5b4fc !important;
+
+  border-color: rgba(99, 102, 241, 0.25) !important;
+}
+
+
+/* Sidebar icons */
+
+body.app-dark-mode .sidebar i,
+body.app-dark-mode .sidebar svg {
+  color: inherit !important;
+}
+
+
+/* =========================================================
+   GLOBAL PAGE CONTAINERS
+   ========================================================= */
+
+body.app-dark-mode .dashboard-page,
+body.app-dark-mode .home-page,
+body.app-dark-mode .analytics-page,
+body.app-dark-mode .model-page,
+body.app-dark-mode .historique-page,
+body.app-dark-mode .history-page,
+body.app-dark-mode .notification-page,
+body.app-dark-mode .notification-center,
+body.app-dark-mode .ai-assistant-page,
+body.app-dark-mode .assistant-page,
+body.app-dark-mode .non-conformance-page {
+  background:
+    radial-gradient(
+      circle at 90% 0%,
+      rgba(99, 102, 241, 0.07),
+      transparent 28%
+    ),
+    #0b1120 !important;
+
+  color: #f8fafc !important;
+}
+
+
+/* =========================================================
+   HEADINGS
+   ========================================================= */
+
+body.app-dark-mode h1,
+body.app-dark-mode h2,
+body.app-dark-mode h3,
+body.app-dark-mode h4,
+body.app-dark-mode h5,
+body.app-dark-mode h6 {
+  color: #f8fafc !important;
+}
+
+
+body.app-dark-mode .page-title,
+body.app-dark-mode .section-title,
+body.app-dark-mode .card-title {
+  color: #f8fafc !important;
+}
+
+
+/* =========================================================
+   NORMAL TEXT
+   ========================================================= */
+
+body.app-dark-mode p,
+body.app-dark-mode span,
+body.app-dark-mode label {
+  border-color: #273449;
+}
+
+
+body.app-dark-mode p {
+  color: #94a3b8;
+}
+
+
+/* Secondary text */
+
+body.app-dark-mode .muted,
+body.app-dark-mode .text-muted,
+body.app-dark-mode .subtitle,
+body.app-dark-mode .description,
+body.app-dark-mode .hint,
+body.app-dark-mode .caption,
+body.app-dark-mode small {
+  color: #94a3b8 !important;
+}
+
+
+body.app-dark-mode strong,
+body.app-dark-mode b {
+  color: #f8fafc !important;
+}
+
+
+/* =========================================================
+   CARDS
+   ========================================================= */
+
+body.app-dark-mode .card,
+body.app-dark-mode .info-card,
+body.app-dark-mode .metric-card,
+body.app-dark-mode .chart-card,
+body.app-dark-mode .feature-card,
+body.app-dark-mode .kpi-card,
+body.app-dark-mode .stat-card,
+body.app-dark-mode .panel,
+body.app-dark-mode .widget {
+  background:
+    linear-gradient(
+      145deg,
+      #111827,
+      #0f172a
+    ) !important;
+
+  color: #f8fafc !important;
+
+  border: 1px solid #273449 !important;
+
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.18) !important;
+}
+
+
+body.app-dark-mode .card:hover,
+body.app-dark-mode .info-card:hover,
+body.app-dark-mode .metric-card:hover,
+body.app-dark-mode .chart-card:hover,
+body.app-dark-mode .feature-card:hover {
+  border-color: #3b4a63 !important;
+
+  box-shadow:
+    0 14px 32px rgba(0, 0, 0, 0.25) !important;
+}
+
+
+/* =========================================================
+   WHITE BACKGROUNDS
+   ========================================================= */
+
+body.app-dark-mode .bg-white,
+body.app-dark-mode .background-white,
+body.app-dark-mode .surface-white,
+body.app-dark-mode .white-background {
+  background: #111827 !important;
+  color: #f8fafc !important;
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+body.app-dark-mode .header,
+body.app-dark-mode .topbar,
+body.app-dark-mode .app-header,
+body.app-dark-mode .navbar {
+  background: rgba(11, 17, 32, 0.92) !important;
+
+  color: #f8fafc !important;
+
+  border-color: #1e293b !important;
+}
+
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+body.app-dark-mode button {
+  color: #f8fafc;
+}
+
+
+/* Secondary buttons */
+
+body.app-dark-mode .refresh-button,
+body.app-dark-mode .secondary-button,
+body.app-dark-mode .btn-secondary,
+body.app-dark-mode .outline-button,
+body.app-dark-mode .cancel-button,
+body.app-dark-mode .filter-button {
+  background: #1e293b !important;
+
+  color: #e2e8f0 !important;
+
+  border: 1px solid #334155 !important;
+}
+
+
+body.app-dark-mode .refresh-button:hover,
+body.app-dark-mode .secondary-button:hover,
+body.app-dark-mode .btn-secondary:hover,
+body.app-dark-mode .outline-button:hover,
+body.app-dark-mode .filter-button:hover {
+  background: #273449 !important;
+
+  color: #ffffff !important;
+
+  border-color: #475569 !important;
+}
+
+
+/* Primary buttons */
+
+body.app-dark-mode .primary-button,
+body.app-dark-mode .btn-primary,
+body.app-dark-mode .save-button,
+body.app-dark-mode .submit-button {
+  background:
+    linear-gradient(
+      135deg,
+      #6366f1,
+      #7c3aed
+    ) !important;
+
+  color: #ffffff !important;
+
+  border-color: transparent !important;
+}
+
+
+/* =========================================================
+   INPUTS
+   ========================================================= */
+
+body.app-dark-mode input,
+body.app-dark-mode textarea,
+body.app-dark-mode select,
+body.app-dark-mode .form-control {
+  background: #0f172a !important;
+
+  color: #f8fafc !important;
+
+  border: 1px solid #334155 !important;
+}
+
+
+body.app-dark-mode input::placeholder,
+body.app-dark-mode textarea::placeholder {
+  color: #64748b !important;
+}
+
+
+body.app-dark-mode input:focus,
+body.app-dark-mode textarea:focus,
+body.app-dark-mode select:focus {
+  background: #111827 !important;
+
+  color: #ffffff !important;
+
+  border-color: #6366f1 !important;
+
+  box-shadow:
+    0 0 0 3px rgba(99, 102, 241, 0.12) !important;
+
+  outline: none !important;
+}
+
+
+/* =========================================================
+   TABLES
+   ========================================================= */
+
+body.app-dark-mode table {
+  background: #111827 !important;
+
+  color: #f8fafc !important;
+
+  border-color: #273449 !important;
+}
+
+
+body.app-dark-mode thead,
+body.app-dark-mode th {
+  background: #1e293b !important;
+
+  color: #f8fafc !important;
+
+  border-color: #334155 !important;
+}
+
+
+body.app-dark-mode tbody {
+  background: #111827 !important;
+
+  color: #e2e8f0 !important;
+}
+
+
+body.app-dark-mode td {
+  color: #e2e8f0 !important;
+
+  border-color: #273449 !important;
+}
+
+
+body.app-dark-mode tbody tr {
+  background: #111827 !important;
+}
+
+
+body.app-dark-mode tbody tr:hover {
+  background: #1e293b !important;
+}
+
+
+/* =========================================================
+   DROPDOWNS / MODALS / MENUS
+   ========================================================= */
+
+body.app-dark-mode .dropdown,
+body.app-dark-mode .dropdown-menu,
+body.app-dark-mode .menu,
+body.app-dark-mode .popover,
+body.app-dark-mode .modal,
+body.app-dark-mode .modal-content,
+body.app-dark-mode .dialog {
+  background: #111827 !important;
+
+  color: #f8fafc !important;
+
+  border-color: #334155 !important;
+
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.40) !important;
+}
+
+
+/* =========================================================
+   BADGES / TAGS
+   ========================================================= */
+
+body.app-dark-mode .feature-tag,
+body.app-dark-mode .tag,
+body.app-dark-mode .badge {
+  background: #1e293b !important;
+
+  color: #cbd5e1 !important;
+
+  border-color: #334155 !important;
+}
+
+
+/* =========================================================
+   LINKS
+   ========================================================= */
+
+body.app-dark-mode a {
+  color: #a5b4fc;
+}
+
+
+body.app-dark-mode a:hover {
+  color: #c7d2fe;
+}
+
+
+/* =========================================================
+   BORDERS
+   ========================================================= */
+
+body.app-dark-mode hr {
+  border-color: #273449 !important;
+}
+
+
+/* =========================================================
+   ICON BACKGROUNDS
+   ========================================================= */
+
+body.app-dark-mode .section-icon,
+body.app-dark-mode .metric-icon,
+body.app-dark-mode .card-icon,
+body.app-dark-mode .chart-icon,
+body.app-dark-mode .feature-icon {
+  background: #1e293b !important;
+
+  color: #a5b4fc !important;
+
+  border-color: #334155 !important;
+}
+
+
+/* =========================================================
+   SEARCH / FILTERS
+   ========================================================= */
+
+body.app-dark-mode .search-box,
+body.app-dark-mode .filter-panel,
+body.app-dark-mode .control-panel,
+body.app-dark-mode .filters {
+  background: #111827 !important;
+
+  color: #f8fafc !important;
+
+  border-color: #273449 !important;
+}
+
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+body.app-dark-mode .loading-container {
+  background: transparent !important;
+
+  color: #f8fafc !important;
+}
+
+
+body.app-dark-mode .loading-container h3 {
+  color: #f8fafc !important;
+}
+
+
+body.app-dark-mode .loader {
+  border-color: #273449 !important;
+
+  border-top-color: #6366f1 !important;
+
+  border-right-color: #8b5cf6 !important;
+}
+
+
+/* =========================================================
+   ERROR
+   ========================================================= */
+
+body.app-dark-mode .error-container {
+  background: #111827 !important;
+
+  color: #f8fafc !important;
+
+  border-color: #3f2932 !important;
+}
+
+
+body.app-dark-mode .error-container h2 {
+  color: #f8fafc !important;
+}
+
+
+/* =========================================================
+   SCROLLBAR GLOBAL
+   ========================================================= */
+
+body.app-dark-mode ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+
+body.app-dark-mode ::-webkit-scrollbar-track {
+  background: #070b14 !important;
+}
+
+
+body.app-dark-mode ::-webkit-scrollbar-thumb {
+  background: #334155 !important;
+
+  border-radius: 999px;
+}
+
+
+body.app-dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: #475569 !important;
+}
+
+
+/* =========================================================
+   CODE
+   ========================================================= */
+
+body.app-dark-mode pre,
+body.app-dark-mode code {
+  background: #0f172a !important;
+
+  color: #c7d2fe !important;
+
+  border-color: #273449 !important;
+}
+
+
+/* =========================================================
+   OVERLAY / BACKDROP
+   ========================================================= */
+
+body.app-dark-mode .overlay,
+body.app-dark-mode .backdrop {
+  background: rgba(0, 0, 0, 0.65) !important;
+}
+
+
+/* =========================================================
+   BOOTSTRAP DARK SUPPORT
+   ========================================================= */
+
+body.app-dark-mode .dropdown-menu,
+body.app-dark-mode .list-group-item,
+body.app-dark-mode .form-select,
+body.app-dark-mode .form-control {
+  background-color: #111827 !important;
+
+  color: #f8fafc !important;
+
+  border-color: #334155 !important;
+}
+
+
+body.app-dark-mode .list-group-item:hover {
+  background-color: #1e293b !important;
+}
+
+
+/* =========================================================
+   IMAGES
+   ========================================================= */
+
+body.app-dark-mode img {
+  border-color: #273449;
+}
+
+
+/* =========================================================
+   ANGULAR COMPONENT HOSTS
+   ========================================================= */
+
+body.app-dark-mode app-home,
+body.app-dark-mode app-dashboard,
+body.app-dark-mode app-analytics,
+body.app-dark-mode app-model,
+body.app-dark-mode app-historique,
+body.app-dark-mode app-ai-assistant,
+body.app-dark-mode app-notification-center {
+  display: block;
+
+  min-height: 100vh;
+
+  background: #0b1120 !important;
+
+  color: #f8fafc !important;
+}
+
+
+/* =========================================================
+   IMPORTANT:
+   NE PAS UTILISER :
+   
+   [class*="card"]
+   [class*="page"]
+   [class*="content"]
+   
+   globalement.
+   
+   Ces sélecteurs sont trop larges et peuvent casser
+   les couleurs internes des composants.
+========================================================= */

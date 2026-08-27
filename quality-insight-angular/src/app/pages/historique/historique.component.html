@@ -1,40 +1,50 @@
 <div class="history-page">
 
   <!-- =====================================================
-       PAGE HEADER
+       HEADER
   ====================================================== -->
 
-  <header class="history-header">
+  <div class="page-header">
 
-    <div class="header-content">
-      <span class="eyebrow">QUALITY MANAGEMENT</span>
+    <div class="header-left">
 
-      <h1>Non-Conformances</h1>
+      <div class="page-icon">
+        <i class="bi bi-clock-history"></i>
+      </div>
 
-      <p>
-        Track incidents, quality issues and AI-predicted risks in one place.
-      </p>
+      <div>
+        <h1>Non-Conformance History</h1>
+
+        <p>
+          Review and manage all non-conformance records
+        </p>
+      </div>
+
     </div>
 
-    <button
-      type="button"
-      class="raise-button"
-      (click)="openModal()">
+    <div class="header-actions">
 
-      <i class="bi bi-plus-lg"></i>
+      <button
+        type="button"
+        class="primary-button"
+        (click)="openModal()">
 
-      <span>Raise NC</span>
+        <i class="bi bi-plus-lg"></i>
 
-    </button>
+        Raise NC
 
-  </header>
+      </button>
+
+    </div>
+
+  </div>
 
 
   <!-- =====================================================
-       TOOLBAR
+       FILTERS
   ====================================================== -->
 
-  <section class="toolbar">
+  <div class="filters-card">
 
     <div class="search-box">
 
@@ -44,43 +54,77 @@
         type="text"
         [(ngModel)]="searchTerm"
         (ngModelChange)="onSearchChange()"
-        placeholder="Search non-conformances..."
+        placeholder="Search by reference, title, category, group, state..."
       />
+
+      <button
+        *ngIf="searchTerm"
+        type="button"
+        class="clear-search"
+        (click)="searchTerm = ''; onSearchChange()">
+
+        <i class="bi bi-x"></i>
+
+      </button>
 
     </div>
 
 
-    <select
-      class="risk-filter"
-      [(ngModel)]="riskFilter"
-      (ngModelChange)="onRiskFilterChange()">
+    <div class="filter-group">
 
-      <option value="ALL">All risks</option>
-      <option value="HIGH">High</option>
-      <option value="MEDIUM">Medium</option>
-      <option value="LOW">Low</option>
+      <label>
+        AI Risk
+      </label>
 
-    </select>
+      <select
+        [(ngModel)]="riskFilter"
+        (ngModelChange)="onRiskFilterChange()">
+
+        <option value="ALL">
+          All risks
+        </option>
+
+        <option value="HIGH">
+          High
+        </option>
+
+        <option value="MEDIUM">
+          Medium
+        </option>
+
+        <option value="LOW">
+          Low
+        </option>
+
+      </select>
+
+    </div>
 
 
-    <button
-      type="button"
-      class="refresh-button"
-      title="Refresh"
-      (click)="loadHistory()">
+    <div class="filter-summary">
 
-      <i class="bi bi-arrow-clockwise"></i>
+      <span>
+        Showing
+      </span>
 
-    </button>
+      <strong>
+        {{ filteredRecords.length }}
+      </strong>
 
-  </section>
+      <span>
+        record(s)
+      </span>
+
+    </div>
+
+  </div>
 
 
   <!-- =====================================================
        TABLE
   ====================================================== -->
 
-  <section class="table-card">
+  <div class="table-card">
 
     <div class="table-wrapper">
 
@@ -89,14 +133,39 @@
         <thead>
 
           <tr>
-            <th>Reference</th>
-            <th>Title</th>
-            <th>Category</th>
-            <th>Assignment Group</th>
-            <th>State</th>
-            <th>AI Risk</th>
-            <th>Raised</th>
-            <th class="actions-header">Actions</th>
+
+            <th>
+              Reference
+            </th>
+
+            <th>
+              Title
+            </th>
+
+            <th>
+              Category
+            </th>
+
+            <th>
+              Assignment Group
+            </th>
+
+            <th>
+              State
+            </th>
+
+            <th>
+              AI Risk
+            </th>
+
+            <th>
+              Date
+            </th>
+
+            <th class="actions-header">
+              Actions
+            </th>
+
           </tr>
 
         </thead>
@@ -104,19 +173,24 @@
 
         <tbody>
 
-          <!-- =================================================
-               RECORD
-          ================================================== -->
-
           <tr
-            *ngFor="let record of paginatedRecords; trackBy: trackByRef">
+            *ngFor="
+              let record of paginatedRecords;
+              trackBy: trackByRef
+            ">
+
+            <!-- REFERENCE -->
 
             <td>
+
               <span class="reference">
                 {{ record.ref }}
               </span>
+
             </td>
 
+
+            <!-- TITLE -->
 
             <td>
 
@@ -126,20 +200,22 @@
                   {{ record.title }}
                 </strong>
 
-                <small
-                  [class.manual-source]="record.source === 'MANUAL'"
-                  [class.ai-source]="record.source === 'DASHBOARD'">
+                <small>
 
                   <i
                     class="bi"
-                    [class.bi-pencil]="record.source === 'MANUAL'"
-                    [class.bi-cpu]="record.source === 'DASHBOARD'">
+                    [class.bi-cpu]="
+                      record.source === 'DASHBOARD'
+                    "
+                    [class.bi-pencil-square]="
+                      record.source === 'MANUAL'
+                    ">
                   </i>
 
                   {{
-                    record.source === 'MANUAL'
-                      ? 'Manual NC'
-                      : 'AI Prediction'
+                    record.source === 'DASHBOARD'
+                      ? 'AI Prediction'
+                      : 'Manual NC'
                   }}
 
                 </small>
@@ -149,19 +225,21 @@
             </td>
 
 
+            <!-- CATEGORY -->
+
             <td>
-              <span class="table-text">
-                {{ record.category }}
-              </span>
+              {{ record.category || '—' }}
             </td>
 
 
+            <!-- ASSIGNMENT GROUP -->
+
             <td>
-              <span class="table-text">
-                {{ record.assignment_group }}
-              </span>
+              {{ record.assignment_group || '—' }}
             </td>
 
+
+            <!-- STATE -->
 
             <td>
 
@@ -169,12 +247,16 @@
                 class="state-badge"
                 [ngClass]="stateClass(record.state)">
 
+                <span class="state-dot"></span>
+
                 {{ stateLabel(record.state) }}
 
               </span>
 
             </td>
 
+
+            <!-- AI RISK -->
 
             <td>
 
@@ -190,8 +272,14 @@
 
                 </span>
 
+
                 <span class="probability">
-                  {{ getProbability(record) | number:'1.1-1' }}%
+
+                  {{
+                    getProbability(record)
+                      | number:'1.1-1'
+                  }}%
+
                 </span>
 
               </div>
@@ -199,10 +287,24 @@
             </td>
 
 
+            <!-- DATE -->
+
             <td>
-              <span class="raised-date">
-                {{ formatDate(record.raised) }}
-              </span>
+
+              <div class="date-cell">
+
+                <span class="date-value">
+
+                  {{
+                    formatDate(
+                      getDisplayDate(record)
+                    )
+                  }}
+
+                </span>
+
+              </div>
+
             </td>
 
 
@@ -216,7 +318,6 @@
                   type="button"
                   class="icon-button view"
                   title="View details"
-                  aria-label="View details"
                   (click)="viewRecord(record)">
 
                   <i class="bi bi-eye"></i>
@@ -228,7 +329,6 @@
                   type="button"
                   class="icon-button pdf"
                   title="Export PDF"
-                  aria-label="Export PDF"
                   (click)="exportPdf(record)">
 
                   <i class="bi bi-file-earmark-pdf"></i>
@@ -240,7 +340,6 @@
                   type="button"
                   class="icon-button delete"
                   title="Delete"
-                  aria-label="Delete"
                   (click)="deleteRecord(record)">
 
                   <i class="bi bi-trash3"></i>
@@ -254,25 +353,32 @@
           </tr>
 
 
-          <!-- =================================================
-               EMPTY STATE
-          ================================================== -->
+          <!-- EMPTY -->
 
-          <tr *ngIf="filteredRecords.length === 0">
+          <tr
+            *ngIf="
+              filteredRecords.length === 0
+            ">
 
-            <td colspan="8" class="empty-row">
+            <td
+              colspan="8"
+              class="empty-row">
 
               <div class="empty-state">
 
                 <div class="empty-icon">
+
                   <i class="bi bi-inbox"></i>
+
                 </div>
 
-                <h3>No non-conformances found</h3>
+                <h3>
+                  No non-conformances found
+                </h3>
 
                 <p>
-                  Start a prediction from the Dashboard or create a new
-                  non-conformance manually.
+                  No records match your current
+                  search or filter.
                 </p>
 
                 <button
@@ -300,25 +406,41 @@
 
 
     <!-- =====================================================
-         TABLE FOOTER
+         FOOTER
     ====================================================== -->
 
-    <footer class="table-footer">
+    <div class="table-footer">
 
-      <span class="records-count">
+      <div class="records-count">
+
+        Showing
+
+        <strong>
+          {{ getFirstDisplayedRecord() }}
+        </strong>
+
+        -
+
+        <strong>
+          {{ getLastDisplayedRecord() }}
+        </strong>
+
+        of
 
         <strong>
           {{ filteredRecords.length }}
         </strong>
 
-        non-conformance(s)
+        records
 
-      </span>
+      </div>
 
 
       <div
         class="pagination"
-        *ngIf="filteredRecords.length > pageSize">
+        *ngIf="
+          filteredRecords.length > pageSize
+        ">
 
         <button
           type="button"
@@ -368,54 +490,48 @@
 
       </button>
 
-    </footer>
+    </div>
 
-  </section>
+  </div>
 
 </div>
 
 
-
 <!-- =========================================================
-     RAISE NC MODAL
+     CREATE NC MODAL
 ========================================================== -->
 
 <div
-  class="modal-overlay"
   *ngIf="showModal"
+  class="modal-backdrop"
   (click)="closeModal()">
 
-
   <div
-    class="modal raise-modal"
+    class="modal-container"
     (click)="$event.stopPropagation()">
 
 
-    <!-- =====================================================
-         MODAL HEADER
-    ====================================================== -->
+    <!-- MODAL HEADER -->
 
-    <header class="modal-header">
+    <div class="modal-header">
 
-      <div class="modal-heading">
+      <div>
 
-        <div class="modal-heading-icon">
-          <i class="bi bi-shield-check"></i>
+        <div class="modal-title-icon">
+
+          <i class="bi bi-plus-circle"></i>
+
         </div>
 
         <div>
-
-          <span class="eyebrow">
-            QUALITY MANAGEMENT
-          </span>
 
           <h2>
             Raise Non-Conformance
           </h2>
 
           <p>
-            Enter the incident information below. The AI model will
-            automatically assess the SLA breach risk.
+            Create a new non-conformance
+            and calculate its AI risk.
           </p>
 
         </div>
@@ -425,523 +541,350 @@
 
       <button
         type="button"
-        class="close-button"
+        class="modal-close"
         [disabled]="isSubmitting"
-        (click)="closeModal()"
-        aria-label="Close">
+        (click)="closeModal()">
 
         <i class="bi bi-x-lg"></i>
 
       </button>
 
-    </header>
-
-
-    <!-- =====================================================
-         AI INFORMATION
-    ====================================================== -->
-
-    <div class="ai-info">
-
-      <div class="ai-info-icon">
-        <i class="bi bi-stars"></i>
-      </div>
-
-      <div class="ai-info-content">
-
-        <strong>
-          AI Risk Prediction
-        </strong>
-
-        <p>
-          Risk level and probability will be calculated automatically
-          using the machine learning model.
-        </p>
-
-      </div>
-
-      <span class="ai-status">
-        AI
-      </span>
-
     </div>
 
 
-    <!-- =====================================================
-         ERROR
-    ====================================================== -->
-
-    <div
-      class="submit-error"
-      *ngIf="submitError">
-
-      <i class="bi bi-exclamation-circle"></i>
-
-      <span>
-        {{ submitError }}
-      </span>
-
-    </div>
-
-
-    <!-- =====================================================
-         MODAL BODY
-    ====================================================== -->
+    <!-- MODAL BODY -->
 
     <div class="modal-body">
 
+      <div
+        *ngIf="submitError"
+        class="form-error">
 
-      <!-- ===================================================
-           BASIC INFORMATION
-      ==================================================== -->
+        <i class="bi bi-exclamation-triangle"></i>
 
-      <section class="form-section">
+        <span>
+          {{ submitError }}
+        </span>
 
-        <div class="section-heading">
-
-          <div class="section-icon">
-            <i class="bi bi-info-circle"></i>
-          </div>
-
-          <div>
-
-            <h3>
-              Basic Information
-            </h3>
-
-            <p>
-              Describe the non-conformance and the observed issue.
-            </p>
-
-          </div>
-
-        </div>
+      </div>
 
 
-        <div class="modal-grid">
+      <!-- TITLE -->
+
+      <div class="form-group">
+
+        <label>
+          Title
+          <span>*</span>
+        </label>
+
+        <input
+          type="text"
+          [(ngModel)]="newNC.title"
+          placeholder="Enter NC title"
+          [disabled]="isSubmitting"
+        />
+
+      </div>
 
 
-          <div class="form-group full">
+      <!-- CATEGORY -->
 
-            <label>
-              Title
-              <span>*</span>
-            </label>
+      <div class="form-row">
 
-            <input
-              type="text"
-              [(ngModel)]="newNC.title"
-              [disabled]="isSubmitting"
-              placeholder="e.g. Critical production application failure"
-            />
+        <div class="form-group">
 
-          </div>
+          <label>
+            Category
+            <span>*</span>
+          </label>
 
-
-          <div class="form-group">
-
-            <label>
-              Category
-              <span>*</span>
-            </label>
-
-            <input
-              type="text"
-              [(ngModel)]="newNC.category"
-              [disabled]="isSubmitting"
-              placeholder="e.g. Software"
-            />
-
-          </div>
-
-
-          <div class="form-group">
-
-            <label>
-              Subcategory
-            </label>
-
-            <input
-              type="text"
-              [(ngModel)]="newNC.subcategory"
-              [disabled]="isSubmitting"
-              placeholder="e.g. Application"
-            />
-
-          </div>
-
-
-          <div class="form-group full">
-
-            <label>
-              Symptom
-            </label>
-
-            <textarea
-              rows="4"
-              [(ngModel)]="newNC.symptom"
-              [disabled]="isSubmitting"
-              placeholder="Describe the observed problem, error or quality issue...">
-            </textarea>
-
-          </div>
-
-        </div>
-
-      </section>
-
-
-
-      <!-- ===================================================
-           ASSIGNMENT
-      ==================================================== -->
-
-      <section class="form-section">
-
-        <div class="section-heading">
-
-          <div class="section-icon">
-            <i class="bi bi-people"></i>
-          </div>
-
-          <div>
-
-            <h3>
-              Assignment
-            </h3>
-
-            <p>
-              Specify the team responsible for handling this NC.
-            </p>
-
-          </div>
+          <input
+            type="text"
+            [(ngModel)]="newNC.category"
+            placeholder="Category"
+            [disabled]="isSubmitting"
+          />
 
         </div>
 
 
-        <div class="modal-grid">
+        <div class="form-group">
 
-          <div class="form-group">
+          <label>
+            Subcategory
+          </label>
 
-            <label>
-              Assignment Group
-              <span>*</span>
-            </label>
-
-            <input
-              type="text"
-              [(ngModel)]="newNC.assignment_group"
-              [disabled]="isSubmitting"
-              placeholder="e.g. Software"
-            />
-
-          </div>
-
-
-          <div class="form-group">
-
-            <label>
-              Assigned To
-            </label>
-
-            <input
-              type="text"
-              [(ngModel)]="newNC.assigned_to"
-              [disabled]="isSubmitting"
-              placeholder="e.g. developer01"
-            />
-
-          </div>
+          <input
+            type="text"
+            [(ngModel)]="newNC.subcategory"
+            placeholder="Subcategory"
+            [disabled]="isSubmitting"
+          />
 
         </div>
 
-      </section>
+      </div>
 
 
+      <!-- ASSIGNMENT -->
 
-      <!-- ===================================================
-           CLASSIFICATION
-      ==================================================== -->
+      <div class="form-row">
 
-      <section class="form-section">
+        <div class="form-group">
 
-        <div class="section-heading">
+          <label>
+            Assignment Group
+            <span>*</span>
+          </label>
 
-          <div class="section-icon">
-            <i class="bi bi-diagram-3"></i>
-          </div>
-
-          <div>
-
-            <h3>
-              NC Classification
-            </h3>
-
-            <p>
-              Define the current state and opening date.
-            </p>
-
-          </div>
+          <input
+            type="text"
+            [(ngModel)]="newNC.assignment_group"
+            placeholder="Assignment group"
+            [disabled]="isSubmitting"
+          />
 
         </div>
 
 
-        <div class="modal-grid">
+        <div class="form-group">
 
-          <div class="form-group">
+          <label>
+            Assigned To
+          </label>
 
-            <label>
-              State
-              <span>*</span>
-            </label>
-
-            <select
-              [(ngModel)]="newNC.state"
-              [disabled]="isSubmitting">
-
-              <option value="RAISED">
-                Raised
-              </option>
-
-              <option value="ASSIGNED">
-                Assigned
-              </option>
-
-              <option value="UNDER_INVESTIGATION">
-                Under Investigation
-              </option>
-
-              <option value="CORRECTIVE_ACTION">
-                Corrective Action
-              </option>
-
-              <option value="CLOSED">
-                Closed
-              </option>
-
-              <option value="REJECTED">
-                Rejected
-              </option>
-
-            </select>
-
-          </div>
-
-
-          <div class="form-group">
-
-            <label>
-              Opened Date
-              <span>*</span>
-            </label>
-
-            <input
-              type="datetime-local"
-              [(ngModel)]="newNC.opened_at"
-              [disabled]="isSubmitting"
-            />
-
-          </div>
+          <input
+            type="text"
+            [(ngModel)]="newNC.assigned_to"
+            placeholder="Assigned person"
+            [disabled]="isSubmitting"
+          />
 
         </div>
 
-      </section>
+      </div>
 
 
+      <!-- STATE + DATE -->
 
-      <!-- ===================================================
-           PRIORITY & SEVERITY
-      ==================================================== -->
+      <div class="form-row">
 
-      <section class="form-section priority-section">
+        <div class="form-group">
 
-        <div class="section-heading">
+          <label>
+            State
+          </label>
 
-          <div class="section-icon warning">
-            <i class="bi bi-exclamation-triangle"></i>
-          </div>
+          <select
+            [(ngModel)]="newNC.state"
+            [disabled]="isSubmitting">
 
-          <div>
+            <option value="RAISED">
+              Raised
+            </option>
 
-            <h3>
-              Priority & Severity
-            </h3>
+            <option value="ASSIGNED">
+              Assigned
+            </option>
 
-            <p>
-              These values are used by the prediction model.
-            </p>
+            <option value="UNDER_INVESTIGATION">
+              Under Investigation
+            </option>
 
-          </div>
+            <option value="CORRECTIVE_ACTION">
+              Corrective Action
+            </option>
+
+            <option value="CLOSED">
+              Closed
+            </option>
+
+            <option value="REJECTED">
+              Rejected
+            </option>
+
+          </select>
 
         </div>
 
 
-        <div class="modal-grid priority-grid">
+        <div class="form-group">
 
+          <label>
+            Raised Date
+          </label>
 
-          <div class="form-group">
-
-            <label>
-              Impact
-              <span>*</span>
-            </label>
-
-            <select
-              [(ngModel)]="newNC.impact"
-              [disabled]="isSubmitting">
-
-              <option [ngValue]="1">
-                1 - High
-              </option>
-
-              <option [ngValue]="2">
-                2 - Medium
-              </option>
-
-              <option [ngValue]="3">
-                3 - Low
-              </option>
-
-            </select>
-
-          </div>
-
-
-          <div class="form-group">
-
-            <label>
-              Urgency
-              <span>*</span>
-            </label>
-
-            <select
-              [(ngModel)]="newNC.urgency"
-              [disabled]="isSubmitting">
-
-              <option [ngValue]="1">
-                1 - High
-              </option>
-
-              <option [ngValue]="2">
-                2 - Medium
-              </option>
-
-              <option [ngValue]="3">
-                3 - Low
-              </option>
-
-            </select>
-
-          </div>
-
-
-          <div class="form-group">
-
-            <label>
-              Priority
-              <span>*</span>
-            </label>
-
-            <select
-              [(ngModel)]="newNC.priority"
-              [disabled]="isSubmitting">
-
-              <option [ngValue]="1">
-                1 - Critical
-              </option>
-
-              <option [ngValue]="2">
-                2 - High
-              </option>
-
-              <option [ngValue]="3">
-                3 - Moderate
-              </option>
-
-              <option [ngValue]="4">
-                4 - Low
-              </option>
-
-              <option [ngValue]="5">
-                5 - Planning
-              </option>
-
-            </select>
-
-          </div>
+          <input
+            type="datetime-local"
+            [(ngModel)]="newNC.opened_at"
+            [disabled]="isSubmitting"
+          />
 
         </div>
 
-      </section>
+      </div>
+
+
+      <!-- SYMPTOM -->
+
+      <div class="form-group">
+
+        <label>
+          Symptom
+        </label>
+
+        <textarea
+          [(ngModel)]="newNC.symptom"
+          rows="3"
+          placeholder="Describe the symptom..."
+          [disabled]="isSubmitting">
+        </textarea>
+
+      </div>
+
+
+      <!-- IMPACT / URGENCY / PRIORITY -->
+
+      <div class="form-row three-columns">
+
+        <div class="form-group">
+
+          <label>
+            Impact
+          </label>
+
+          <select
+            [(ngModel)]="newNC.impact"
+            [disabled]="isSubmitting">
+
+            <option [ngValue]="1">
+              High
+            </option>
+
+            <option [ngValue]="2">
+              Medium
+            </option>
+
+            <option [ngValue]="3">
+              Low
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label>
+            Urgency
+          </label>
+
+          <select
+            [(ngModel)]="newNC.urgency"
+            [disabled]="isSubmitting">
+
+            <option [ngValue]="1">
+              High
+            </option>
+
+            <option [ngValue]="2">
+              Medium
+            </option>
+
+            <option [ngValue]="3">
+              Low
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label>
+            Priority
+          </label>
+
+          <select
+            [(ngModel)]="newNC.priority"
+            [disabled]="isSubmitting">
+
+            <option [ngValue]="1">
+              Critical
+            </option>
+
+            <option [ngValue]="2">
+              High
+            </option>
+
+            <option [ngValue]="3">
+              Moderate
+            </option>
+
+            <option [ngValue]="4">
+              Low
+            </option>
+
+            <option [ngValue]="5">
+              Planning
+            </option>
+
+          </select>
+
+        </div>
+
+      </div>
 
     </div>
 
 
+    <!-- MODAL FOOTER -->
 
-    <!-- =====================================================
-         MODAL FOOTER
-    ====================================================== -->
+    <div class="modal-footer">
 
-    <footer class="modal-footer">
+      <button
+        type="button"
+        class="secondary-button"
+        [disabled]="isSubmitting"
+        (click)="closeModal()">
 
-      <div class="footer-hint">
-        <i class="bi bi-lock"></i>
-        AI prediction is generated automatically
-      </div>
+        Cancel
 
-
-      <div class="footer-actions">
-
-        <button
-          type="button"
-          class="cancel-button"
-          [disabled]="isSubmitting"
-          (click)="closeModal()">
-
-          Cancel
-
-        </button>
+      </button>
 
 
-        <button
-          type="button"
-          class="save-button"
-          [disabled]="
-            isSubmitting ||
-            !newNC.title.trim() ||
-            !newNC.category.trim() ||
-            !newNC.assignment_group.trim()
-          "
-          (click)="addNC()">
+      <button
+        type="button"
+        class="primary-button"
+        [disabled]="isSubmitting"
+        (click)="addNC()">
 
-          <span
-            class="spinner"
-            *ngIf="isSubmitting">
-          </span>
+        <span
+          *ngIf="isSubmitting"
+          class="spinner">
+        </span>
 
-          <i
-            class="bi bi-stars"
-            *ngIf="!isSubmitting">
-          </i>
+        <i
+          *ngIf="!isSubmitting"
+          class="bi bi-cpu">
+        </i>
 
-          <span *ngIf="!isSubmitting">
-            Predict & Raise NC
-          </span>
+        {{
+          isSubmitting
+            ? 'Calculating...'
+            : 'Create & Predict'
+        }}
 
-          <span *ngIf="isSubmitting">
-            Predicting risk...
-          </span>
+      </button>
 
-        </button>
-
-      </div>
-
-    </footer>
+    </div>
 
   </div>
 
 </div>
-
 
 
 <!-- =========================================================
@@ -949,37 +892,39 @@
 ========================================================== -->
 
 <div
-  class="details-overlay"
-  *ngIf="showDetailsModal && selectedRecord"
+  *ngIf="
+    showDetailsModal &&
+    selectedRecord
+  "
+  class="modal-backdrop"
   (click)="closeDetails()">
 
-
   <div
-    class="details-modal"
+    class="modal-container details-modal"
     (click)="$event.stopPropagation()">
 
 
-    <!-- =====================================================
-         DETAILS HEADER
-    ====================================================== -->
+    <!-- DETAILS HEADER -->
 
-    <header class="details-header">
+    <div class="modal-header">
 
-      <div class="details-heading">
+      <div>
 
-        <div class="details-record-icon">
+        <div class="modal-title-icon">
+
           <i class="bi bi-file-earmark-text"></i>
+
         </div>
 
         <div>
 
-          <span class="eyebrow">
-            NON-CONFORMANCE
-          </span>
-
           <h2>
             {{ selectedRecord.ref }}
           </h2>
+
+          <p>
+            {{ selectedRecord.title }}
+          </p>
 
         </div>
 
@@ -988,173 +933,248 @@
 
       <button
         type="button"
-        class="close-button"
-        (click)="closeDetails()"
-        aria-label="Close">
+        class="modal-close"
+        (click)="closeDetails()">
 
         <i class="bi bi-x-lg"></i>
 
       </button>
 
-    </header>
+    </div>
 
 
+    <!-- DETAILS BODY -->
 
-    <!-- =====================================================
-         DETAILS BODY
-    ====================================================== -->
-
-    <div class="details-body">
+    <div class="modal-body">
 
 
-      <!-- TITLE -->
+      <!-- STATUS -->
 
-      <div class="details-title">
+      <div class="details-status-row">
 
-        <span class="details-label">
-          Title
+        <span
+          class="state-badge"
+          [ngClass]="
+            stateClass(selectedRecord.state)
+          ">
+
+          <span class="state-dot"></span>
+
+          {{ stateLabel(selectedRecord.state) }}
+
         </span>
 
+
+        <span
+          class="risk-badge"
+          [ngClass]="
+            riskClass(selectedRecord.risk)
+          ">
+
+          <span class="risk-dot"></span>
+
+          {{ riskLabel(selectedRecord.risk) }}
+
+        </span>
+
+
+        <span class="probability">
+
+          {{
+            getProbability(selectedRecord)
+              | number:'1.1-1'
+          }}%
+
+        </span>
+
+      </div>
+
+
+      <!-- =================================================
+           GENERAL INFORMATION
+      ================================================== -->
+
+      <div class="details-section">
+
         <h3>
-          {{ selectedRecord.title }}
+          General Information
         </h3>
-
-      </div>
-
-
-
-      <!-- RISK SUMMARY -->
-
-      <div class="risk-summary">
-
-        <div class="risk-summary-left">
-
-          <span class="details-label">
-            AI Risk
-          </span>
-
-          <span
-            class="large-risk-badge"
-            [ngClass]="riskClass(selectedRecord.risk)">
-
-            <span class="risk-dot"></span>
-
-            {{ riskLabel(selectedRecord.risk) }}
-
-          </span>
-
-        </div>
-
-
-        <div class="risk-summary-right">
-
-          <span class="details-label">
-            Probability
-          </span>
-
-          <strong>
-            {{ getProbability(selectedRecord) | number:'1.1-1' }}%
-          </strong>
-
-        </div>
-
-      </div>
-
-
-
-      <!-- MAIN DETAILS -->
-
-      <div class="details-grid">
-
-
-        <div class="detail-item">
-
-          <span class="details-label">
-            Category
-          </span>
-
-          <strong>
-            {{ selectedRecord.category }}
-          </strong>
-
-        </div>
-
-
-        <div class="detail-item">
-
-          <span class="details-label">
-            Assignment Group
-          </span>
-
-          <strong>
-            {{ selectedRecord.assignment_group }}
-          </strong>
-
-        </div>
-
-
-        <div class="detail-item">
-
-          <span class="details-label">
-            State
-          </span>
-
-          <span
-            class="state-badge"
-            [ngClass]="stateClass(selectedRecord.state)">
-
-            {{ stateLabel(selectedRecord.state) }}
-
-          </span>
-
-        </div>
-
-
-        <div class="detail-item">
-
-          <span class="details-label">
-            Raised
-          </span>
-
-          <strong>
-            {{ formatDate(selectedRecord.raised) }}
-          </strong>
-
-        </div>
-
-      </div>
-
-
-
-      <!-- INCIDENT INFORMATION -->
-
-      <div
-        class="input-details"
-        *ngIf="selectedRecord.input">
-
-        <div class="section-heading details-section-heading">
-
-          <div class="section-icon">
-            <i class="bi bi-database"></i>
-          </div>
-
-          <div>
-
-            <h3>
-              Incident Information
-            </h3>
-
-            <p>
-              Original information used for the AI prediction.
-            </p>
-
-          </div>
-
-        </div>
 
 
         <div class="details-grid">
 
+          <div class="detail-item">
+
+            <span class="details-label">
+              Reference
+            </span>
+
+            <strong>
+              {{ selectedRecord.ref }}
+            </strong>
+
+          </div>
+
+
+          <div class="detail-item">
+
+            <span class="details-label">
+              Title
+            </span>
+
+            <strong>
+              {{ selectedRecord.title }}
+            </strong>
+
+          </div>
+
+
+          <div class="detail-item">
+
+            <span class="details-label">
+              Category
+            </span>
+
+            <strong>
+              {{ selectedRecord.category || '—' }}
+            </strong>
+
+          </div>
+
+
+          <div class="detail-item">
+
+            <span class="details-label">
+              Assignment Group
+            </span>
+
+            <strong>
+              {{ selectedRecord.assignment_group || '—' }}
+            </strong>
+
+          </div>
+
+
+          <div class="detail-item">
+
+            <span class="details-label">
+              State
+            </span>
+
+            <strong>
+              {{ stateLabel(selectedRecord.state) }}
+            </strong>
+
+          </div>
+
+
+          <!-- DATE ACTUELLE UNIQUEMENT -->
+
+          <div class="detail-item">
+
+            <span class="details-label">
+              Date
+            </span>
+
+            <strong>
+
+              {{
+                formatDate(
+                  getDisplayDate(selectedRecord)
+                )
+              }}
+
+            </strong>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           AI RISK
+           
+           SUPPRESSION DE LA SECTION :
+           "STATE DATES"
+           
+           Assigned —
+           Under Investigation —
+           Corrective Action —
+           Closed —
+           Rejected —
+      ================================================== -->
+
+      <div class="details-section">
+
+        <h3>
+          AI Risk Assessment
+        </h3>
+
+
+        <div class="ai-risk-details">
+
+          <div class="ai-risk-main">
+
+            <span
+              class="risk-badge large"
+              [ngClass]="
+                riskClass(selectedRecord.risk)
+              ">
+
+              <span class="risk-dot"></span>
+
+              {{ riskLabel(selectedRecord.risk) }}
+
+            </span>
+
+
+            <strong>
+
+              {{
+                getProbability(
+                  selectedRecord
+                ) | number:'1.1-1'
+              }}%
+
+            </strong>
+
+          </div>
+
+
+          <div class="probability-bar">
+
+            <div
+              class="probability-fill"
+              [style.width.%]="
+                getProbability(
+                  selectedRecord
+                )
+              ">
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           INCIDENT DETAILS
+      ================================================== -->
+
+      <div
+        class="details-section"
+        *ngIf="selectedRecord.input">
+
+        <h3>
+          Incident Details
+        </h3>
+
+
+        <div class="details-grid">
 
           <div class="detail-item">
 
@@ -1163,7 +1183,10 @@
             </span>
 
             <strong>
-              {{ selectedRecord.input?.subcategory || '—' }}
+              {{
+                selectedRecord.input.subcategory
+                  || '—'
+              }}
             </strong>
 
           </div>
@@ -1176,7 +1199,10 @@
             </span>
 
             <strong>
-              {{ selectedRecord.input?.assigned_to || '—' }}
+              {{
+                selectedRecord.input.assigned_to
+                  || '—'
+              }}
             </strong>
 
           </div>
@@ -1189,7 +1215,11 @@
             </span>
 
             <strong>
-              {{ impactLabel(selectedRecord.input?.impact) }}
+              {{
+                impactLabel(
+                  selectedRecord.input.impact
+                )
+              }}
             </strong>
 
           </div>
@@ -1202,7 +1232,11 @@
             </span>
 
             <strong>
-              {{ urgencyLabel(selectedRecord.input?.urgency) }}
+              {{
+                urgencyLabel(
+                  selectedRecord.input.urgency
+                )
+              }}
             </strong>
 
           </div>
@@ -1215,23 +1249,32 @@
             </span>
 
             <strong>
-              {{ priorityLabel(selectedRecord.input?.priority) }}
+              {{
+                priorityLabel(
+                  selectedRecord.input.priority
+                )
+              }}
             </strong>
 
           </div>
 
+        </div>
 
-          <div class="detail-item full-detail">
 
-            <span class="details-label">
-              Symptom
-            </span>
+        <!-- SYMPTOM -->
 
-            <p>
-              {{ selectedRecord.input?.u_symptom || 'No symptom provided' }}
-            </p>
+        <div class="symptom-box">
 
-          </div>
+          <span class="details-label">
+            Symptom
+          </span>
+
+          <p>
+            {{
+              selectedRecord.input.u_symptom ||
+              'No symptom provided.'
+            }}
+          </p>
 
         </div>
 
@@ -1240,51 +1283,32 @@
     </div>
 
 
+    <!-- DETAILS FOOTER -->
 
-    <!-- =====================================================
-         DETAILS FOOTER
-    ====================================================== -->
-
-    <footer class="details-footer">
-
-      <div class="details-footer-left">
-
-        <button
-          type="button"
-          class="details-pdf-button"
-          (click)="exportPdf(selectedRecord)">
-
-          <i class="bi bi-file-earmark-pdf"></i>
-
-          Export PDF
-
-        </button>
-
-
-        <button
-          type="button"
-          class="details-delete-button"
-          (click)="deleteRecord(selectedRecord!)">
-
-          <i class="bi bi-trash3"></i>
-
-          Delete
-
-        </button>
-
-      </div>
-
+    <div class="modal-footer">
 
       <button
         type="button"
-        class="details-close-button"
+        class="secondary-button"
         (click)="closeDetails()">
 
         Close
 
       </button>
 
-    </footer>
+
+      <button
+        type="button"
+        class="primary-button"
+        (click)="exportPdf(selectedRecord)">
+
+        <i class="bi bi-file-earmark-pdf"></i>
+
+        Export PDF
+
+      </button>
+
+    </div>
 
   </div>
 

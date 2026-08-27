@@ -24,47 +24,63 @@ import {
 
 
 // ============================================================
-// FORMULAIRE NOUVELLE NC
+// FORMULAIRE
 // ============================================================
 
 interface NewNCForm {
 
   title: string;
+
   category: string;
+
   subcategory: string;
+
   symptom: string;
+
   assignment_group: string;
+
   assigned_to: string;
+
   impact: number;
+
   urgency: number;
+
   priority: number;
+
   state: NCState;
+
   opened_at: string;
 
 }
 
 
 // ============================================================
-// RÉPONSE BACKEND /predict
+// API RESPONSE
 // ============================================================
 
 interface PredictionApiResponse {
 
   risk_level?: string;
+
   probability?: number;
+
   confidence?: number;
+
   threshold?: number;
+
   medium_threshold?: number;
+
   model_version?: string;
+
   sla_target_days?: number;
+
   prediction?: string;
-  generated_features?: unknown;
 
 }
 
 
 // ============================================================
-// HISTORIQUE DASHBOARD
+// DASHBOARD HISTORY
 // ============================================================
 
 interface DashboardHistoryItem {
@@ -105,13 +121,23 @@ interface DashboardHistoryItem {
 
   raised?: string;
 
+  assigned_at?: string;
+
+  investigated_at?: string;
+
+  corrective_action_at?: string;
+
+  closed_at?: string;
+
+  rejected_at?: string;
+
   model_version?: string;
 
 }
 
 
 // ============================================================
-// RECORD LOCAL
+// HISTORY RECORD
 // ============================================================
 
 type HistoryRecord =
@@ -119,33 +145,34 @@ type HistoryRecord =
 
     predictionDate: string;
 
-    /**
-     * Permet de conserver l'ordre réel des prédictions
-     * Dashboard lorsque plusieurs dates sont identiques
-     * ou lorsqu'une ancienne donnée ne possède pas de date.
-     */
     predictionOrder?: number;
 
-    /**
-     * True uniquement pour les prédictions provenant
-     * de predictionHistory.
-     */
     isDashboardPrediction?: boolean;
+
+    raisedAt?: string;
+
+    assignedAt?: string;
+
+    investigatedAt?: string;
+
+    correctiveActionAt?: string;
+
+    closedAt?: string;
+
+    rejectedAt?: string;
 
   };
 
 
 // ============================================================
-// COMPOSANT
+// COMPONENT
 // ============================================================
 
 @Component({
 
-  selector:
-    'app-historique',
+  selector: 'app-historique',
 
-  standalone:
-    true,
+  standalone: true,
 
   imports: [
     CommonModule,
@@ -164,16 +191,11 @@ export class HistoriqueComponent
 
 
   // ==========================================================
-  // API
+  // CONFIGURATION
   // ==========================================================
 
   private readonly API_URL =
     'http://127.0.0.1:8000';
-
-
-  // ==========================================================
-  // STORAGE
-  // ==========================================================
 
   private readonly NC_HISTORY_KEY =
     'nonConformanceHistory';
@@ -186,72 +208,46 @@ export class HistoriqueComponent
   // DONNÉES
   // ==========================================================
 
-  records:
-    HistoryRecord[] = [];
-
-
-  // ==========================================================
-  // MODALS
-  // ==========================================================
-
-  showModal =
-    false;
-
-  showDetailsModal =
-    false;
+  records: HistoryRecord[] = [];
 
   selectedRecord:
-    HistoryRecord | null =
-    null;
+    HistoryRecord | null = null;
 
+  showModal = false;
 
-  // ==========================================================
-  // ENVOI
-  // ==========================================================
+  showDetailsModal = false;
 
-  isSubmitting =
-    false;
+  isSubmitting = false;
 
   submitError:
-    string | null =
-    null;
+    string | null = null;
 
 
   // ==========================================================
   // FORMULAIRE
   // ==========================================================
 
-  newNC:
-    NewNCForm =
+  newNC: NewNCForm =
     this.createEmptyForm();
 
 
   // ==========================================================
-  // RECHERCHE
+  // FILTRES
   // ==========================================================
 
-  searchTerm =
-    '';
-
-
-  // ==========================================================
-  // FILTRE RISQUE
-  // ==========================================================
+  searchTerm = '';
 
   riskFilter:
-    'ALL' | RiskLevel =
-    'ALL';
+    'ALL' | RiskLevel = 'ALL';
 
 
   // ==========================================================
   // PAGINATION
   // ==========================================================
 
-  currentPage =
-    1;
+  currentPage = 1;
 
-  pageSize =
-    5;
+  pageSize = 5;
 
 
   // ==========================================================
@@ -266,7 +262,7 @@ export class HistoriqueComponent
 
 
   // ==========================================================
-  // FORMULAIRE VIDE
+  // FORMULAIRE INITIAL
   // ==========================================================
 
   private createEmptyForm():
@@ -278,10 +274,12 @@ export class HistoriqueComponent
     const localDate =
       new Date(
         now.getTime() -
-        now.getTimezoneOffset() * 60000
+        now.getTimezoneOffset() *
+        60000
       )
         .toISOString()
         .slice(0, 16);
+
 
     return {
 
@@ -313,16 +311,7 @@ export class HistoriqueComponent
 
 
   // ==========================================================
-  // CHARGEMENT PRINCIPAL
-  //
-  // IMPORTANT :
-  //
-  // predictionHistory est lu séparément.
-  //
-  // Les prédictions Dashboard sont reconstruites à partir
-  // de predictionHistory puis triées avec leur vraie date.
-  //
-  // La dernière prédiction est TOUJOURS en position 0.
+  // CHARGER HISTORIQUE
   // ==========================================================
 
   loadHistory(): void {
@@ -332,52 +321,29 @@ export class HistoriqueComponent
       const existingRecords =
         this.loadNonConformanceHistory();
 
+
       const dashboardRecords =
         this.loadDashboardPredictionHistory();
 
-      /*
-       * On fusionne les anciennes NC avec les prédictions
-       * Dashboard.
-       */
+
       this.records =
         this.mergeRecords(
           existingRecords,
           dashboardRecords
         );
 
-      /*
-       * TRI CENTRAL.
-       *
-       * Cette fonction place obligatoirement la dernière
-       * prédiction Dashboard en première position.
-       */
+
       this.sortRecords();
 
-      /*
-       * Sauvegarder immédiatement l'ordre corrigé.
-       */
       this.saveHistory();
 
-      this.currentPage =
-        1;
+      this.currentPage = 1;
 
       this.fixCurrentPage();
 
-      console.log(
-        '[HISTORIQUE] Ordre final :',
-        this.records.map(
-          record => ({
-            ref: record.ref,
-            source: record.source,
-            predictionDate:
-              record.predictionDate,
-            predictionOrder:
-              record.predictionOrder
-          })
-        )
-      );
+    }
 
-    } catch (error) {
+    catch (error) {
 
       console.error(
         'Erreur chargement historique :',
@@ -394,7 +360,7 @@ export class HistoriqueComponent
 
 
   // ==========================================================
-  // CHARGER NON-CONFORMANCE HISTORY
+  // CHARGER NC HISTORY
   // ==========================================================
 
   private loadNonConformanceHistory():
@@ -407,23 +373,24 @@ export class HistoriqueComponent
           this.NC_HISTORY_KEY
         );
 
+
       if (!stored) {
 
         return [];
 
       }
 
-      const parsed:
-        unknown =
+
+      const parsed: unknown =
         JSON.parse(stored);
 
-      if (
-        !Array.isArray(parsed)
-      ) {
+
+      if (!Array.isArray(parsed)) {
 
         return [];
 
       }
+
 
       return parsed
 
@@ -446,7 +413,9 @@ export class HistoriqueComponent
             item !== null
         );
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
       console.error(
         'Erreur lecture nonConformanceHistory :',
@@ -462,13 +431,6 @@ export class HistoriqueComponent
 
   // ==========================================================
   // CHARGER PREDICTION HISTORY
-  //
-  // IMPORTANT :
-  //
-  // On conserve l'INDEX ORIGINAL.
-  //
-  // Cela permet de savoir quelle prédiction est la dernière
-  // même lorsque l'ancienne donnée n'a pas de timestamp.
   // ==========================================================
 
   private loadDashboardPredictionHistory():
@@ -481,50 +443,37 @@ export class HistoriqueComponent
           this.PREDICTION_HISTORY_KEY
         );
 
+
       if (!stored) {
 
         return [];
 
       }
 
-      const parsed:
-        unknown =
+
+      const parsed: unknown =
         JSON.parse(stored);
 
-      if (
-        !Array.isArray(parsed)
-      ) {
+
+      if (!Array.isArray(parsed)) {
 
         return [];
 
       }
 
-      const predictions =
-        parsed as DashboardHistoryItem[];
 
-      /*
-       * IMPORTANT :
-       *
-       * Nous ne faisons PAS confiance uniquement à la date.
-       *
-       * L'index dans predictionHistory est conservé.
-       */
-      const total =
-        predictions.length;
-
-      return predictions
+      return (
+        parsed as DashboardHistoryItem[]
+      )
 
         .map(
           (
-            item:
-              DashboardHistoryItem,
-            index:
-              number
+            item,
+            index
           ) =>
             this.dashboardPredictionToRecord(
               item,
-              index,
-              total
+              index
             )
         )
 
@@ -536,7 +485,9 @@ export class HistoriqueComponent
             item !== null
         );
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
       console.error(
         'Erreur lecture predictionHistory :',
@@ -551,22 +502,13 @@ export class HistoriqueComponent
 
 
   // ==========================================================
-  // CONVERSION DASHBOARD -> RECORD
+  // DASHBOARD → RECORD
   // ==========================================================
 
   private dashboardPredictionToRecord(
-
-    item:
-      DashboardHistoryItem,
-
-    index:
-      number,
-
-    total:
-      number
-
-  ):
-    HistoryRecord | null {
+    item: DashboardHistoryItem,
+    index: number
+  ): HistoryRecord | null {
 
     if (
       !item ||
@@ -577,71 +519,20 @@ export class HistoriqueComponent
 
     }
 
+
     const input:
       IncidentRequest =
       item.input ??
       ({} as IncidentRequest);
 
 
-    // ========================================================
-    // DATE DE PRÉDICTION
-    //
-    // ORDRE DE PRIORITÉ :
-    //
-    // 1 predictionDate
-    // 2 prediction_date
-    // 3 predicted_at
-    // 4 prediction_timestamp
-    // 5 createdAt
-    // 6 created_at
-    // 7 timestamp
-    // 8 date
-    //
-    // IMPORTANT :
-    // raised n'est PAS utilisé ici.
-    // ========================================================
-
-    const explicitPredictionDate =
-      this.findPredictionDate(item);
+    const predictionDate =
+      this.findPredictionDate(item) ??
+      this.createFallbackPredictionDate(index);
 
 
-    /*
-     * Si une vraie date existe, on l'utilise.
-     *
-     * Sinon on fabrique une date technique basée sur l'ordre
-     * de predictionHistory.
-     *
-     * Plus l'index est grand, plus la prédiction est récente
-     * lorsque predictionHistory est stocké chronologiquement.
-     */
-    let predictionDate: string;
-
-    if (
-      explicitPredictionDate
-    ) {
-
-      predictionDate =
-        explicitPredictionDate;
-
-    } else {
-
-      predictionDate =
-        this.createFallbackPredictionDate(
-          index,
-          total
-        );
-
-    }
-
-
-    // ========================================================
-    // DATE D'OUVERTURE
-    //
-    // Elle sert uniquement au SLA.
-    // ========================================================
-
-    const raised =
-      this.getValidDate(
+    const raisedAt =
+      this.getOptionalDate(
         input.opened_at ??
         item.raised ??
         item.date ??
@@ -651,9 +542,35 @@ export class HistoriqueComponent
       );
 
 
-    // ========================================================
-    // TITRE
-    // ========================================================
+    const assignedAt =
+      this.getOptionalDate(
+        item.assigned_at
+      );
+
+
+    const investigatedAt =
+      this.getOptionalDate(
+        item.investigated_at
+      );
+
+
+    const correctiveActionAt =
+      this.getOptionalDate(
+        item.corrective_action_at
+      );
+
+
+    const closedAt =
+      this.getOptionalDate(
+        item.closed_at
+      );
+
+
+    const rejectedAt =
+      this.getOptionalDate(
+        item.rejected_at
+      );
+
 
     const title =
       String(
@@ -661,10 +578,6 @@ export class HistoriqueComponent
         this.generateTitle(input)
       ).trim();
 
-
-    // ========================================================
-    // RISQUE
-    // ========================================================
 
     const risk =
       this.normalizeRisk(
@@ -674,10 +587,6 @@ export class HistoriqueComponent
       );
 
 
-    // ========================================================
-    // PROBABILITÉ
-    // ========================================================
-
     const probability =
       this.normalizeProbability(
         item.probability ??
@@ -686,41 +595,26 @@ export class HistoriqueComponent
       );
 
 
-    // ========================================================
-    // REF
-    // ========================================================
-
-    const ref =
-      item.ref
-        ? String(item.ref)
-        : this.generateDashboardRef(
-            item,
-            index
-          );
-
-
-    // ========================================================
-    // RECORD
-    // ========================================================
-
     return {
 
-      ref,
+      ref:
+        item.ref ??
+        this.generateDashboardRef(
+          item,
+          index
+        ),
 
       title:
-        title ||
-        'AI Prediction',
+        title || 'AI Prediction',
 
       category:
         String(
-          input.category ??
-          '—'
+          input.category ?? '—'
         ),
 
       assignment_group:
         String(
-          input.assignment_group ??
-          '—'
+          input.assignment_group ?? '—'
         ),
 
       state:
@@ -732,7 +626,9 @@ export class HistoriqueComponent
 
       probability,
 
-      raised,
+      raised:
+        raisedAt ??
+        predictionDate,
 
       source:
         'DASHBOARD',
@@ -741,14 +637,23 @@ export class HistoriqueComponent
 
       predictionDate,
 
-      /*
-       * L'index est conservé pour garantir un ordre stable.
-       */
       predictionOrder:
         index,
 
       isDashboardPrediction:
-        true
+        true,
+
+      raisedAt,
+
+      assignedAt,
+
+      investigatedAt,
+
+      correctiveActionAt,
+
+      closedAt,
+
+      rejectedAt
 
     };
 
@@ -756,381 +661,13 @@ export class HistoriqueComponent
 
 
   // ==========================================================
-  // TROUVER UNE VRAIE DATE DE PRÉDICTION
-  // ==========================================================
-
-  private findPredictionDate(
-    item:
-      DashboardHistoryItem
-  ):
-    string | null {
-
-    const candidates:
-      unknown[] = [
-
-        item.predictionDate,
-
-        item.prediction_date,
-
-        item.predicted_at,
-
-        item.prediction_timestamp,
-
-        item.createdAt,
-
-        item.created_at,
-
-        item.timestamp,
-
-        item.date
-
-      ];
-
-
-    for (
-      const value of candidates
-    ) {
-
-      if (
-        value === undefined ||
-        value === null ||
-        String(value).trim() === ''
-      ) {
-
-        continue;
-
-      }
-
-      const date =
-        new Date(
-          String(value)
-        );
-
-      if (
-        !Number.isNaN(
-          date.getTime()
-        )
-      ) {
-
-        return date.toISOString();
-
-      }
-
-    }
-
-    return null;
-
-  }
-
-
-  // ==========================================================
-  // DATE FALLBACK
-  //
-  // Permet de conserver l'ordre même si predictionHistory
-  // ne possède aucune date.
-  //
-  // L'index est volontairement intégré dans la date.
-  // ==========================================================
-
-  private createFallbackPredictionDate(
-
-    index:
-      number,
-
-    total:
-      number
-
-  ):
-    string {
-
-    /*
-     * Base fixe.
-     *
-     * On ajoute les secondes correspondant à l'index.
-     */
-    const base =
-      new Date(
-        '2000-01-01T00:00:00.000Z'
-      ).getTime();
-
-    const timestamp =
-      base +
-      Math.max(
-        0,
-        total - index
-      ) * 1000;
-
-    return new Date(
-      timestamp
-    ).toISOString();
-
-  }
-
-
-  // ==========================================================
-  // DATE VALIDE
-  // ==========================================================
-
-  private getValidDate(
-    value:
-      unknown
-  ):
-    string {
-
-    if (
-      value !== undefined &&
-      value !== null &&
-      String(value).trim() !== ''
-    ) {
-
-      const date =
-        new Date(
-          String(value)
-        );
-
-      if (
-        !Number.isNaN(
-          date.getTime()
-        )
-      ) {
-
-        return date.toISOString();
-
-      }
-
-    }
-
-    return new Date().toISOString();
-
-  }
-
-
-  // ==========================================================
-  // FUSION
-  //
-  // IMPORTANT :
-  //
-  // Les prédictions Dashboard restent prioritaires.
-  //
-  // On ne remplace PAS une prédiction récente par une
-  // ancienne version de nonConformanceHistory.
-  // ==========================================================
-
-  private mergeRecords(
-
-    existingRecords:
-      HistoryRecord[],
-
-    dashboardRecords:
-      HistoryRecord[]
-
-  ):
-    HistoryRecord[] {
-
-    const result:
-      HistoryRecord[] = [];
-
-
-    // ========================================================
-    // 1. AJOUTER LES NC MANUELLES
-    // ========================================================
-
-    for (
-      const record of existingRecords
-    ) {
-
-      /*
-       * Si le record est une ancienne prédiction Dashboard,
-       * on l'ajoute provisoirement.
-       *
-       * Les versions Dashboard plus récentes seront ensuite
-       * remplacées par predictionHistory.
-       */
-      if (
-        !this.recordAlreadyExists(
-          result,
-          record
-        )
-      ) {
-
-        result.push(record);
-
-      }
-
-    }
-
-
-    // ========================================================
-    // 2. AJOUTER / REMPLACER LES DASHBOARD
-    // ========================================================
-
-    for (
-      const dashboardRecord of dashboardRecords
-    ) {
-
-      const existingIndex =
-        this.findDashboardMatch(
-          result,
-          dashboardRecord
-        );
-
-
-      if (
-        existingIndex === -1
-      ) {
-
-        result.push(
-          dashboardRecord
-        );
-
-        continue;
-
-      }
-
-
-      /*
-       * La version venant directement de predictionHistory
-       * est toujours la source de vérité.
-       */
-      result[
-        existingIndex
-      ] = {
-
-        ...result[
-          existingIndex
-        ],
-
-        ...dashboardRecord,
-
-        source:
-          'DASHBOARD',
-
-        isDashboardPrediction:
-          true
-
-      };
-
-    }
-
-
-    return result;
-
-  }
-
-
-  // ==========================================================
-  // TROUVER CORRESPONDANCE DASHBOARD
-  // ==========================================================
-
-  private findDashboardMatch(
-
-    records:
-      HistoryRecord[],
-
-    record:
-      HistoryRecord
-
-  ):
-    number {
-
-
-    // ========================================================
-    // 1. MÊME REF
-    // ========================================================
-
-    if (
-      record.ref
-    ) {
-
-      const byRef =
-        records.findIndex(
-          item =>
-            item.ref === record.ref
-        );
-
-      if (
-        byRef !== -1
-      ) {
-
-        return byRef;
-
-      }
-
-    }
-
-
-    // ========================================================
-    // 2. MÊME DATE DE PRÉDICTION
-    // ========================================================
-
-    const byPredictionDate =
-      records.findIndex(
-        item =>
-
-          item.source === 'DASHBOARD' &&
-
-          this.normalizeDateForComparison(
-            item.predictionDate
-          ) ===
-          this.normalizeDateForComparison(
-            record.predictionDate
-          )
-      );
-
-
-    if (
-      byPredictionDate !== -1
-    ) {
-
-      return byPredictionDate;
-
-    }
-
-
-    return -1;
-
-  }
-
-
-  // ==========================================================
-  // DÉTECTION DOUBLON
-  // ==========================================================
-
-  private recordAlreadyExists(
-
-    records:
-      HistoryRecord[],
-
-    record:
-      HistoryRecord
-
-  ):
-    boolean {
-
-    return (
-      records.findIndex(
-        item =>
-          item.ref === record.ref
-      ) !== -1
-    );
-
-  }
-
-
-  // ==========================================================
-  // NORMALISER RECORD EXISTANT
+  // NORMALISER RECORD
   // ==========================================================
 
   private normalizeRecord(
-
-    value:
-      unknown,
-
-    index:
-      number
-
-  ):
-    HistoryRecord | null {
+    value: unknown,
+    index: number
+  ): HistoryRecord | null {
 
     if (
       !value ||
@@ -1141,16 +678,40 @@ export class HistoriqueComponent
 
     }
 
+
     const item =
-      value as Partial<
-        NonConformanceRecord
-      > & {
+      value as
+        Partial<NonConformanceRecord> & {
 
-        predictionDate?: string;
+          predictionDate?: string;
 
-        prediction_date?: string;
+          prediction_date?: string;
 
-      };
+          predictionOrder?: number;
+
+          raisedAt?: string;
+
+          assignedAt?: string;
+
+          investigatedAt?: string;
+
+          correctiveActionAt?: string;
+
+          closedAt?: string;
+
+          rejectedAt?: string;
+
+          assigned_at?: string;
+
+          investigated_at?: string;
+
+          corrective_action_at?: string;
+
+          closed_at?: string;
+
+          rejected_at?: string;
+
+        };
 
 
     if (
@@ -1163,9 +724,45 @@ export class HistoriqueComponent
     }
 
 
-    const raised =
-      this.getValidDate(
+    const raisedAt =
+      this.getOptionalDate(
+        item.raisedAt ??
         item.raised
+      );
+
+
+    const assignedAt =
+      this.getOptionalDate(
+        item.assignedAt ??
+        item.assigned_at
+      );
+
+
+    const investigatedAt =
+      this.getOptionalDate(
+        item.investigatedAt ??
+        item.investigated_at
+      );
+
+
+    const correctiveActionAt =
+      this.getOptionalDate(
+        item.correctiveActionAt ??
+        item.corrective_action_at
+      );
+
+
+    const closedAt =
+      this.getOptionalDate(
+        item.closedAt ??
+        item.closed_at
+      );
+
+
+    const rejectedAt =
+      this.getOptionalDate(
+        item.rejectedAt ??
+        item.rejected_at
       );
 
 
@@ -1187,14 +784,12 @@ export class HistoriqueComponent
 
       category:
         String(
-          item.category ??
-          '—'
+          item.category ?? '—'
         ),
 
       assignment_group:
         String(
-          item.assignment_group ??
-          '—'
+          item.assignment_group ?? '—'
         ),
 
       state:
@@ -1212,7 +807,9 @@ export class HistoriqueComponent
           item.probability
         ),
 
-      raised,
+      raised:
+        raisedAt ??
+        predictionDate,
 
       source:
         item.source === 'MANUAL'
@@ -1225,12 +822,284 @@ export class HistoriqueComponent
       predictionDate,
 
       predictionOrder:
+        item.predictionOrder ??
         index,
 
       isDashboardPrediction:
-        item.source !== 'MANUAL'
+        item.source !== 'MANUAL',
+
+      raisedAt,
+
+      assignedAt,
+
+      investigatedAt,
+
+      correctiveActionAt,
+
+      closedAt,
+
+      rejectedAt
 
     };
+
+  }
+
+
+  // ==========================================================
+  // DATE OPTIONNELLE
+  // ==========================================================
+
+  private getOptionalDate(
+    value: unknown
+  ): string | undefined {
+
+    if (
+      value === undefined ||
+      value === null ||
+      String(value).trim() === ''
+    ) {
+
+      return undefined;
+
+    }
+
+
+    const date =
+      new Date(
+        String(value)
+      );
+
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+
+      return undefined;
+
+    }
+
+
+    return date.toISOString();
+
+  }
+
+
+  // ==========================================================
+  // DATE VALIDE
+  // ==========================================================
+
+  private getValidDate(
+    value: unknown
+  ): string {
+
+    return (
+      this.getOptionalDate(value) ??
+      new Date().toISOString()
+    );
+
+  }
+
+
+  // ==========================================================
+  // DATE PREDICTION
+  // ==========================================================
+
+  private findPredictionDate(
+    item: DashboardHistoryItem
+  ): string | null {
+
+    const candidates: unknown[] = [
+
+      item.predictionDate,
+
+      item.prediction_date,
+
+      item.predicted_at,
+
+      item.prediction_timestamp,
+
+      item.createdAt,
+
+      item.created_at,
+
+      item.timestamp,
+
+      item.date
+
+    ];
+
+
+    for (
+      const value
+      of candidates
+    ) {
+
+      const date =
+        this.getOptionalDate(value);
+
+
+      if (date) {
+
+        return date;
+
+      }
+
+    }
+
+
+    return null;
+
+  }
+
+
+  // ==========================================================
+  // FALLBACK DATE
+  // ==========================================================
+
+  private createFallbackPredictionDate(
+    index: number
+  ): string {
+
+    const base =
+      new Date(
+        '2000-01-01T00:00:00.000Z'
+      ).getTime();
+
+
+    return new Date(
+      base +
+      index * 1000
+    ).toISOString();
+
+  }
+
+
+  // ==========================================================
+  // MERGE
+  // ==========================================================
+
+  private mergeRecords(
+    existingRecords: HistoryRecord[],
+    dashboardRecords: HistoryRecord[]
+  ): HistoryRecord[] {
+
+    const result:
+      HistoryRecord[] = [];
+
+
+    for (
+      const record
+      of existingRecords
+    ) {
+
+      if (
+        !this.recordAlreadyExists(
+          result,
+          record
+        )
+      ) {
+
+        result.push(record);
+
+      }
+
+    }
+
+
+    for (
+      const dashboardRecord
+      of dashboardRecords
+    ) {
+
+      const existingIndex =
+        this.findDashboardMatch(
+          result,
+          dashboardRecord
+        );
+
+
+      if (
+        existingIndex === -1
+      ) {
+
+        result.push(
+          dashboardRecord
+        );
+
+      }
+
+      else {
+
+        result[existingIndex] = {
+
+          ...result[existingIndex],
+
+          ...dashboardRecord
+
+        };
+
+      }
+
+    }
+
+
+    return result;
+
+  }
+
+
+  // ==========================================================
+  // FIND MATCH
+  // ==========================================================
+
+  private findDashboardMatch(
+    records: HistoryRecord[],
+    record: HistoryRecord
+  ): number {
+
+    if (record.ref) {
+
+      const index =
+        records.findIndex(
+          item =>
+            item.ref === record.ref
+        );
+
+
+      if (index !== -1) {
+
+        return index;
+
+      }
+
+    }
+
+
+    return records.findIndex(
+      item =>
+        item.source === 'DASHBOARD' &&
+        item.predictionOrder ===
+        record.predictionOrder
+    );
+
+  }
+
+
+  // ==========================================================
+  // EXISTE
+  // ==========================================================
+
+  private recordAlreadyExists(
+    records: HistoryRecord[],
+    record: HistoryRecord
+  ): boolean {
+
+    return records.some(
+      item =>
+        item.ref === record.ref
+    );
 
   }
 
@@ -1240,15 +1109,11 @@ export class HistoriqueComponent
   // ==========================================================
 
   private normalizeState(
-    value:
-      unknown
-  ):
-    NCState {
+    value: unknown
+  ): NCState {
 
     const state =
-      String(
-        value ?? ''
-      )
+      String(value ?? '')
         .trim()
         .toUpperCase()
         .replace(
@@ -1263,22 +1128,28 @@ export class HistoriqueComponent
       case 'OPEN':
         return 'RAISED';
 
+
       case 'ASSIGNED':
         return 'ASSIGNED';
+
 
       case 'UNDER_INVESTIGATION':
       case 'INVESTIGATION':
       case 'IN_PROGRESS':
         return 'UNDER_INVESTIGATION';
 
+
       case 'CORRECTIVE_ACTION':
         return 'CORRECTIVE_ACTION';
+
 
       case 'CLOSED':
         return 'CLOSED';
 
+
       case 'REJECTED':
         return 'REJECTED';
+
 
       default:
         return 'RAISED';
@@ -1289,14 +1160,12 @@ export class HistoriqueComponent
 
 
   // ==========================================================
-  // LABEL STATE
+  // STATE LABEL
   // ==========================================================
 
   stateLabel(
-    state:
-      NCState
-  ):
-    string {
+    state: NCState
+  ): string {
 
     switch (state) {
 
@@ -1327,14 +1196,12 @@ export class HistoriqueComponent
 
 
   // ==========================================================
-  // CLASSE STATE
+  // STATE CLASS
   // ==========================================================
 
   stateClass(
-    state:
-      NCState
-  ):
-    string {
+    state: NCState
+  ): string {
 
     return state
       .toLowerCase()
@@ -1347,264 +1214,139 @@ export class HistoriqueComponent
 
 
   // ==========================================================
-  // REF DASHBOARD
+  // DATE À AFFICHER
   // ==========================================================
 
-  private generateDashboardRef(
+  getDisplayDate(
+    record: HistoryRecord
+  ): string {
 
-    item:
-      DashboardHistoryItem,
+    switch (record.state) {
 
-    index:
-      number
+      case 'RAISED':
 
-  ):
-    string {
+        return (
+          record.raisedAt ??
+          record.raised ??
+          record.predictionDate
+        );
 
-    if (
-      item.id !== undefined &&
-      item.id !== null
-    ) {
 
-      const id =
-        String(item.id)
-          .replace(
-            /[^a-zA-Z0-9]/g,
-            ''
-          )
-          .slice(-12);
+      case 'ASSIGNED':
 
-      if (id) {
+        return (
+          record.assignedAt ??
+          record.raisedAt ??
+          record.raised ??
+          record.predictionDate
+        );
 
-        return `NC-AI-${id}`;
 
-      }
+      case 'UNDER_INVESTIGATION':
+
+        return (
+          record.investigatedAt ??
+          record.assignedAt ??
+          record.raisedAt ??
+          record.raised ??
+          record.predictionDate
+        );
+
+
+      case 'CORRECTIVE_ACTION':
+
+        return (
+          record.correctiveActionAt ??
+          record.investigatedAt ??
+          record.assignedAt ??
+          record.raisedAt ??
+          record.raised ??
+          record.predictionDate
+        );
+
+
+      case 'CLOSED':
+
+        return (
+          record.closedAt ??
+          record.correctiveActionAt ??
+          record.investigatedAt ??
+          record.assignedAt ??
+          record.raisedAt ??
+          record.raised ??
+          record.predictionDate
+        );
+
+
+      case 'REJECTED':
+
+        return (
+          record.rejectedAt ??
+          record.raisedAt ??
+          record.raised ??
+          record.predictionDate
+        );
+
+
+      default:
+
+        return (
+          record.raised ??
+          record.predictionDate
+        );
 
     }
-
-
-    if (
-      item.ref
-    ) {
-
-      return String(
-        item.ref
-      );
-
-    }
-
-
-    const dateValue =
-      this.findPredictionDate(item);
-
-
-    if (
-      dateValue
-    ) {
-
-      const timestamp =
-        new Date(
-          dateValue
-        ).getTime();
-
-      if (
-        Number.isFinite(timestamp)
-      ) {
-
-        return `NC-AI-${timestamp}`;
-
-      }
-
-    }
-
-
-    return (
-      'NC-AI-' +
-      String(
-        index + 1
-      ).padStart(
-        6,
-        '0'
-      )
-    );
 
   }
 
 
   // ==========================================================
-  // TITRE
+  // LABEL DE DATE
   // ==========================================================
 
-  private generateTitle(
-    input:
-      Partial<IncidentRequest>
-  ):
-    string {
+  getDateLabel(
+    record: HistoryRecord
+  ): string {
 
-    const symptom =
-      String(
-        input.u_symptom ?? ''
-      ).trim();
+    switch (record.state) {
 
-    const category =
-      String(
-        input.category ?? ''
-      ).trim();
+      case 'RAISED':
+        return 'Raised Date';
 
-    const subcategory =
-      String(
-        input.subcategory ?? ''
-      ).trim();
+      case 'ASSIGNED':
+        return 'Assigned Date';
 
+      case 'UNDER_INVESTIGATION':
+        return 'Investigation Date';
 
-    if (
-      symptom
-    ) {
+      case 'CORRECTIVE_ACTION':
+        return 'Corrective Action Date';
 
-      return symptom;
+      case 'CLOSED':
+        return 'Closed Date';
 
-    }
+      case 'REJECTED':
+        return 'Rejected Date';
 
-
-    if (
-      category &&
-      subcategory
-    ) {
-
-      return (
-        category +
-        ' - ' +
-        subcategory
-      );
+      default:
+        return 'Date';
 
     }
-
-
-    if (
-      category
-    ) {
-
-      return category;
-
-    }
-
-
-    return 'Incident prediction';
 
   }
 
 
   // ==========================================================
-  // NORMALISER RISQUE
-  // ==========================================================
-
-  private normalizeRisk(
-    value:
-      unknown
-  ):
-    RiskLevel {
-
-    const risk =
-      String(
-        value ?? ''
-      )
-        .trim()
-        .toUpperCase();
-
-
-    if (
-      risk.includes('HIGH')
-    ) {
-
-      return 'HIGH';
-
-    }
-
-
-    if (
-      risk.includes('MEDIUM') ||
-      risk.includes('MED')
-    ) {
-
-      return 'MEDIUM';
-
-    }
-
-
-    return 'LOW';
-
-  }
-
-
-  // ==========================================================
-  // NORMALISER PROBABILITÉ
-  // ==========================================================
-
-  private normalizeProbability(
-    value:
-      unknown
-  ):
-    number {
-
-    let probability =
-      Number(value);
-
-
-    if (
-      !Number.isFinite(
-        probability
-      )
-    ) {
-
-      return 0;
-
-    }
-
-
-    if (
-      probability > 1
-    ) {
-
-      probability /= 100;
-
-    }
-
-
-    return Math.min(
-      Math.max(
-        probability,
-        0
-      ),
-      1
-    );
-
-  }
-
-
-  // ==========================================================
-  // TRI PRINCIPAL
-  //
-  // ==========================================================
-  //
-  // RÈGLE ABSOLUE :
-  //
-  // LA DERNIÈRE PRÉDICTION DASHBOARD
-  // DOIT ÊTRE LA PREMIÈRE LIGNE.
-  //
+  // TRI
   // ==========================================================
 
   private sortRecords(): void {
 
     this.records.sort(
-
-      (a, b) => {
-
-
-        // ====================================================
-        // 1. DASHBOARD VS MANUEL
-        //
-        // Les prédictions Dashboard sont prioritaires.
-        // ====================================================
+      (
+        a,
+        b
+      ) => {
 
         const aDashboard =
           a.source === 'DASHBOARD';
@@ -1633,113 +1375,43 @@ export class HistoriqueComponent
         }
 
 
-        // ====================================================
-        // 2. DEUX PRÉDICTIONS DASHBOARD
-        //
-        // On utilise predictionDate.
-        // ====================================================
-
         if (
           aDashboard &&
           bDashboard
         ) {
 
-          const dateA =
-            this.getDateTimestamp(
-              a.predictionDate
-            );
-
-          const dateB =
-            this.getDateTimestamp(
-              b.predictionDate
-            );
-
-
-          if (
-            dateA !== dateB
-          ) {
-
-            /*
-             * PLUS RÉCENT = PREMIER
-             */
-            return dateB - dateA;
-
-          }
-
-
-          // ==================================================
-          // Même timestamp :
-          // predictionOrder permet de départager.
-          // ==================================================
-
           const orderA =
             Number(
-              a.predictionOrder ?? 0
+              a.predictionOrder ?? -1
             );
+
 
           const orderB =
             Number(
-              b.predictionOrder ?? 0
+              b.predictionOrder ?? -1
             );
 
 
-          if (
-            orderA !== orderB
-          ) {
-
-            return orderB - orderA;
-
-          }
+          return orderB - orderA;
 
         }
 
 
-        // ====================================================
-        // 3. NC MANUELLES
-        // ====================================================
-
-        const manualDateA =
+        const dateA =
           this.getDateTimestamp(
-            a.predictionDate ??
-            a.raised
-          );
-
-        const manualDateB =
-          this.getDateTimestamp(
-            b.predictionDate ??
-            b.raised
+            this.getDisplayDate(a)
           );
 
 
-        if (
-          manualDateA !== manualDateB
-        ) {
-
-          return manualDateB -
-                 manualDateA;
-
-        }
+        const dateB =
+          this.getDateTimestamp(
+            this.getDisplayDate(b)
+          );
 
 
-        // ====================================================
-        // 4. DERNIER CRITÈRE : REF
-        // ====================================================
-
-        return String(
-          b.ref
-        ).localeCompare(
-          String(
-            a.ref
-          ),
-          undefined,
-          {
-            numeric: true,
-            sensitivity: 'base'
-          }
-        );
+        return dateB - dateA;
 
       }
-
     );
 
   }
@@ -1750,78 +1422,22 @@ export class HistoriqueComponent
   // ==========================================================
 
   private getDateTimestamp(
-    value:
-      string
-  ):
-    number {
-
-    if (
-      !value
-    ) {
-
-      return 0;
-
-    }
-
+    value: string
+  ): number {
 
     const timestamp =
-      new Date(
-        value
-      ).getTime();
+      new Date(value).getTime();
 
 
-    if (
-      Number.isNaN(
-        timestamp
-      )
-    ) {
-
-      return 0;
-
-    }
-
-
-    return timestamp;
+    return Number.isNaN(timestamp)
+      ? 0
+      : timestamp;
 
   }
 
 
   // ==========================================================
-  // DATE COMPARAISON
-  // ==========================================================
-
-  private normalizeDateForComparison(
-    value:
-      string
-  ):
-    string {
-
-    const date =
-      new Date(
-        value
-      );
-
-    if (
-      Number.isNaN(
-        date.getTime()
-      )
-    ) {
-
-      return String(
-        value
-      );
-
-    }
-
-    return String(
-      date.getTime()
-    );
-
-  }
-
-
-  // ==========================================================
-  // SAUVEGARDE
+  // SAVE
   // ==========================================================
 
   private saveHistory(): void {
@@ -1829,16 +1445,15 @@ export class HistoriqueComponent
     try {
 
       localStorage.setItem(
-
         this.NC_HISTORY_KEY,
-
         JSON.stringify(
           this.records
         )
-
       );
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
       console.error(
         'Erreur sauvegarde historique :',
@@ -1851,7 +1466,7 @@ export class HistoriqueComponent
 
 
   // ==========================================================
-  // OUVRIR MODAL
+  // MODAL
   // ==========================================================
 
   openModal(): void {
@@ -1859,14 +1474,11 @@ export class HistoriqueComponent
     this.newNC =
       this.createEmptyForm();
 
-    this.submitError =
-      null;
+    this.submitError = null;
 
-    this.isSubmitting =
-      false;
+    this.isSubmitting = false;
 
-    this.showModal =
-      true;
+    this.showModal = true;
 
     document.body.style.overflow =
       'hidden';
@@ -1874,25 +1486,18 @@ export class HistoriqueComponent
   }
 
 
-  // ==========================================================
-  // FERMER MODAL
-  // ==========================================================
-
   closeModal(): void {
 
-    if (
-      this.isSubmitting
-    ) {
+    if (this.isSubmitting) {
 
       return;
 
     }
 
-    this.showModal =
-      false;
 
-    this.submitError =
-      null;
+    this.showModal = false;
+
+    this.submitError = null;
 
     document.body.style.overflow =
       '';
@@ -1901,15 +1506,12 @@ export class HistoriqueComponent
 
 
   // ==========================================================
-  // AJOUT NC MANUELLE
+  // ADD NC
   // ==========================================================
 
-  async addNC():
-    Promise<void> {
+  async addNC(): Promise<void> {
 
-    if (
-      this.isSubmitting
-    ) {
+    if (this.isSubmitting) {
 
       return;
 
@@ -1930,11 +1532,9 @@ export class HistoriqueComponent
     }
 
 
-    this.isSubmitting =
-      true;
+    this.isSubmitting = true;
 
-    this.submitError =
-      null;
+    this.submitError = null;
 
 
     const incidentInput:
@@ -1987,8 +1587,14 @@ export class HistoriqueComponent
         );
 
 
-      const predictionDate =
+      const now =
         new Date().toISOString();
+
+
+      const raisedAt =
+        this.getValidDate(
+          this.newNC.opened_at
+        );
 
 
       const record:
@@ -2016,11 +1622,7 @@ export class HistoriqueComponent
           prediction.probability,
 
         raised:
-          this.newNC.opened_at
-            ? new Date(
-                this.newNC.opened_at
-              ).toISOString()
-            : predictionDate,
+          raisedAt,
 
         source:
           'MANUAL',
@@ -2028,23 +1630,26 @@ export class HistoriqueComponent
         input:
           incidentInput,
 
-        predictionDate,
+        predictionDate:
+          now,
 
         predictionOrder:
           Number.MAX_SAFE_INTEGER,
 
         isDashboardPrediction:
-          false
+          false,
+
+        raisedAt
 
       };
 
 
-      /*
-       * Ajouter puis retrier.
-       */
       this.records = [
+
         record,
+
         ...this.records
+
       ];
 
 
@@ -2052,33 +1657,34 @@ export class HistoriqueComponent
 
       this.saveHistory();
 
-      this.currentPage =
-        1;
+      this.currentPage = 1;
 
       this.newNC =
         this.createEmptyForm();
 
-      this.showModal =
-        false;
+      this.showModal = false;
 
       document.body.style.overflow =
         '';
 
+    }
 
-    } catch (error) {
+    catch (error) {
 
       console.error(
-        'Erreur prédiction NC :',
+        'Erreur prédiction :',
         error
       );
 
+
       this.submitError =
-        'Impossible de calculer le risque. Vérifiez que le backend FastAPI est démarré et accessible.';
+        'Impossible de calculer le risque. Vérifiez que le backend FastAPI est démarré.';
 
-    } finally {
+    }
 
-      this.isSubmitting =
-        false;
+    finally {
+
+      this.isSubmitting = false;
 
     }
 
@@ -2086,29 +1692,21 @@ export class HistoriqueComponent
 
 
   // ==========================================================
-  // PRÉDICTION BACKEND
+  // PREDICTION
   // ==========================================================
 
   private async predictRisk(
-
-    input:
-      IncidentRequest
-
-  ):
-    Promise<{
-
-      risk:
-        RiskLevel;
-
-      probability:
-        number;
-
-    }> {
+    input: IncidentRequest
+  ): Promise<{
+    risk: RiskLevel;
+    probability: number;
+  }> {
 
     const response =
       await fetch(
         `${this.API_URL}/predict`,
         {
+
           method: 'POST',
 
           headers: {
@@ -2117,26 +1715,16 @@ export class HistoriqueComponent
           },
 
           body:
-            JSON.stringify(
-              input
-            )
+            JSON.stringify(input)
+
         }
       );
 
 
-    if (
-      !response.ok
-    ) {
-
-      const message =
-        await response
-          .text()
-          .catch(
-            () => ''
-          );
+    if (!response.ok) {
 
       throw new Error(
-        `Prediction failed: ${response.status} ${message}`
+        `Prediction failed: ${response.status}`
       );
 
     }
@@ -2166,31 +1754,27 @@ export class HistoriqueComponent
 
 
   // ==========================================================
-  // REF SUIVANTE
+  // REFERENCE
   // ==========================================================
 
-  private generateNextRef():
-    string {
+  private generateNextRef(): string {
 
-    let maxNumber =
-      0;
+    let maxNumber = 0;
 
 
     for (
-      const record of this.records
+      const record
+      of this.records
     ) {
 
       const match =
-        String(
-          record.ref
-        ).match(
-          /NC-(\d+)/i
-        );
+        String(record.ref)
+          .match(
+            /NC-(\d+)/i
+          );
 
 
-      if (
-        !match
-      ) {
+      if (!match) {
 
         continue;
 
@@ -2198,9 +1782,7 @@ export class HistoriqueComponent
 
 
       const number =
-        Number(
-          match[1]
-        );
+        Number(match[1]);
 
 
       if (
@@ -2208,8 +1790,7 @@ export class HistoriqueComponent
         number > maxNumber
       ) {
 
-        maxNumber =
-          number;
+        maxNumber = number;
 
       }
 
@@ -2230,7 +1811,239 @@ export class HistoriqueComponent
 
 
   // ==========================================================
-  // FILTRAGE
+  // RISK
+  // ==========================================================
+
+  private normalizeRisk(
+    value: unknown
+  ): RiskLevel {
+
+    const risk =
+      String(value ?? '')
+        .trim()
+        .toUpperCase();
+
+
+    if (
+      risk.includes('HIGH')
+    ) {
+
+      return 'HIGH';
+
+    }
+
+
+    if (
+      risk.includes('MEDIUM') ||
+      risk.includes('MED')
+    ) {
+
+      return 'MEDIUM';
+
+    }
+
+
+    return 'LOW';
+
+  }
+
+
+  riskClass(
+    risk: RiskLevel | null
+  ): string {
+
+    return (
+      risk?.toLowerCase() ??
+      'none'
+    );
+
+  }
+
+
+  riskLabel(
+    risk: RiskLevel
+  ): string {
+
+    switch (risk) {
+
+      case 'HIGH':
+        return 'High';
+
+      case 'MEDIUM':
+        return 'Medium';
+
+      case 'LOW':
+        return 'Low';
+
+      default:
+        return risk;
+
+    }
+
+  }
+
+
+  // ==========================================================
+  // PROBABILITY
+  // ==========================================================
+
+  private normalizeProbability(
+    value: unknown
+  ): number {
+
+    let probability =
+      Number(value);
+
+
+    if (
+      !Number.isFinite(
+        probability
+      )
+    ) {
+
+      return 0;
+
+    }
+
+
+    if (
+      probability > 1
+    ) {
+
+      probability /= 100;
+
+    }
+
+
+    return Math.min(
+      Math.max(
+        probability,
+        0
+      ),
+      1
+    );
+
+  }
+
+
+  getProbability(
+    record: HistoryRecord
+  ): number {
+
+    return (
+      record.probability *
+      100
+    );
+
+  }
+
+
+  // ==========================================================
+  // TITLE
+  // ==========================================================
+
+  private generateTitle(
+    input: Partial<IncidentRequest>
+  ): string {
+
+    const symptom =
+      String(
+        input.u_symptom ?? ''
+      ).trim();
+
+
+    const category =
+      String(
+        input.category ?? ''
+      ).trim();
+
+
+    const subcategory =
+      String(
+        input.subcategory ?? ''
+      ).trim();
+
+
+    if (symptom) {
+
+      return symptom;
+
+    }
+
+
+    if (
+      category &&
+      subcategory
+    ) {
+
+      return (
+        category +
+        ' - ' +
+        subcategory
+      );
+
+    }
+
+
+    if (category) {
+
+      return category;
+
+    }
+
+
+    return 'Incident prediction';
+
+  }
+
+
+  // ==========================================================
+  // DASHBOARD REFERENCE
+  // ==========================================================
+
+  private generateDashboardRef(
+    item: DashboardHistoryItem,
+    index: number
+  ): string {
+
+    if (
+      item.id !== undefined &&
+      item.id !== null
+    ) {
+
+      const id =
+        String(item.id)
+          .replace(
+            /[^a-zA-Z0-9]/g,
+            ''
+          )
+          .slice(-12);
+
+
+      if (id) {
+
+        return `NC-AI-${id}`;
+
+      }
+
+    }
+
+
+    return (
+      'NC-AI-' +
+      String(
+        index + 1
+      ).padStart(
+        6,
+        '0'
+      )
+    );
+
+  }
+
+
+  // ==========================================================
+  // FILTRE
   // ==========================================================
 
   get filteredRecords():
@@ -2306,21 +2119,15 @@ export class HistoriqueComponent
       this.pageSize;
 
 
-    return this.filteredRecords
-      .slice(
-        start,
-        start + this.pageSize
-      );
+    return this.filteredRecords.slice(
+      start,
+      start + this.pageSize
+    );
 
   }
 
 
-  // ==========================================================
-  // TOTAL PAGES
-  // ==========================================================
-
-  get totalPages():
-    number {
+  get totalPages(): number {
 
     return Math.max(
       1,
@@ -2333,12 +2140,7 @@ export class HistoriqueComponent
   }
 
 
-  // ==========================================================
-  // PAGES
-  // ==========================================================
-
-  get pages():
-    number[] {
+  get pages(): number[] {
 
     return Array.from(
       {
@@ -2355,9 +2157,54 @@ export class HistoriqueComponent
   }
 
 
-  // ==========================================================
-  // NEXT PAGE
-  // ==========================================================
+  /*
+   * IMPORTANT :
+   * On ne met PAS Math.min() dans le HTML.
+   */
+  getLastDisplayedRecord(): number {
+
+    if (
+      this.filteredRecords.length === 0
+    ) {
+
+      return 0;
+
+    }
+
+
+    const last =
+      this.currentPage *
+      this.pageSize;
+
+
+    return last >
+      this.filteredRecords.length
+      ? this.filteredRecords.length
+      : last;
+
+  }
+
+
+  getFirstDisplayedRecord(): number {
+
+    if (
+      this.filteredRecords.length === 0
+    ) {
+
+      return 0;
+
+    }
+
+
+    return (
+      (
+        this.currentPage - 1
+      ) *
+      this.pageSize
+    ) + 1;
+
+  }
+
 
   nextPage(): void {
 
@@ -2373,10 +2220,6 @@ export class HistoriqueComponent
   }
 
 
-  // ==========================================================
-  // PREVIOUS PAGE
-  // ==========================================================
-
   previousPage(): void {
 
     if (
@@ -2390,13 +2233,8 @@ export class HistoriqueComponent
   }
 
 
-  // ==========================================================
-  // GO PAGE
-  // ==========================================================
-
   goToPage(
-    page:
-      number
+    page: number
   ): void {
 
     if (
@@ -2404,49 +2242,31 @@ export class HistoriqueComponent
       page <= this.totalPages
     ) {
 
-      this.currentPage =
-        page;
+      this.currentPage = page;
 
     }
 
   }
 
 
-  // ==========================================================
-  // SEARCH
-  // ==========================================================
-
   onSearchChange(): void {
 
-    this.currentPage =
-      1;
+    this.currentPage = 1;
 
   }
 
-
-  // ==========================================================
-  // FILTER
-  // ==========================================================
 
   onRiskFilterChange(): void {
 
-    this.currentPage =
-      1;
+    this.currentPage = 1;
 
   }
 
 
-  // ==========================================================
-  // TRACK
-  // ==========================================================
-
   trackByRef(
-    index:
-      number,
-    record:
-      HistoryRecord
-  ):
-    string {
+    index: number,
+    record: HistoryRecord
+  ): string {
 
     return record.ref;
 
@@ -2454,50 +2274,12 @@ export class HistoriqueComponent
 
 
   // ==========================================================
-  // PROBABILITÉ
-  // ==========================================================
-
-  getProbability(
-    record:
-      HistoryRecord
-  ):
-    number {
-
-    return (
-      record.probability *
-      100
-    );
-
-  }
-
-
-  // ==========================================================
-  // CLASSE RISQUE
-  // ==========================================================
-
-  riskClass(
-    risk:
-      RiskLevel | null
-  ):
-    string {
-
-    return (
-      risk?.toLowerCase() ??
-      'none'
-    );
-
-  }
-
-
-  // ==========================================================
-  // DATE
+  // DATE FORMAT
   // ==========================================================
 
   formatDate(
-    value:
-      string
-  ):
-    string {
+    value: string
+  ): string {
 
     const date =
       new Date(value);
@@ -2509,7 +2291,7 @@ export class HistoriqueComponent
       )
     ) {
 
-      return value;
+      return '—';
 
     }
 
@@ -2517,11 +2299,17 @@ export class HistoriqueComponent
     return new Intl.DateTimeFormat(
       'fr-FR',
       {
+
         day: '2-digit',
+
         month: 'short',
+
         year: 'numeric',
+
         hour: '2-digit',
+
         minute: '2-digit'
+
       }
     ).format(date);
 
@@ -2529,12 +2317,11 @@ export class HistoriqueComponent
 
 
   // ==========================================================
-  // VIEW
+  // DETAILS
   // ==========================================================
 
   viewRecord(
-    record:
-      HistoryRecord
+    record: HistoryRecord
   ): void {
 
     this.selectedRecord =
@@ -2548,10 +2335,6 @@ export class HistoriqueComponent
 
   }
 
-
-  // ==========================================================
-  // CLOSE DETAILS
-  // ==========================================================
 
   closeDetails(): void {
 
@@ -2572,8 +2355,7 @@ export class HistoriqueComponent
   // ==========================================================
 
   deleteRecord(
-    record:
-      HistoryRecord
+    record: HistoryRecord
   ): void {
 
     const confirmed =
@@ -2582,9 +2364,7 @@ export class HistoriqueComponent
       );
 
 
-    if (
-      !confirmed
-    ) {
+    if (!confirmed) {
 
       return;
 
@@ -2605,7 +2385,8 @@ export class HistoriqueComponent
 
 
     if (
-      this.selectedRecord?.ref ===
+      this.selectedRecord &&
+      this.selectedRecord.ref ===
       record.ref
     ) {
 
@@ -2617,7 +2398,7 @@ export class HistoriqueComponent
 
 
   // ==========================================================
-  // CLEAR HISTORY
+  // CLEAR
   // ==========================================================
 
   clearHistory(): void {
@@ -2628,20 +2409,16 @@ export class HistoriqueComponent
       );
 
 
-    if (
-      !confirmed
-    ) {
+    if (!confirmed) {
 
       return;
 
     }
 
 
-    this.records =
-      [];
+    this.records = [];
 
-    this.currentPage =
-      1;
+    this.currentPage = 1;
 
 
     localStorage.removeItem(
@@ -2663,22 +2440,7 @@ export class HistoriqueComponent
 
 
   // ==========================================================
-  // RESET FORM
-  // ==========================================================
-
-  resetForm(): void {
-
-    this.newNC =
-      this.createEmptyForm();
-
-    this.submitError =
-      null;
-
-  }
-
-
-  // ==========================================================
-  // PAGE COURANTE
+  // PAGINATION FIX
   // ==========================================================
 
   private fixCurrentPage(): void {
@@ -2698,37 +2460,7 @@ export class HistoriqueComponent
       this.currentPage < 1
     ) {
 
-      this.currentPage =
-        1;
-
-    }
-
-  }
-
-
-  // ==========================================================
-  // LABEL RISQUE
-  // ==========================================================
-
-  riskLabel(
-    risk:
-      RiskLevel
-  ):
-    string {
-
-    switch (risk) {
-
-      case 'HIGH':
-        return 'High';
-
-      case 'MEDIUM':
-        return 'Medium';
-
-      case 'LOW':
-        return 'Low';
-
-      default:
-        return risk;
+      this.currentPage = 1;
 
     }
 
@@ -2740,14 +2472,10 @@ export class HistoriqueComponent
   // ==========================================================
 
   impactLabel(
-    value?:
-      number
-  ):
-    string {
+    value?: number
+  ): string {
 
-    switch (
-      Number(value)
-    ) {
+    switch (Number(value)) {
 
       case 1:
         return 'High';
@@ -2771,14 +2499,10 @@ export class HistoriqueComponent
   // ==========================================================
 
   urgencyLabel(
-    value?:
-      number
-  ):
-    string {
+    value?: number
+  ): string {
 
-    switch (
-      Number(value)
-    ) {
+    switch (Number(value)) {
 
       case 1:
         return 'High';
@@ -2802,14 +2526,10 @@ export class HistoriqueComponent
   // ==========================================================
 
   priorityLabel(
-    value?:
-      number
-  ):
-    string {
+    value?: number
+  ): string {
 
-    switch (
-      Number(value)
-    ) {
+    switch (Number(value)) {
 
       case 1:
         return 'Critical';
@@ -2835,116 +2555,51 @@ export class HistoriqueComponent
 
 
   // ==========================================================
-  // INPUT
-  // ==========================================================
-
-  hasInput(
-    record:
-      HistoryRecord
-  ):
-    boolean {
-
-    return !!record.input;
-
-  }
-
-
-  // ==========================================================
-  // EXPORT PDF
+  // PDF
   // ==========================================================
 
   exportPdf(
-    record:
-      HistoryRecord
-  ):
-    void {
+    record: HistoryRecord
+  ): void {
 
     const doc =
       new jsPDF();
 
 
-    // ========================================================
-    // HEADER
-    // ========================================================
-
-    doc.setFillColor(
-      79,
-      70,
-      229
-    );
-
-    doc.rect(
-      0,
-      0,
-      210,
-      28,
-      'F'
-    );
-
-    doc.setTextColor(
-      255,
-      255,
-      255
-    );
-
-    doc.setFontSize(
-      18
-    );
+    doc.setFontSize(18);
 
     doc.setFont(
       'helvetica',
       'bold'
     );
 
+
     doc.text(
       'Non-Conformance Report',
       15,
-      17
+      20
     );
 
-    doc.setFontSize(
-      10
-    );
+
+    doc.setFontSize(10);
 
     doc.setFont(
       'helvetica',
       'normal'
     );
 
-    doc.text(
-      record.ref,
-      15,
-      24
-    );
 
-    doc.setTextColor(
-      30,
-      41,
-      59
-    );
-
-
-    let y =
-      42;
-
-    const lineHeight =
-      8;
+    let y = 35;
 
 
     const addRow = (
-      label:
-        string,
-      value:
-        string
+      label: string,
+      value: string
     ) => {
 
       doc.setFont(
         'helvetica',
         'bold'
-      );
-
-      doc.setFontSize(
-        10
       );
 
       doc.text(
@@ -2958,57 +2613,20 @@ export class HistoriqueComponent
         'normal'
       );
 
-      const lines =
-        doc.splitTextToSize(
-          value ||
-          '—',
-          120
-        );
-
       doc.text(
-        lines,
+        value || '—',
         70,
         y
       );
 
-      y +=
-        lineHeight *
-        lines.length;
+      y += 8;
 
     };
 
 
-    // ========================================================
-    // IDENTIFICATION
-    // ========================================================
-
-    doc.setFontSize(
-      12
-    );
-
-    doc.setFont(
-      'helvetica',
-      'bold'
-    );
-
-    doc.setTextColor(
-      79,
-      70,
-      229
-    );
-
-    doc.text(
-      'Identification',
-      15,
-      y
-    );
-
-    y += 6;
-
-    doc.setTextColor(
-      30,
-      41,
-      59
+    addRow(
+      'Reference',
+      record.ref
     );
 
 
@@ -3017,15 +2635,18 @@ export class HistoriqueComponent
       record.title
     );
 
+
     addRow(
       'Category',
       record.category
     );
 
+
     addRow(
       'Assignment Group',
       record.assignment_group
     );
+
 
     addRow(
       'State',
@@ -3034,71 +2655,25 @@ export class HistoriqueComponent
       )
     );
 
+
+    /*
+     * La date correspond au STATE.
+     */
     addRow(
-      'Raised',
+      'Date',
       this.formatDate(
-        record.raised
+        this.getDisplayDate(record)
       )
     );
 
-    addRow(
-      'Prediction Date',
-      this.formatDate(
-        record.predictionDate
-      )
-    );
 
     addRow(
-      'Source',
-      record.source === 'MANUAL'
-        ? 'Manual NC'
-        : 'AI Prediction'
-    );
-
-
-    y += 4;
-
-
-    // ========================================================
-    // AI RISK
-    // ========================================================
-
-    doc.setFontSize(
-      12
-    );
-
-    doc.setFont(
-      'helvetica',
-      'bold'
-    );
-
-    doc.setTextColor(
-      79,
-      70,
-      229
-    );
-
-    doc.text(
-      'AI Risk Assessment',
-      15,
-      y
-    );
-
-    y += 6;
-
-    doc.setTextColor(
-      30,
-      41,
-      59
-    );
-
-
-    addRow(
-      'Risk Level',
+      'AI Risk',
       this.riskLabel(
         record.risk
       )
     );
+
 
     addRow(
       'Probability',
@@ -3106,31 +2681,16 @@ export class HistoriqueComponent
     );
 
 
-    y += 4;
+    if (record.input) {
 
+      y += 5;
 
-    // ========================================================
-    // INCIDENT DETAILS
-    // ========================================================
-
-    if (
-      record.input
-    ) {
-
-      doc.setFontSize(
-        12
-      );
 
       doc.setFont(
         'helvetica',
         'bold'
       );
 
-      doc.setTextColor(
-        79,
-        70,
-        229
-      );
 
       doc.text(
         'Incident Details',
@@ -3138,13 +2698,8 @@ export class HistoriqueComponent
         y
       );
 
-      y += 6;
 
-      doc.setTextColor(
-        30,
-        41,
-        59
-      );
+      y += 8;
 
 
       addRow(
@@ -3153,11 +2708,13 @@ export class HistoriqueComponent
         '—'
       );
 
+
       addRow(
         'Assigned To',
         record.input.assigned_to ??
         '—'
       );
+
 
       addRow(
         'Impact',
@@ -3166,6 +2723,7 @@ export class HistoriqueComponent
         )
       );
 
+
       addRow(
         'Urgency',
         this.urgencyLabel(
@@ -3173,12 +2731,14 @@ export class HistoriqueComponent
         )
       );
 
+
       addRow(
         'Priority',
         this.priorityLabel(
           record.input.priority
         )
       );
+
 
       addRow(
         'Symptom',
@@ -3189,32 +2749,17 @@ export class HistoriqueComponent
     }
 
 
-    // ========================================================
-    // FOOTER
-    // ========================================================
+    doc.setFontSize(8);
 
-    doc.setFontSize(
-      8
-    );
-
-    doc.setTextColor(
-      148,
-      163,
-      184
-    );
 
     doc.text(
-      `Généré le ${
-        new Intl.DateTimeFormat(
-          'fr-FR',
-          {
-            dateStyle: 'medium',
-            timeStyle: 'short'
-          }
-        ).format(
-          new Date()
-        )
-      }`,
+      `Generated on ${new Intl.DateTimeFormat(
+        'fr-FR',
+        {
+          dateStyle: 'medium',
+          timeStyle: 'short'
+        }
+      ).format(new Date())}`,
       15,
       287
     );

@@ -6,219 +6,482 @@
 
   <header class="page-header">
 
-    <div>
-      <span class="page-eyebrow">
-        AI RISK ADVISOR
-      </span>
+    <div class="header-content">
 
-      <h1>
-        AI Risk Assistant
-      </h1>
+      <div class="header-icon">
+        AI
+      </div>
 
-      <p class="page-description">
-        Analyze the latest HIGH-risk prediction and receive
-        AI-powered recommendations to reduce the risk.
-      </p>
+      <div>
+
+        <span class="eyebrow">
+          QUALITY INSIGHT AI
+        </span>
+
+        <h1>
+          AI Risk Assistant
+        </h1>
+
+        <p>
+          Analyze predictions, risk levels and SLA exposure.
+        </p>
+
+      </div>
+
     </div>
 
   </header>
 
 
   <!-- ============================================================
-       LATEST HIGH RISK
+       MAIN GRID
+       LEFT = LATEST PREDICTION STATISTICS
+       RIGHT = CHATBOT
   ============================================================ -->
 
-  <section class="risk-card">
-
-    <div class="risk-card-header">
-
-      <div>
-        <span class="section-eyebrow">
-          LATEST HIGH-RISK PREDICTION
-        </span>
-
-        <h2>
-          Latest detected HIGH risk
-        </h2>
-
-        <p>
-          The most recent HIGH-risk prediction recorded by
-          the risk prediction engine.
-        </p>
-      </div>
-
-      <span
-        class="risk-badge"
-        *ngIf="highRiskAvailable"
-      >
-        HIGH
-      </span>
-
-    </div>
+  <div class="dashboard-grid">
 
 
     <!-- ==========================================================
-         HIGH RISK AVAILABLE
+         LEFT COLUMN
     =========================================================== -->
 
-    <ng-container
-      *ngIf="latestHighRiskPrediction as prediction; else noHighRisk"
-    >
-
-      <div class="risk-summary">
-
-        <!-- RISK LEVEL -->
-
-        <div class="risk-main">
-
-          <span class="metric-label">
-            RISK LEVEL
-          </span>
-
-          <strong class="risk-value">
-            {{ prediction.risk }}
-          </strong>
-
-        </div>
+    <section class="left-column">
 
 
-        <!-- PROBABILITY -->
+      <!-- ========================================================
+           LATEST PREDICTION CARD
+      ========================================================= -->
 
-        <div class="metric-box">
+      <article class="prediction-card">
 
-          <span class="metric-label">
-            PROBABILITY
-          </span>
-
-          <strong>
-            {{ prediction.probability | number:'1.2-2' }}%
-          </strong>
-
-        </div>
-
-
-        <!-- PREDICTION -->
-
-        <div class="metric-box">
-
-          <span class="metric-label">
-            PREDICTION
-          </span>
-
-          <strong>
-            {{ prediction.prediction }}
-          </strong>
-
-        </div>
-
-
-        <!-- DATE -->
-
-        <div class="metric-box">
-
-          <span class="metric-label">
-            PREDICTION DATE
-          </span>
-
-          <strong>
-            {{ formatDate(prediction.date) }}
-          </strong>
-
-        </div>
-
-      </div>
-
-
-      <!-- ==========================================================
-           PROBABILITY
-      =========================================================== -->
-
-      <div class="probability-section">
-
-        <div class="probability-header">
-
-          <span>
-            Risk probability
-          </span>
-
-          <strong>
-            {{ prediction.probability | number:'1.2-2' }}%
-          </strong>
-
-        </div>
-
-        <div class="probability-track">
-
-          <div
-            class="probability-fill"
-            [style.width.%]="prediction.probability"
-          ></div>
-
-        </div>
-
-      </div>
-
-
-      <!-- ==========================================================
-           MODEL EXPLAINABILITY
-      =========================================================== -->
-
-      <div
-        class="drivers-section"
-        *ngIf="prediction.drivers.length > 0"
-      >
-
-        <div class="drivers-header">
+        <div class="card-header">
 
           <div>
 
-            <span class="section-eyebrow">
-              MODEL EXPLAINABILITY
+            <span class="card-eyebrow">
+              LATEST PREDICTION
             </span>
 
-            <h3>
-              Main risk drivers
-            </h3>
+            <h2>
+              Prediction Statistics
+            </h2>
+
+          </div>
+
+          <div
+            class="risk-badge"
+            [class.high-badge]="getLatestRisk() === 'HIGH'"
+            [class.medium-badge]="getLatestRisk() === 'MEDIUM'"
+            [class.low-badge]="getLatestRisk() === 'LOW'"
+          >
+            {{ getLatestRisk() }}
+          </div>
+
+        </div>
+
+
+        <!-- ======================================================
+             MAIN RISK
+        ======================================================= -->
+
+        <div
+          class="risk-main"
+          *ngIf="latestPrediction"
+        >
+
+          <div>
+
+            <span class="risk-label">
+              CURRENT RISK
+            </span>
 
             <p>
-              Factors that contributed most to the latest
-              HIGH-risk prediction.
+              Latest prediction from the application
             </p>
 
           </div>
 
+          <strong>
+            {{ getPredictionProbabilityPublic() | percent:'1.1-1' }}
+          </strong>
+
         </div>
 
 
-        <div class="drivers-list">
+        <!-- ======================================================
+             EMPTY
+        ======================================================= -->
 
-          <div
-            class="driver-row"
-            *ngFor="
-              let driver of prediction.drivers;
-              trackBy: trackByIndex
-            "
-          >
+        <div
+          class="empty-state"
+          *ngIf="!latestPrediction"
+        >
 
-            <div class="driver-info">
+          <h3>
+            No prediction available
+          </h3>
 
-              <span class="driver-name">
-                {{ getDriverName(driver) }}
-              </span>
+          <p>
+            Run a prediction from the Dashboard to display
+            its statistics here.
+          </p>
 
-              <span class="driver-value">
-                {{ getDriverImportance(driver) | number:'1.1-2' }}%
+        </div>
+
+
+        <!-- ======================================================
+             PREDICTION DETAILS
+        ======================================================= -->
+
+        <div
+          class="prediction-grid"
+          *ngIf="latestPrediction"
+        >
+
+          <div class="prediction-item">
+
+            <span>
+              Risk Level
+            </span>
+
+            <strong
+              [class.risk-high]="getLatestRisk() === 'HIGH'"
+              [class.risk-medium]="getLatestRisk() === 'MEDIUM'"
+              [class.risk-low]="getLatestRisk() === 'LOW'"
+            >
+              {{ getLatestRisk() }}
+            </strong>
+
+          </div>
+
+
+          <div class="prediction-item">
+
+            <span>
+              Probability
+            </span>
+
+            <strong>
+              {{ getPredictionProbabilityPublic() | percent:'1.1-1' }}
+            </strong>
+
+          </div>
+
+
+          <div class="prediction-item">
+
+            <span>
+              Prediction Date
+            </span>
+
+            <strong>
+              {{ formatDateTime(getLatestPredictionDate()) }}
+            </strong>
+
+          </div>
+
+
+          <div class="prediction-item">
+
+            <span>
+              Source
+            </span>
+
+            <strong>
+              {{ getLatestPredictionSource() }}
+            </strong>
+
+          </div>
+
+
+          <div class="prediction-item full">
+
+            <span>
+              Incident
+            </span>
+
+            <strong>
+              {{ getLatestPredictionTitle() }}
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <!-- ======================================================
+             PROBABILITY BAR
+        ======================================================= -->
+
+        <div
+          class="probability-section"
+          *ngIf="latestPrediction"
+        >
+
+          <div class="probability-header">
+
+            <span>
+              Risk probability
+            </span>
+
+            <strong>
+              {{ getPredictionProbabilityPublic() | percent:'1.1-1' }}
+            </strong>
+
+          </div>
+
+          <div class="probability-track">
+
+            <div
+              class="probability-fill"
+              [class.fill-high]="getLatestRisk() === 'HIGH'"
+              [class.fill-medium]="getLatestRisk() === 'MEDIUM'"
+              [class.fill-low]="getLatestRisk() === 'LOW'"
+              [style.width.%]="getPredictionProbabilityPublic() * 100"
+            ></div>
+
+          </div>
+
+        </div>
+
+
+      </article>
+
+
+      <!-- ========================================================
+           GLOBAL STATISTICS
+      ========================================================= -->
+
+      <article class="statistics-card">
+
+        <div class="card-header">
+
+          <div>
+
+            <span class="card-eyebrow">
+              HISTORY
+            </span>
+
+            <h2>
+              Prediction Overview
+            </h2>
+
+          </div>
+
+        </div>
+
+
+        <div class="statistics-grid">
+
+          <div class="stat-item total">
+
+            <span>
+              Total
+            </span>
+
+            <strong>
+              {{ totalPredictions }}
+            </strong>
+
+          </div>
+
+
+          <div class="stat-item high">
+
+            <span>
+              HIGH
+            </span>
+
+            <strong>
+              {{ highCount }}
+            </strong>
+
+            <small>
+              {{ formatPercent(highPercentage) }}
+            </small>
+
+          </div>
+
+
+          <div class="stat-item medium">
+
+            <span>
+              MEDIUM
+            </span>
+
+            <strong>
+              {{ mediumCount }}
+            </strong>
+
+            <small>
+              {{ formatPercent(mediumPercentage) }}
+            </small>
+
+          </div>
+
+
+          <div class="stat-item low">
+
+            <span>
+              LOW
+            </span>
+
+            <strong>
+              {{ lowCount }}
+            </strong>
+
+            <small>
+              {{ formatPercent(lowPercentage) }}
+            </small>
+
+          </div>
+
+        </div>
+
+
+        <div class="average-box">
+
+          <span>
+            Average prediction probability
+          </span>
+
+          <strong>
+            {{ formatProbability(averageProbability) }}
+          </strong>
+
+        </div>
+
+      </article>
+
+
+    </section>
+
+
+    <!-- ==========================================================
+         RIGHT COLUMN — CHATBOT
+    =========================================================== -->
+
+    <section class="right-column">
+
+      <article class="chat-card">
+
+
+        <!-- ======================================================
+             HEADER
+        ======================================================= -->
+
+        <div class="chat-header">
+
+          <div class="assistant-profile">
+
+            <div class="assistant-avatar">
+              AI
+            </div>
+
+            <div>
+
+              <h2>
+                Quality Insight AI
+              </h2>
+
+              <span>
+                AI Risk Assistant
               </span>
 
             </div>
 
+          </div>
 
-            <div class="driver-track">
+
+          <button
+            type="button"
+            class="clear-button"
+            (click)="clearChat()"
+          >
+            New chat
+          </button>
+
+        </div>
+
+
+        <!-- ======================================================
+             ERROR
+        ======================================================= -->
+
+        <div
+          class="error-message"
+          *ngIf="errorMessage"
+        >
+          {{ errorMessage }}
+        </div>
+
+
+        <!-- ======================================================
+             CHAT BODY
+        ======================================================= -->
+
+        <div class="chat-body">
+
+          <div class="messages">
+
+            <div
+              class="message-row"
+              *ngFor="
+                let message of messages;
+                let i = index;
+                trackBy: trackMessage
+              "
+              [class.user]="message.role === 'user'"
+              [class.assistant]="message.role === 'assistant'"
+            >
 
               <div
-                class="driver-fill"
-                [style.width.%]="getDriverImportance(driver)"
-              ></div>
+                class="message-avatar"
+                *ngIf="message.role === 'assistant'"
+              >
+                AI
+              </div>
+
+
+              <div class="message-content">
+
+                <div
+                  class="message-bubble"
+                  [class.ai-bubble]="message.role === 'assistant'"
+                  [class.user-bubble]="message.role === 'user'"
+                >
+                  {{ message.content }}
+                </div>
+
+
+                <span class="message-time">
+                  {{ formatDateTime(message.createdAt) }}
+                </span>
+
+              </div>
+
+            </div>
+
+
+            <!-- LOADING -->
+
+            <div
+              class="message-row assistant"
+              *ngIf="loading"
+            >
+
+              <div class="message-avatar">
+                AI
+              </div>
+
+              <div class="message-bubble ai-bubble loading">
+
+                <span></span>
+                <span></span>
+                <span></span>
+
+              </div>
 
             </div>
 
@@ -226,479 +489,100 @@
 
         </div>
 
-      </div>
 
-    </ng-container>
+        <!-- ======================================================
+             QUICK QUESTIONS
+        ======================================================= -->
 
+        <div class="quick-area">
 
-    <!-- ==========================================================
-         NO HIGH RISK
-    =========================================================== -->
-
-    <ng-template #noHighRisk>
-
-      <div class="empty-state">
-
-        <div class="empty-icon">
-          !
-        </div>
-
-        <div>
-
-          <h3>
-            No HIGH-risk prediction available
-          </h3>
-
-          <p>
-            No HIGH-risk prediction has been recorded
-            in the prediction history yet.
-          </p>
-
-        </div>
-
-      </div>
-
-    </ng-template>
-
-  </section>
-
-
-  <!-- ============================================================
-       AI AGENT
-  ============================================================ -->
-
-  <section class="agent-card">
-
-    <!-- ==========================================================
-         AGENT HEADER
-    =========================================================== -->
-
-    <div class="agent-header">
-
-      <div>
-
-        <span class="section-eyebrow">
-          AI AGENT
-        </span>
-
-        <h2>
-          Risk Resolution Assistant
-        </h2>
-
-        <p>
-          Ask the AI agent what actions should be taken
-          to reduce or prevent the detected HIGH risk.
-        </p>
-
-      </div>
-
-
-      <!-- STATUS -->
-
-      <div class="agent-status">
-
-        <span class="status-dot"></span>
-
-        AI READY
-
-      </div>
-
-    </div>
-
-
-    <!-- ==========================================================
-         IMPORTANT:
-         NO CURRENT AI CONTEXT HERE
-         
-         The risk information is already displayed above.
-         
-         We intentionally DO NOT display:
-         
-         CURRENT RISK HIGH
-         PROBABILITY 69.19%
-         PREDICTION SLA_BREACH
-         PREDICTION DATE
-    =========================================================== -->
-
-
-    <!-- ==========================================================
-         QUESTION
-    =========================================================== -->
-
-    <div class="question-area">
-
-      <label for="aiQuestion">
-        Your question
-      </label>
-
-      <textarea
-        id="aiQuestion"
-        name="aiQuestion"
-        [(ngModel)]="question"
-        rows="4"
-        [disabled]="loading"
-        placeholder="Example: What actions should we take immediately to reduce this HIGH risk?"
-      ></textarea>
-
-    </div>
-
-
-    <!-- ==========================================================
-         QUICK QUESTIONS
-    =========================================================== -->
-
-    <div class="quick-questions">
-
-      <button
-        type="button"
-        (click)="setImmediateQuestion()"
-        [disabled]="loading || !latestHighRiskPrediction"
-      >
-        Immediate actions
-      </button>
-
-
-      <button
-        type="button"
-        (click)="setPreventiveQuestion()"
-        [disabled]="loading || !latestHighRiskPrediction"
-      >
-        Preventive measures
-      </button>
-
-
-      <button
-        type="button"
-        (click)="setStepByStepQuestion()"
-        [disabled]="loading || !latestHighRiskPrediction"
-      >
-        Step-by-step plan
-      </button>
-
-    </div>
-
-
-    <!-- ==========================================================
-         ACTION BUTTONS
-    =========================================================== -->
-
-    <div class="agent-actions">
-
-      <button
-        type="button"
-        class="secondary-button"
-        (click)="clearQuestion()"
-        [disabled]="loading"
-      >
-        Clear
-      </button>
-
-
-      <button
-        type="button"
-        class="primary-button"
-        (click)="askAI()"
-        [disabled]="
-          loading ||
-          !question.trim() ||
-          !latestHighRiskPrediction
-        "
-      >
-
-        <span *ngIf="!loading">
-          Ask AI Agent
-        </span>
-
-        <span *ngIf="loading">
-          Generating...
-        </span>
-
-      </button>
-
-    </div>
-
-
-    <!-- ==========================================================
-         ERROR
-    =========================================================== -->
-
-    <div
-      class="error-message"
-      *ngIf="errorMessage"
-    >
-
-      <strong>
-        AI Agent Error
-      </strong>
-
-      <span>
-        {{ errorMessage }}
-      </span>
-
-    </div>
-
-
-    <!-- ==========================================================
-         AI RESPONSE
-    =========================================================== -->
-
-    <div
-      class="ai-response"
-      *ngIf="aiResponse as response"
-    >
-
-      <!-- RESPONSE HEADER -->
-
-      <div class="response-header">
-
-        <div>
-
-          <span class="section-eyebrow">
-            AI RESPONSE
+          <span>
+            Suggestions
           </span>
 
-          <h3>
-            Recommended risk resolution
-          </h3>
+          <div class="quick-buttons">
+
+            <button
+              type="button"
+              (click)="askLatestPrediction()"
+              [disabled]="loading"
+            >
+              Latest prediction
+            </button>
+
+            <button
+              type="button"
+              (click)="askHighRisk()"
+              [disabled]="loading"
+            >
+              HIGH count
+            </button>
+
+            <button
+              type="button"
+              (click)="askStatistics()"
+              [disabled]="loading"
+            >
+              Statistics
+            </button>
+
+            <button
+              type="button"
+              (click)="askWhyHigh()"
+              [disabled]="loading"
+            >
+              Risk & prevention
+            </button>
+
+          </div>
 
         </div>
 
-        <span class="generated-badge">
-          AI GENERATED
-        </span>
 
-      </div>
+        <!-- ======================================================
+             INPUT
+        ======================================================= -->
 
+        <div class="input-area">
 
-      <!-- ========================================================
-           DIRECT ANSWER
-      ========================================================= -->
-
-      <div
-        class="response-section"
-        *ngIf="response.answer"
-      >
-
-        <h4>
-          AI Recommendation
-        </h4>
-
-        <p>
-          {{ response.answer }}
-        </p>
-
-      </div>
+          <textarea
+            [(ngModel)]="question"
+            maxlength="2000"
+            rows="4"
+            placeholder="Ask any question about Quality Insight AI, SLA risk, incidents, predictions, prevention..."
+            (keydown.enter)="onEnter($event)"
+          ></textarea>
 
 
-      <!-- ========================================================
-           SUMMARY
-      ========================================================= -->
+          <div class="input-footer">
 
-      <div
-        class="response-section"
-        *ngIf="response.summary"
-      >
+            <span>
+              Enter to send · Shift + Enter for a new line
+            </span>
 
-        <h4>
-          Summary
-        </h4>
+            <span>
+              {{ question.length }}/2000
+            </span>
 
-        <p>
-          {{ response.summary }}
-        </p>
-
-      </div>
+          </div>
 
 
-      <!-- ========================================================
-           RISK ANALYSIS
-      ========================================================= -->
-
-      <div
-        class="response-section"
-        *ngIf="response.risk_analysis"
-      >
-
-        <h4>
-          Risk analysis
-        </h4>
-
-        <p>
-          {{ response.risk_analysis }}
-        </p>
-
-      </div>
-
-
-      <!-- ========================================================
-           IMMEDIATE ACTIONS
-      ========================================================= -->
-
-      <div
-        class="response-section"
-        *ngIf="
-          response.immediate_actions &&
-          response.immediate_actions.length > 0
-        "
-      >
-
-        <h4>
-          Immediate actions
-        </h4>
-
-        <ol>
-
-          <li
-            *ngFor="
-              let action of response.immediate_actions;
-              trackBy: trackByIndex
-            "
+          <button
+            type="button"
+            class="send-button"
+            (click)="sendQuestion()"
+            [disabled]="loading || !question.trim()"
           >
-            {{ action }}
-          </li>
+            {{ loading ? 'Thinking...' : 'Send' }}
+          </button>
 
-        </ol>
-
-      </div>
+        </div>
 
 
-      <!-- ========================================================
-           RECOMMENDED ACTIONS
-      ========================================================= -->
+      </article>
 
-      <div
-        class="response-section"
-        *ngIf="
-          response.recommended_actions &&
-          response.recommended_actions.length > 0
-        "
-      >
+    </section>
 
-        <h4>
-          Recommended actions
-        </h4>
-
-        <ul>
-
-          <li
-            *ngFor="
-              let action of response.recommended_actions;
-              trackBy: trackByIndex
-            "
-          >
-            {{ action }}
-          </li>
-
-        </ul>
-
-      </div>
-
-
-      <!-- ========================================================
-           PREVENTIVE ACTIONS
-      ========================================================= -->
-
-      <div
-        class="response-section"
-        *ngIf="
-          response.preventive_actions &&
-          response.preventive_actions.length > 0
-        "
-      >
-
-        <h4>
-          Preventive measures
-        </h4>
-
-        <ul>
-
-          <li
-            *ngFor="
-              let action of response.preventive_actions;
-              trackBy: trackByIndex
-            "
-          >
-            {{ action }}
-          </li>
-
-        </ul>
-
-      </div>
-
-
-      <!-- ========================================================
-           MONITORING
-      ========================================================= -->
-
-      <div
-        class="response-section"
-        *ngIf="
-          response.monitoring_actions &&
-          response.monitoring_actions.length > 0
-        "
-      >
-
-        <h4>
-          Monitoring
-        </h4>
-
-        <ul>
-
-          <li
-            *ngFor="
-              let action of response.monitoring_actions;
-              trackBy: trackByIndex
-            "
-          >
-            {{ action }}
-          </li>
-
-        </ul>
-
-      </div>
-
-
-      <!-- ========================================================
-           PRIORITY
-      ========================================================= -->
-
-      <div
-        class="response-section"
-        *ngIf="response.priority"
-      >
-
-        <h4>
-          Priority
-        </h4>
-
-        <p>
-          {{ response.priority }}
-        </p>
-
-      </div>
-
-
-      <!-- ========================================================
-           EXPECTED OUTCOME
-      ========================================================= -->
-
-      <div
-        class="outcome-box"
-        *ngIf="response.expected_outcome"
-      >
-
-        <span>
-          EXPECTED OUTCOME
-        </span>
-
-        <p>
-          {{ response.expected_outcome }}
-        </p>
-
-      </div>
-
-    </div>
-
-  </section>
+  </div>
 
 </div>

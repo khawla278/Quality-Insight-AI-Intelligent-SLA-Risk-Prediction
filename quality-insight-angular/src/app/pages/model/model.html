@@ -1,6 +1,5 @@
 <div class="model-page">
 
-
   <!-- =====================================================
        LOADING
   ====================================================== -->
@@ -9,17 +8,11 @@
     class="loading-container"
     *ngIf="loading"
   >
-
     <div class="loader"></div>
 
-    <h3>
-      Loading model information
-    </h3>
+    <h3>Loading model information</h3>
 
-    <p>
-      Connecting to the AI backend...
-    </p>
-
+    <p>Connecting to the AI backend...</p>
   </div>
 
 
@@ -36,24 +29,17 @@
       <i class="bi bi-exclamation-triangle"></i>
     </div>
 
-    <h2>
-      Model information unavailable
-    </h2>
+    <h2>Model information unavailable</h2>
 
-    <p>
-      {{ error }}
-    </p>
+    <p>{{ error }}</p>
 
     <button
       type="button"
       class="refresh-button"
       (click)="refresh()"
     >
-
       <i class="bi bi-arrow-clockwise"></i>
-
       Retry
-
     </button>
 
   </div>
@@ -63,10 +49,7 @@
        CONTENT
   ====================================================== -->
 
-  <ng-container
-    *ngIf="!loading && model"
-  >
-
+  <ng-container *ngIf="!loading && model">
 
     <!-- ===================================================
          PAGE HEADER
@@ -74,25 +57,17 @@
 
     <section class="page-header">
 
-      <div>
+      <div class="page-header-content">
 
         <div class="breadcrumb">
-
-          <span>
-            Quality Insight AI
-          </span>
+          <span>Quality Insight AI</span>
 
           <i class="bi bi-chevron-right"></i>
 
-          <span>
-            Model
-          </span>
-
+          <span>Model</span>
         </div>
 
-        <h1>
-          Model Overview
-        </h1>
+        <h1>Model Overview</h1>
 
         <p>
           Understand how the AI model predicts
@@ -102,17 +77,13 @@
 
       </div>
 
-
       <button
         type="button"
         class="refresh-button"
         (click)="refresh()"
       >
-
         <i class="bi bi-arrow-clockwise"></i>
-
         Refresh
-
       </button>
 
     </section>
@@ -125,11 +96,8 @@
     <section class="model-hero">
 
       <div class="hero-icon">
-
         <i class="bi bi-cpu"></i>
-
       </div>
-
 
       <div class="hero-content">
 
@@ -140,66 +108,43 @@
           </h2>
 
           <span class="version-badge">
-
             v{{ model.model_version }}
-
           </span>
 
         </div>
 
         <p class="hero-description">
-
           {{ model.model_description }}
-
         </p>
-
 
         <div class="hero-meta">
 
           <span>
-
             <i class="bi bi-diagram-3"></i>
-
             {{ model.model_type }}
-
           </span>
 
           <span>
-
             <i class="bi bi-tree"></i>
-
             {{ model.model_family }}
-
           </span>
 
           <span>
-
             <i class="bi bi-calendar3"></i>
-
-            Trained
-            {{ formatDate(model.training_date) }}
-
+            Trained {{ formatDate(model.training_date) }}
           </span>
 
         </div>
 
       </div>
 
-
       <div class="model-status">
 
         <span class="status-indicator"></span>
 
         <div>
-
-          <strong>
-            Model Online
-          </strong>
-
-          <small>
-            Backend connected
-          </small>
-
+          <strong>Model Online</strong>
+          <small>Backend connected</small>
         </div>
 
       </div>
@@ -214,16 +159,12 @@
     <section class="info-card purpose-card">
 
       <div class="section-icon">
-
         <i class="bi bi-bullseye"></i>
-
       </div>
 
       <div>
 
-        <h3>
-          Business Purpose
-        </h3>
+        <h3>Business Purpose</h3>
 
         <p>
           {{ model.business_purpose }}
@@ -235,7 +176,7 @@
 
 
     <!-- ===================================================
-         KPI
+         PERFORMANCE
     ==================================================== -->
 
     <section class="section-block">
@@ -248,9 +189,7 @@
             PERFORMANCE
           </span>
 
-          <h2>
-            Model Performance
-          </h2>
+          <h2>Model Performance</h2>
 
           <p>
             Evaluation metrics of the SLA breach
@@ -263,7 +202,6 @@
 
 
       <div class="metrics-grid">
-
 
         <!-- ACCURACY -->
 
@@ -420,11 +358,12 @@
 
 
     <!-- ===================================================
-         TARGET
+         TARGET + SLA
     ==================================================== -->
 
     <section class="two-columns">
 
+      <!-- TARGET -->
 
       <div class="info-card">
 
@@ -435,15 +374,11 @@
           </div>
 
           <div>
-
-            <h3>
-              Prediction Target
-            </h3>
+            <h3>Prediction Target</h3>
 
             <span>
               {{ model.target_name }}
             </span>
-
           </div>
 
         </div>
@@ -452,7 +387,6 @@
           {{ model.target_definition }}
         </p>
 
-
         <div class="classes">
 
           <div class="class-item positive">
@@ -460,7 +394,6 @@
             <span class="class-dot"></span>
 
             <div>
-
               <strong>
                 {{ model.positive_class }}
               </strong>
@@ -468,7 +401,6 @@
               <small>
                 Positive class
               </small>
-
             </div>
 
           </div>
@@ -479,7 +411,6 @@
             <span class="class-dot"></span>
 
             <div>
-
               <strong>
                 {{ model.negative_class }}
               </strong>
@@ -487,7 +418,6 @@
               <small>
                 Negative class
               </small>
-
             </div>
 
           </div>
@@ -508,15 +438,11 @@
           </div>
 
           <div>
-
-            <h3>
-              SLA Configuration
-            </h3>
+            <h3>SLA Configuration</h3>
 
             <span>
               Risk classification thresholds
             </span>
-
           </div>
 
         </div>
@@ -540,11 +466,8 @@
           <div class="risk-band high">
 
             <div class="risk-name">
-
               <span class="risk-dot"></span>
-
               HIGH
-
             </div>
 
             <strong>
@@ -557,11 +480,8 @@
           <div class="risk-band medium">
 
             <div class="risk-name">
-
               <span class="risk-dot"></span>
-
               MEDIUM
-
             </div>
 
             <strong>
@@ -574,11 +494,8 @@
           <div class="risk-band low">
 
             <div class="risk-name">
-
               <span class="risk-dot"></span>
-
               LOW
-
             </div>
 
             <strong>
@@ -595,7 +512,7 @@
 
 
     <!-- ===================================================
-         MODEL EVALUATION IMAGES
+         MODEL EVALUATION
     ==================================================== -->
 
     <section class="section-block">
@@ -608,9 +525,7 @@
             MODEL EVALUATION
           </span>
 
-          <h2>
-            Performance Visualization
-          </h2>
+          <h2>Performance Visualization</h2>
 
           <p>
             Visual evaluation of the classification
@@ -624,7 +539,6 @@
 
       <div class="charts-grid">
 
-
         <!-- CONFUSION MATRIX -->
 
         <div class="chart-card">
@@ -632,16 +546,12 @@
           <div class="chart-header">
 
             <div>
-
-              <h3>
-                Confusion Matrix
-              </h3>
+              <h3>Confusion Matrix</h3>
 
               <p>
                 Classification results by predicted
                 and actual classes.
               </p>
-
             </div>
 
             <span class="chart-icon">
@@ -653,25 +563,21 @@
 
           <div
             class="image-container"
-            *ngIf="
-              model.image_available.confusion_matrix
-            "
+            *ngIf="model.image_available.confusion_matrix"
           >
 
             <img
               [src]="confusionMatrixUrl"
               alt="Confusion Matrix"
               (error)="imageError($event)"
-            >
+            />
 
           </div>
 
 
           <div
             class="image-unavailable"
-            *ngIf="
-              !model.image_available.confusion_matrix
-            "
+            *ngIf="!model.image_available.confusion_matrix"
           >
 
             <i class="bi bi-image"></i>
@@ -692,16 +598,12 @@
           <div class="chart-header">
 
             <div>
-
-              <h3>
-                ROC Curve
-              </h3>
+              <h3>ROC Curve</h3>
 
               <p>
                 Receiver Operating Characteristic
                 curve and discrimination capability.
               </p>
-
             </div>
 
             <span class="chart-icon">
@@ -713,25 +615,21 @@
 
           <div
             class="image-container"
-            *ngIf="
-              model.image_available.roc_curve
-            "
+            *ngIf="model.image_available.roc_curve"
           >
 
             <img
               [src]="rocCurveUrl"
               alt="ROC Curve"
               (error)="imageError($event)"
-            >
+            />
 
           </div>
 
 
           <div
             class="image-unavailable"
-            *ngIf="
-              !model.image_available.roc_curve
-            "
+            *ngIf="!model.image_available.roc_curve"
           >
 
             <i class="bi bi-image"></i>
@@ -763,9 +661,7 @@
             MODEL INPUTS
           </span>
 
-          <h2>
-            Features Used by the Model
-          </h2>
+          <h2>Features Used by the Model</h2>
 
           <p>
             Variables used to estimate the probability
@@ -779,7 +675,6 @@
 
       <div class="features-grid">
 
-
         <!-- CATEGORICAL -->
 
         <div class="feature-card">
@@ -787,16 +682,12 @@
           <div class="feature-header">
 
             <div class="feature-icon categorical">
-
               <i class="bi bi-tags"></i>
-
             </div>
 
             <div>
 
-              <h3>
-                Categorical Features
-              </h3>
+              <h3>Categorical Features</h3>
 
               <span>
                 {{ model.categorical_features.length }}
@@ -817,9 +708,7 @@
                 trackBy: trackByFeature
               "
             >
-
               {{ feature }}
-
             </span>
 
           </div>
@@ -834,16 +723,12 @@
           <div class="feature-header">
 
             <div class="feature-icon numerical">
-
               <i class="bi bi-123"></i>
-
             </div>
 
             <div>
 
-              <h3>
-                Numerical Features
-              </h3>
+              <h3>Numerical Features</h3>
 
               <span>
                 {{ model.numerical_features.length }}
@@ -864,9 +749,7 @@
                 trackBy: trackByFeature
               "
             >
-
               {{ feature }}
-
             </span>
 
           </div>
@@ -879,7 +762,7 @@
 
 
     <!-- ===================================================
-         TECHNICAL INFO
+         TECHNICAL DETAILS
     ==================================================== -->
 
     <section class="section-block">
@@ -892,9 +775,7 @@
             TECHNICAL DETAILS
           </span>
 
-          <h2>
-            Model Environment
-          </h2>
+          <h2>Model Environment</h2>
 
         </div>
 
@@ -903,21 +784,15 @@
 
       <div class="technical-grid">
 
-
         <div class="technical-item">
 
           <i class="bi bi-code-slash"></i>
 
           <div>
-
-            <span>
-              Python
-            </span>
-
+            <span>Python</span>
             <strong>
               {{ model.python_version }}
             </strong>
-
           </div>
 
         </div>
@@ -928,15 +803,10 @@
           <i class="bi bi-box"></i>
 
           <div>
-
-            <span>
-              Scikit-learn
-            </span>
-
+            <span>Scikit-learn</span>
             <strong>
               {{ model.sklearn_version }}
             </strong>
-
           </div>
 
         </div>
@@ -947,15 +817,10 @@
           <i class="bi bi-lightning"></i>
 
           <div>
-
-            <span>
-              LightGBM
-            </span>
-
+            <span>LightGBM</span>
             <strong>
               {{ model.lightgbm_version }}
             </strong>
-
           </div>
 
         </div>
@@ -966,15 +831,10 @@
           <i class="bi bi-repeat"></i>
 
           <div>
-
-            <span>
-              Training Iterations
-            </span>
-
+            <span>Training Iterations</span>
             <strong>
               {{ model.training_iterations }}
             </strong>
-
           </div>
 
         </div>
@@ -985,15 +845,10 @@
           <i class="bi bi-calendar-check"></i>
 
           <div>
-
-            <span>
-              Training Date
-            </span>
-
+            <span>Training Date</span>
             <strong>
               {{ formatDate(model.training_date) }}
             </strong>
-
           </div>
 
         </div>
@@ -1004,15 +859,10 @@
           <i class="bi bi-upload"></i>
 
           <div>
-
-            <span>
-              Exported
-            </span>
-
+            <span>Exported</span>
             <strong>
               {{ formatDate(model.exported_at) }}
             </strong>
-
           </div>
 
         </div>
@@ -1029,30 +879,22 @@
     <section class="limitations-card">
 
       <div class="limitations-icon">
-
         <i class="bi bi-info-circle"></i>
-
       </div>
-
 
       <div class="limitations-content">
 
-        <h3>
-          Model Limitations
-        </h3>
+        <h3>Model Limitations</h3>
 
         <p>
           The following considerations should be taken
           into account when interpreting predictions.
         </p>
 
-
         <ul>
 
           <li
-            *ngFor="
-              let limitation of model.limitations
-            "
+            *ngFor="let limitation of model.limitations"
           >
 
             <i class="bi bi-check2"></i>
@@ -1068,7 +910,6 @@
       </div>
 
     </section>
-
 
   </ng-container>
 
