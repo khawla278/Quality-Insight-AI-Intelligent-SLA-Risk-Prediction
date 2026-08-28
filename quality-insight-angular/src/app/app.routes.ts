@@ -36,6 +36,28 @@ export const routes: Routes = [
         .then(m => m.DashboardComponent)
   },
 
+  // IT incident predictor (study 01)
+  {
+    path: 'incident',
+    loadComponent: () =>
+      import('./pages/dashboard/dashboard.component')
+        .then(m => m.DashboardComponent)
+  },
+
+  // Crossrail NCR ticketing experience (study 02)
+  {
+    path: 'crossrail',
+    loadComponent: () =>
+      import('./pages/crossrail-ncr/crossrail-ncr.component')
+        .then(m => m.CrossrailNcrComponent)
+  },
+  {
+    path: 'crossrail/:view',
+    loadComponent: () =>
+      import('./pages/crossrail-insights/crossrail-insights.component')
+        .then(m => m.CrossrailInsightsComponent)
+  },
+
 
   /* =========================================================
      HISTORIQUE / NON-CONFORMANCES

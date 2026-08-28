@@ -8,6 +8,8 @@
   <aside
     class="sidebar"
     [class.collapsed]="!menuOpen"
+    [class.ncr-theme]="experiment === 'ncr'"
+    [class.home-sidebar]="isHome"
   >
 
 
@@ -21,7 +23,7 @@
     >
 
       <div class="brand-logo">
-        Q
+        {{ isHome ? 'Q' : (experiment === 'ncr' ? 'N' : 'IT') }}
       </div>
 
 
@@ -31,11 +33,11 @@
       >
 
         <strong>
-          Quality
+          {{ isHome ? 'Quality Insight' : (experiment === 'ncr' ? 'Crossrail' : 'IT Incident') }}
         </strong>
 
         <span>
-          Insight AI
+          {{ isHome ? 'Choose a study' : (experiment === 'ncr' ? 'NCR Workspace' : 'Risk Workspace') }}
         </span>
 
       </div>
@@ -49,9 +51,7 @@
 
     <nav class="sidebar-nav">
 
-
-      <!-- HOME -->
-
+      <!-- ALL STUDIES -->
       <a
         routerLink="/home"
         routerLinkActive="active"
@@ -59,20 +59,30 @@
           exact: true
         }"
       >
-
         <i class="bi bi-house"></i>
-
-        <span *ngIf="menuOpen">
-          Home
-        </span>
-
+        <span *ngIf="menuOpen">All studies</span>
       </a>
+
+      <span class="nav-group-label" *ngIf="menuOpen">STUDIES</span>
+
+      <a routerLink="/incident" [class.active]="isExperiment && experiment === 'it'">
+        <i class="bi bi-pc-display"></i>
+        <span *ngIf="menuOpen">IT Incident Log</span>
+      </a>
+
+      <a routerLink="/crossrail" [class.active]="isExperiment && experiment === 'ncr'">
+        <i class="bi bi-clipboard2-check"></i>
+        <span *ngIf="menuOpen">Crossrail NCR</span>
+      </a>
+
+      <span class="nav-group-label" *ngIf="menuOpen && isExperiment">{{ experiment === 'ncr' ? 'NCR WORKSPACE' : 'IT WORKSPACE' }}</span>
 
 
       <!-- DASHBOARD -->
 
       <a
         routerLink="/dashboard"
+        *ngIf="isExperiment && experiment === 'it'"
         routerLinkActive="active"
         [routerLinkActiveOptions]="{
           exact: true
@@ -92,6 +102,7 @@
 
       <a
         routerLink="/model"
+        *ngIf="isExperiment && experiment === 'it'"
         routerLinkActive="active"
       >
 
@@ -108,6 +119,7 @@
 
       <a
         routerLink="/analytics"
+        *ngIf="isExperiment && experiment === 'it'"
         routerLinkActive="active"
       >
 
@@ -124,6 +136,7 @@
 
       <a
         routerLink="/explainability"
+        *ngIf="isExperiment && experiment === 'it'"
         routerLinkActive="active"
       >
 
@@ -140,6 +153,7 @@
 
       <a
         routerLink="/historique"
+        *ngIf="isExperiment && experiment === 'it'"
         routerLinkActive="active"
       >
 
@@ -156,6 +170,7 @@
 
       <a
         routerLink="/ai-assistant"
+        *ngIf="isExperiment && experiment === 'it'"
         routerLinkActive="active"
       >
 
@@ -174,6 +189,7 @@
 
       <a
         routerLink="/notifications"
+        *ngIf="isExperiment && experiment === 'it'"
         routerLinkActive="active"
       >
 
@@ -207,6 +223,41 @@
 
       </a>
 
+      <a
+        *ngIf="isExperiment && experiment === 'ncr'"
+        routerLink="/crossrail"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+      >
+        <i class="bi bi-clipboard2-check"></i>
+        <span *ngIf="menuOpen">NCR Workspace</span>
+      </a>
+
+      <a *ngIf="isExperiment && experiment === 'ncr'" routerLink="/crossrail/model" routerLinkActive="active">
+        <i class="bi bi-cpu"></i>
+        <span *ngIf="menuOpen">Model Overview</span>
+      </a>
+
+      <a *ngIf="isExperiment && experiment === 'ncr'" routerLink="/crossrail/analytics" routerLinkActive="active">
+        <i class="bi bi-graph-up"></i>
+        <span *ngIf="menuOpen">Analytics</span>
+      </a>
+
+      <a *ngIf="isExperiment && experiment === 'ncr'" routerLink="/crossrail/explainability" routerLinkActive="active">
+        <i class="bi bi-lightbulb"></i>
+        <span *ngIf="menuOpen">Explainability</span>
+      </a>
+
+      <a *ngIf="isExperiment && experiment === 'ncr'" routerLink="/crossrail/history" routerLinkActive="active">
+        <i class="bi bi-clock-history"></i>
+        <span *ngIf="menuOpen">NCR History</span>
+      </a>
+
+      <a *ngIf="isExperiment && experiment === 'ncr'" routerLink="/crossrail/assistant" routerLinkActive="active">
+        <i class="bi bi-robot"></i>
+        <span *ngIf="menuOpen">AI Assistant</span>
+      </a>
+
     </nav>
 
 
@@ -222,7 +273,7 @@
       <span class="online-dot"></span>
 
       <span>
-        AI System
+        {{ isHome ? 'Select a study' : (experiment === 'ncr' ? 'NCR Model' : 'IT Model') }}
       </span>
 
     </div>
@@ -237,6 +288,7 @@
   <main
     class="main-content"
     [class.expanded]="!menuOpen"
+    [class.standalone]="false"
   >
 
 
@@ -244,7 +296,7 @@
          TOPBAR
     ==================================================== -->
 
-    <header class="topbar">
+    <header class="topbar" *ngIf="isExperiment" [class.ncr-theme]="experiment === 'ncr'">
 
 
       <!-- LEFT -->
@@ -264,7 +316,7 @@
 
 
         <strong>
-          Quality Insight AI
+          {{ experiment === 'ncr' ? 'Crossrail NCR · Model 02' : 'IT Incident Log · Model 01' }}
         </strong>
 
       </div>
@@ -284,6 +336,7 @@
         <button
           type="button"
           class="notification-button"
+          *ngIf="experiment === 'it'"
           routerLink="/notifications"
           title="Notifications"
           aria-label="Open notifications"

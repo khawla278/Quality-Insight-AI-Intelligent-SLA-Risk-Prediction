@@ -19,7 +19,10 @@ import {
   HealthResponse,
   ImportanceResponse,
   IncidentRequest,
-  PredictionResponse
+  PredictionResponse,
+  CrossrailNcrPrediction,
+  CrossrailNcrRequest,
+  CrossrailModelInfo
 } from '../models/api.models';
 
 
@@ -108,6 +111,23 @@ export class ApiService {
       {
         incidents
       }
+    );
+  }
+
+
+  crossrailPredict(
+    payload: CrossrailNcrRequest
+  ): Observable<CrossrailNcrPrediction> {
+
+    return this.http.post<CrossrailNcrPrediction>(
+      `${this.baseUrl}/crossrail/predict`,
+      payload
+    );
+  }
+
+  crossrailModel(): Observable<CrossrailModelInfo> {
+    return this.http.get<CrossrailModelInfo>(
+      `${this.baseUrl}/crossrail/model`
     );
   }
 

@@ -4,6 +4,7 @@ import json
 import logging
 import math
 import os
+import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Literal
@@ -95,6 +96,20 @@ METADATA_PATH = (
     "sla_breach_portable_v1.0.0_meta.json"
 )
 
+# Crossrail NCR model.  It is intentionally kept separate from the IT
+# incident model so that one unavailable artifact does not take the other
+# predictor offline.
+NCR_MODEL_PATH = MODEL_DIR / "crossrail_ncr_predictor.joblib"
+NCR_METADATA_PATH = MODEL_DIR / "model_metadata.json"
+NCR_ASSET_DIR = STATIC_DIR / "crossrail"
+
+# This is the exact source-column name saved in the training artifact.  The
+# API exposes the much clearer `proposed_disposition` field and maps it here.
+NCR_DISPOSITION_COLUMN = (
+    "NCR Classification,_x000D_\n\teB_Proposed_Disposition "
+    "AS [Proposed_Disposition"
+)
+
 
 # ============================================================
 # IMAGE FILES
@@ -118,6 +133,9 @@ ROC_CURVE_PATH = (
 MODEL: Any | None = None
 
 METADATA: dict[str, Any] = {}
+NCR_MODEL: dict[str, Any] | None = None
+NCR_METADATA: dict[str, Any] = {}
+NCR_LOAD_ERROR: str | None = None
 
 
 # ============================================================
@@ -213,8 +231,38 @@ class BatchPredictionRequest(BaseModel):
     incidents: list[IncidentRequest] = Field(
         ...,
         min_length=1,
-        max_length=1000
+        max_length=1000,
     )
+
+
+class CrossrailNcrRequest(BaseModel):
+    """The user-facing fields for the Crossrail late-close-out model."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    ticketing_system: Literal["Crossrail NCR"]
+    title: str = Field(..., min_length=1)  # retained for ticket context; not model input
+    site_area: str = Field(..., min_length=1)
+    type: str = Field(..., min_length=1)
+    organisation: str = Field(..., min_length=1)
+    organisation_code: str = ""
+    project_area: str = Field(..., min_length=1)
+    category: str = Field(..., min_length=1)
+    discipline: str = Field(..., min_length=1)
+    root_cause: str = Field(..., min_length=1)
+    proposed_disposition: str = Field(..., min_length=1)
+    estimated_cost_of_ncr: float = Field(..., ge=0)
+    date_initiated: Any
+    required_close_out_date: Any
+
+
+class CrossrailNcrPrediction(BaseModel):
+    probability: float
+    prediction: Literal["LATE_CLOSE_OUT", "ON_TIME_CLOSE_OUT"]
+    risk_level: Literal["HIGH", "MEDIUM", "LOW"]
+    threshold: float
+    model_name: str
+    model_version: str
 
 
 class GeneratedFeatures(BaseModel):
@@ -477,6 +525,35 @@ def load_model() -> Any:
     return model
 
 
+def load_ncr_metadata() -> dict[str, Any]:
+    if not NCR_METADATA_PATH.exists():
+        raise FileNotFoundError(f"NCR metadata file not found: {NCR_METADATA_PATH}")
+    with open(NCR_METADATA_PATH, "r", encoding="utf-8") as file:
+        data = json.load(file)
+    if not isinstance(data, dict):
+        raise ValueError("NCR metadata JSON must contain a JSON object.")
+    return data
+
+
+def load_ncr_model() -> dict[str, Any]:
+    """Load the portable NCR artifact and its custom transformer module."""
+    if not NCR_MODEL_PATH.exists():
+        raise FileNotFoundError(f"NCR model file not found: {NCR_MODEL_PATH}")
+
+    # joblib stores NCRFeatureEngineer as ncr_preprocessing.NCRFeatureEngineer.
+    # Adding MODEL_DIR makes that module importable during unpickling.
+    model_dir_string = str(MODEL_DIR)
+    if model_dir_string not in sys.path:
+        sys.path.insert(0, model_dir_string)
+    __import__("ncr_preprocessing")
+
+    artifact = joblib.load(NCR_MODEL_PATH)
+    required = {"model", "feature_engineer", "threshold"}
+    if not isinstance(artifact, dict) or not required.issubset(artifact):
+        raise ValueError("Invalid NCR artifact: required ensemble fields are missing.")
+    return artifact
+
+
 # ============================================================
 # LIFESPAN
 # ============================================================
@@ -488,6 +565,9 @@ async def lifespan(
 
     global MODEL
     global METADATA
+    global NCR_MODEL
+    global NCR_METADATA
+    global NCR_LOAD_ERROR
 
     logger.info(
         "========================================"
@@ -567,10 +647,24 @@ async def lifespan(
         MODEL = None
         METADATA = {}
 
+    try:
+        NCR_METADATA = load_ncr_metadata()
+        NCR_MODEL = load_ncr_model()
+        NCR_LOAD_ERROR = None
+        logger.info("Crossrail NCR model loaded successfully.")
+    except Exception as error:
+        logger.exception("Crossrail NCR startup error: %s", error)
+        NCR_MODEL = None
+        NCR_METADATA = {}
+        NCR_LOAD_ERROR = str(error)
+
     yield
 
     MODEL = None
     METADATA = {}
+    NCR_MODEL = None
+    NCR_METADATA = {}
+    NCR_LOAD_ERROR = None
 
     logger.info(
         "API stopped."
@@ -1115,6 +1209,12 @@ def root():
         "predict":
             "/predict",
 
+        "crossrail_ncr_predict":
+            "/crossrail/predict",
+
+        "crossrail_ncr_model":
+            "/crossrail/model",
+
         "explain":
             "/predict/explain",
 
@@ -1255,6 +1355,22 @@ def health():
 
         "model_loaded":
             model_loaded,
+
+        "models": {
+            "it_incident": {
+                "loaded": model_loaded,
+                "name": METADATA.get("model_name"),
+                "version": METADATA.get("model_version"),
+            },
+            "crossrail_ncr": {
+                "loaded": NCR_MODEL is not None,
+                "name": NCR_METADATA.get("champion_model"),
+                "version": "1.0.0" if NCR_MODEL is not None else None,
+                "threshold": NCR_METADATA.get("threshold"),
+                "metrics": NCR_METADATA.get("outer_test_metrics", {}),
+                "load_error": NCR_LOAD_ERROR,
+            },
+        },
 
         "metadata_loaded":
             metadata_loaded,
@@ -1649,6 +1765,173 @@ def predict_batch(
                     str(error),
             },
         )
+
+
+# ============================================================
+# CROSSRAIL NCR PREDICTION
+# ============================================================
+
+def check_ncr_model() -> dict[str, Any]:
+    if NCR_MODEL is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={
+                "message": "Crossrail NCR model is not loaded.",
+                "model_path": str(NCR_MODEL_PATH),
+                "metadata_path": str(NCR_METADATA_PATH),
+                "load_error": NCR_LOAD_ERROR,
+            },
+        )
+    return NCR_MODEL
+
+
+def build_ncr_dataframe(request: CrossrailNcrRequest) -> pd.DataFrame:
+    """Map API field names to the columns used when the NCR model was trained."""
+    initiated = pd.to_datetime(request.date_initiated, errors="coerce")
+    due = pd.to_datetime(request.required_close_out_date, errors="coerce")
+    if pd.isna(initiated) or pd.isna(due):
+        raise ValueError("date_initiated and required_close_out_date must be valid dates.")
+    if due < initiated:
+        raise ValueError("required_close_out_date cannot be before date_initiated.")
+
+    return pd.DataFrame([{
+        "Date Initiated": initiated,
+        "Required Close Out Date": due,
+        "Organisation": request.organisation.strip(),
+        "Organisation Code": request.organisation_code.strip(),
+        "Discipline": request.discipline.strip(),
+        "Category": request.category.strip(),
+        "Project Area": request.project_area.strip(),
+        "Site Area": request.site_area.strip(),
+        "Root Cause": request.root_cause.strip(),
+        "Estimated_Cost_of_NCR": request.estimated_cost_of_ncr,
+        NCR_DISPOSITION_COLUMN: request.proposed_disposition.strip(),
+        "Type": request.type.strip(),
+    }])
+
+
+def ncr_positive_probability(artifact: dict[str, Any], dataframe: pd.DataFrame) -> float:
+    """Run all three saved ensemble components and apply their saved weights."""
+    transformed = artifact["feature_engineer"].transform(dataframe)
+    ensemble = artifact["model"]
+    models = ensemble.get("models", {})
+    weights = ensemble.get("weights", [])
+    model_names = ensemble.get("model_names", [])
+    if not isinstance(models, dict) or len(weights) != len(model_names):
+        raise ValueError("Invalid NCR ensemble configuration.")
+
+    probabilities: list[float] = []
+    for name in model_names:
+        estimator = models.get(name)
+        if estimator is None or not hasattr(estimator, "predict_proba"):
+            raise ValueError(f"NCR ensemble component is invalid: {name}")
+
+        # CatBoost's standalone artifact needs its categorical feature indexes
+        # supplied again at inference; sklearn pipelines carry this internally.
+        if estimator.__class__.__module__.startswith("catboost"):
+            from catboost import Pool
+            features = list(estimator.feature_names_)
+            model_input = Pool(
+                transformed[features],
+                cat_features=estimator.get_cat_feature_indices(),
+            )
+        else:
+            model_input = transformed
+
+        value = float(np.asarray(estimator.predict_proba(model_input), dtype=float)[0, 1])
+        probabilities.append(value)
+
+    probability = float(np.average(probabilities, weights=np.asarray(weights, dtype=float)))
+    if not math.isfinite(probability):
+        raise ValueError("Invalid NCR prediction probability.")
+    return float(np.clip(probability, 0.0, 1.0))
+
+
+@app.post(
+    "/crossrail/predict",
+    response_model=CrossrailNcrPrediction,
+    tags=["Crossrail NCR"],
+)
+def crossrail_predict(request: CrossrailNcrRequest):
+    artifact = check_ncr_model()
+    try:
+        probability = ncr_positive_probability(artifact, build_ncr_dataframe(request))
+        threshold = float(artifact["threshold"])
+        # The NCR model has a binary operating threshold.  Medium is a useful
+        # early-warning band below that decision threshold.
+        risk_level: Literal["HIGH", "MEDIUM", "LOW"]
+        if probability >= threshold:
+            risk_level = "HIGH"
+        elif probability >= threshold * 0.65:
+            risk_level = "MEDIUM"
+        else:
+            risk_level = "LOW"
+        return CrossrailNcrPrediction(
+            probability=round(probability, 6),
+            prediction="LATE_CLOSE_OUT" if probability >= threshold else "ON_TIME_CLOSE_OUT",
+            risk_level=risk_level,
+            threshold=threshold,
+            model_name=str(NCR_METADATA.get("champion_model", artifact.get("champion", "NCR ensemble"))),
+            model_version="1.0.0",
+        )
+    except HTTPException:
+        raise
+    except Exception as error:
+        logger.exception("Crossrail NCR prediction error")
+        raise HTTPException(status_code=500, detail={"message": "Crossrail NCR prediction failed.", "error": str(error)})
+
+
+@app.get("/crossrail/model", tags=["Crossrail NCR"])
+def crossrail_model_info():
+    artifact = check_ncr_model()
+    return {
+        **NCR_METADATA,
+        "loaded": True,
+        "threshold": artifact["threshold"],
+        "prediction_definition": artifact.get("prediction_definition"),
+        "prediction_point": artifact.get("prediction_point"),
+        "asset_directory": str(NCR_ASSET_DIR),
+        "expected_assets": {
+            "confusion_matrix": "crossrail_confusion_matrix.png",
+            "roc_curve": "crossrail_roc_curve.png",
+            "feature_importance": "crossrail_feature_importance.png",
+            "shap_summary": "crossrail_shap_summary.png",
+        },
+        "asset_urls": {
+            name: f"/crossrail/assets/{filename}"
+            for name, filename in {
+                "confusion_matrix": "crossrail_confusion_matrix.png",
+                "roc_curve": "crossrail_roc_curve.png",
+                "feature_importance": "crossrail_feature_importance.png",
+                "shap_summary": "crossrail_shap_summary.png",
+            }.items()
+        },
+        "asset_available": {
+            filename: (NCR_ASSET_DIR / filename).is_file()
+            for filename in {
+                "crossrail_confusion_matrix.png",
+                "crossrail_roc_curve.png",
+                "crossrail_feature_importance.png",
+                "crossrail_shap_summary.png",
+            }
+        },
+    }
+
+
+@app.get("/crossrail/assets/{filename}", tags=["Crossrail NCR"])
+def crossrail_model_asset(filename: str):
+    allowed = {
+        "crossrail_confusion_matrix.png",
+        "crossrail_roc_curve.png",
+        "crossrail_feature_importance.png",
+        "crossrail_shap_summary.png",
+    }
+    if filename not in allowed:
+        raise HTTPException(status_code=404, detail="Unknown Crossrail model asset.")
+    path = NCR_ASSET_DIR / filename
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail=f"Asset not found. Add it to: {NCR_ASSET_DIR}")
+    return FileResponse(path, media_type="image/png", filename=filename)
 
 
 # ============================================================

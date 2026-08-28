@@ -306,6 +306,22 @@ export interface HealthResponse {
   metrics?: EvaluationMetrics;
 
   runtime?: RuntimeInformation;
+
+  models?: {
+    it_incident: {
+      loaded: boolean;
+      name?: string | null;
+      version?: string | null;
+    };
+    crossrail_ncr: {
+      loaded: boolean;
+      name?: string | null;
+      version?: string | null;
+      threshold?: number | null;
+      metrics?: Record<string, number>;
+      load_error?: string | null;
+    };
+  };
 }
 
 
@@ -401,4 +417,56 @@ export interface BatchPredictionResponse {
   model_version: string;
 
   sla_target_days: number;
+}
+
+
+// ============================================================
+// CROSSRAIL NCR MODEL
+// ============================================================
+
+export interface CrossrailNcrRequest {
+
+  ticketing_system: 'Crossrail NCR';
+  title: string;
+  site_area: string;
+  type: string;
+  organisation: string;
+  organisation_code: string;
+  project_area: string;
+  category: string;
+  discipline: string;
+  root_cause: string;
+  proposed_disposition: string;
+  estimated_cost_of_ncr: number;
+  date_initiated: string;
+  required_close_out_date: string;
+}
+
+export interface CrossrailNcrPrediction {
+
+  probability: number;
+  prediction: 'LATE_CLOSE_OUT' | 'ON_TIME_CLOSE_OUT';
+  risk_level: RiskLevel;
+  threshold: number;
+  model_name: string;
+  model_version: string;
+}
+
+export interface CrossrailModelInfo {
+  project: string;
+  champion_model: string;
+  threshold: number;
+  outer_test_metrics: Record<string, number>;
+  required_input_fields: Record<string, string>;
+  expected_assets: Record<string, string>;
+  asset_urls: Record<string, string>;
+  asset_available?: Record<string, boolean>;
+  asset_directory: string;
+}
+
+export interface CrossrailNcrTicket extends CrossrailNcrRequest {
+
+  ref: string;
+  created_at: string;
+  prediction?: CrossrailNcrPrediction;
 }

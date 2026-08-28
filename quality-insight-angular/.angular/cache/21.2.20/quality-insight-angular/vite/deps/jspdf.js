@@ -1,6 +1,6 @@
 import {
   _typeof
-} from "./chunk-WUUVWCMF.js";
+} from "./chunk-ITVQIOBQ.js";
 import "./chunk-I6DCS273.js";
 
 // node_modules/fflate/esm/browser.js
@@ -13349,14 +13349,14 @@ function le() {
   }, t2.allowFsRead = void 0, t2.loadImageFile = t2.loadFile;
 })(E.API), (function(e) {
   function r() {
-    return (i2.html2canvas ? Promise.resolve(i2.html2canvas) : import("./html2canvas.esm-HFV44DML.js")).catch(function(t2) {
+    return (i2.html2canvas ? Promise.resolve(i2.html2canvas) : import("./html2canvas.esm-VSIJWPIE.js")).catch(function(t2) {
       return Promise.reject(new Error("Could not load html2canvas: " + t2));
     }).then(function(t2) {
       return t2.default ? t2.default : t2;
     });
   }
   function n() {
-    return (i2.DOMPurify ? Promise.resolve(i2.DOMPurify) : import("./purify.es-IOL3BM6T.js")).catch(function(t2) {
+    return (i2.DOMPurify ? Promise.resolve(i2.DOMPurify) : import("./purify.es-L5VN2AGA.js")).catch(function(t2) {
       return Promise.reject(new Error("Could not load dompurify: " + t2));
     }).then(function(t2) {
       return t2.default ? t2.default : t2;
@@ -14058,7 +14058,7 @@ function le() {
   var h2 = l2.getContext("2d");
   h2.fillStyle = "#fff", h2.fillRect(0, 0, l2.width, l2.height);
   var f2 = { ignoreMouse: true, ignoreAnimation: true, ignoreDimensions: true }, d2 = this;
-  return (i2.canvg ? Promise.resolve(i2.canvg) : import("./index.es-RLMKDILS.js")).catch(function(t3) {
+  return (i2.canvg ? Promise.resolve(i2.canvg) : import("./index.es-D4UD5YDJ.js")).catch(function(t3) {
     return Promise.reject(new Error("Could not load canvg: " + t3));
   }).then(function(t3) {
     return t3.default ? t3.default : t3;

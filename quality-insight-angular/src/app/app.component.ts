@@ -10,12 +10,15 @@ import {
 } from '@angular/common';
 
 import {
+  NavigationEnd,
+  Router,
   RouterLink,
   RouterLinkActive,
   RouterOutlet
 } from '@angular/router';
 
 import {
+  filter,
   Subscription
 } from 'rxjs';
 
@@ -52,6 +55,12 @@ export class AppComponent
 
   menuOpen = true;
 
+  isExperiment = false;
+
+  isHome = true;
+
+  experiment: 'it' | 'ncr' = 'it';
+
 
   // ==========================================================
   // NOTIFICATION BADGE
@@ -80,8 +89,14 @@ export class AppComponent
   private readonly notificationService =
     inject(NotificationService);
 
+  private readonly router =
+    inject(Router);
+
 
   private notificationSubscription?:
+    Subscription;
+
+  private routeSubscription?:
     Subscription;
 
 
@@ -98,6 +113,12 @@ export class AppComponent
   // ==========================================================
 
   ngOnInit(): void {
+
+    this.updateExperience(this.router.url);
+
+    this.routeSubscription = this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe(event => this.updateExperience(event.urlAfterRedirects));
 
     /*
      * Charge le nombre initial.
@@ -117,6 +138,18 @@ export class AppComponent
 
         });
 
+  }
+
+
+  private updateExperience(url: string): void {
+
+    this.isHome = url === '/home' || url === '/';
+
+    this.isExperiment = !this.isHome;
+
+    this.experiment = url.startsWith('/crossrail')
+      ? 'ncr'
+      : 'it';
   }
 
 
@@ -243,6 +276,9 @@ export class AppComponent
   ngOnDestroy(): void {
 
     this.notificationSubscription
+      ?.unsubscribe();
+
+    this.routeSubscription
       ?.unsubscribe();
 
   }

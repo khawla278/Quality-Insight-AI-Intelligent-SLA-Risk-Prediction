@@ -278,6 +278,19 @@
     72px;
 }
 
+.nav-group-label {
+  margin: 10px 12px 2px;
+  color: #94a3b8;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.main-content.standalone {
+  width: 100%;
+  margin-left: 0;
+}
+
 
 /* =========================================================
    TOPBAR
@@ -465,6 +478,28 @@
   color: #64748b;
 
   font-size: 12px;
+}
+
+/* Crossrail NCR is a separate experiment with its own orange identity. */
+.sidebar.ncr-theme .brand-logo {
+  background: linear-gradient(135deg, #d97706, #f59e0b);
+  font-size: 13px;
+}
+
+.sidebar.ncr-theme .sidebar-nav a:hover,
+.sidebar.ncr-theme .sidebar-nav a.active {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.sidebar.home-sidebar .brand-logo {
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+}
+
+.topbar.ncr-theme .menu-button:hover,
+.topbar.ncr-theme .notification-button:hover {
+  background: #fff7ed;
+  color: #c2410c;
 }
 
 
